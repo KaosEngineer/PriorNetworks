@@ -1,13 +1,19 @@
-import math
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from PriorNetworks.priornet.losses import PriorNetLoss
+from PriorNetworks.priornet.losses import DirichletPriorNetLoss
 from PriorNetworks.util_pytorch import calc_accuracy_torch
 
+
+class trainer(object):
+    def __init__(self, optimizer, optimizer_params, lr_scheduler, lr_scheduler_params, model):
+        self.optimier = optimizer
+        self.optimier_params = optimizer_params
+        self.lr_schedueler = lr_scheduler
+        self.lr_schedueler_params = lr_scheduler_params
+        self.model
 
 # todo: put the training into a class to reduce the functional programming clutter
 def test(model, testloader, batch_size=50, print_progress=True, device=None):
@@ -91,9 +97,9 @@ def train_procedure_with_ood(model, train_dataset, ood_dataset, test_dataset, n_
     print_train, print_test = _get_print_progress_vars(print_progress)
 
     if id_criterion is None:
-        id_criterion = PriorNetLoss(target_concentration=100.0)
+        id_criterion = DirichletPriorNetLoss(target_concentration=100.0)
     if ood_criterion is None:
-        ood_criterion = PriorNetLoss(target_concentration=0.0)
+        ood_criterion = DirichletPriorNetLoss(target_concentration=0.0)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, lr_decay, last_epoch=-1)
     if match_dataset_length:
