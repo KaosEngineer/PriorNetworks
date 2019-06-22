@@ -1,4 +1,5 @@
 import torch
+import torch.optim as optim
 from torchvision import models
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
@@ -65,8 +66,20 @@ def main(argv=None):
     #                          lr_decay=1.0,
     #                          gamma=10.0)
 
-    trainer =
-
+    criterion = PriorNetMixedLoss(
+        [DirichletReverseKLLoss(target_concentration=1e3),
+         DirichletReverseKLLoss()],
+        [1., 1.])
+    trainer = TrainerWithOOD(model, criterion,
+                             train_dataset=id_dataset,
+                             ood_dataset=ood_dataset,
+                             test_dataset=test_dataset,
+                             optimizer=optim.SGD,
+                             scheduler=optim.lr_scheduler.ExponentialLR,
+                             optimizer_params={'lr': 5e-5},
+                             scheduler_params={'gamma': 1.0},
+                             batch_size=50)
+    trainer.train(20, device=device)
 
 if __name__ == '__main__':
     main()
