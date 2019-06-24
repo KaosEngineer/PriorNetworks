@@ -1,8 +1,10 @@
-import torch
-import numpy as np
-from pathlib import Path
-from torch.utils.data import DataLoader
 import re
+from pathlib import Path
+from typing import Union
+
+import numpy as np
+import torch
+
 
 def save_model(model, path):
     """
@@ -20,7 +22,7 @@ def save_model(model, path):
     return
 
 
-def load_model(model_class, path):
+def load_model(model_class: torch.nn.Module, path: Union[Path, str]):
     """
 
     :param model_class:

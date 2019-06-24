@@ -15,6 +15,9 @@ class trainer(object):
         self.lr_schedueler_params = lr_scheduler_params
         self.model
 
+
+
+
 # todo: put the training into a class to reduce the functional programming clutter
 def test(model, testloader, batch_size=50, print_progress=True, device=None):
     """
