@@ -2,7 +2,7 @@ import torch
 from torch.nn import functional as F
 
 
-class EnDLoss(object):
+class EnDLoss:
     def __init__(self, temp=1.0):
         self.temp = temp  # Distillation temperature (scaling of logits to emphasise differences within ensemble)
 

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from scipy.special import gammaln, digamma
 from torch import nn
 
-from PriorNetworks.util_pytorch import categorical_entropy_torch
+from prior_networks.util_pytorch import categorical_entropy_torch
 
 
 # TODO Decide what is a static method and what is a function call...
