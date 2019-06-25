@@ -32,13 +32,13 @@ class PriorNetMixedLoss:
         return torch.mean(total_loss)
 
 
-class DirichletForwardKLLoss:
+class DirichletKLLoss:
     """
     Can be applied to any model which returns logits
 
     """
 
-    def __init__(self, concentration=1.0, target_concentration=1e3):
+    def __init__(self, target_concentration=1e3, concentration=1.0, reverse=True):
         """
         :param target_concentration: The concentration parameter for the
         target class (if provided)
@@ -48,6 +48,7 @@ class DirichletForwardKLLoss:
         self.target_concentration = torch.tensor(target_concentration,
                                                  dtype=torch.float32)
         self.concentration = concentration
+        self.reverse = reverse
 
     def __call__(self, logits, labels):
         alphas = torch.exp(logits)
@@ -77,52 +78,10 @@ class DirichletForwardKLLoss:
                             self.target_concentration)
             target_alphas += target_conc
 
-        loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
-        return loss
-
-
-class DirichletReverseKLLoss:
-    """
-    Can be applied to any model which returns logits
-    """
-    def __init__(self, target_concentration=1e3, concentration=1.0):
-        """
-        :param target_concentration: The concentration parameter for the
-        target class (if provided)
-        :param concentration: The 'base' concentration parameters for
-        non-target classes.
-        """
-        self.target_concentration = torch.tensor(target_concentration,
-                                                 dtype=torch.float32)
-        self.concentration = concentration
-
-    def __call__(self, logits, labels):
-        alphas = torch.exp(logits)
-        return self.forward(alphas, labels)
-
-    def forward(self, alphas, labels):
-        loss = self.compute_loss(alphas, labels)
-        return torch.mean(loss)
-
-    def compute_loss(self, alphas, labels: Optional[torch.tensor] = None):
-        """
-        :param alphas: The alpha parameter outputs from the model
-        :param labels: Optional. The target labels indicating the correct
-        class.
-
-        The loss creates a set of target alpha (concentration) parameters
-        with all values set to self.concentration, except for the correct
-        class (if provided), which is set to self.target_concentration
-        :return: an array of per example loss
-        """
-        # Create array of target (desired) concentration parameters
-        target_alphas = torch.ones_like(alphas) * self.concentration
-        if labels is not None:
-            target_conc = torch.zeros_like(alphas).scatter_(1, labels[:, None],
-                                                            self.target_concentration)
-            target_alphas += target_conc
-
-        loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
+        if self.reverse:
+            loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
+        else:
+            loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
         return loss
 
 # class DirichletPriorNetLoss(object):

@@ -7,7 +7,10 @@ from torch.utils.data import DataLoader, Dataset
 from prior_networks.util_pytorch import calc_accuracy_torch
 
 from typing import Dict, Any
+import numpy as np
 
+
+import time
 
 class Trainer:
     def __init__(self, model, criterion,
@@ -64,13 +67,14 @@ class Trainer:
             assert isinstance(n_epochs, int)
 
         for epoch in range(n_epochs):
-            print('Training epoch: {epoch + 1} / {n_epochs}')
+            print(f'Training epoch: {epoch + 1} / {n_epochs}')
             # Train
             self.scheduler.step()
+            start = time.time()
             self._train_single_epoch()
 
             # Test
-            self.test()
+            self.test(time=time.time()-start)
         return
 
     def _train_single_epoch(self):
@@ -106,7 +110,7 @@ class Trainer:
 
         return
 
-    def test(self):
+    def test(self, time):
         """
         Single evaluation on the entire provided test dataset.
         Return accuracy, mean test loss, and an array of predicted probabilities
@@ -131,7 +135,7 @@ class Trainer:
         test_loss = test_loss / len(self.testloader)
         accuracy = n_correct / len(self.testloader.dataset)
 
-        print(f"Test Loss: {test_loss}; Test Accuracy: {accuracy}")
+        print(f"Test Loss: {np.round(test_loss, 3)}; Test Accuracy: {np.round(100.0*accuracy, 1)}%; Time Per Epoch: {np.round(time/60.0,1)} min")
 
         # Log statistics
         self.test_loss.append(test_loss)
@@ -139,6 +143,11 @@ class Trainer:
         self.test_eval_steps.append(self.steps)
         return
 
+# class AdamM(torch.optim.Adam):
+#     def __init__(self,  params, lr=1e-3, momentum=0.9, beta2= 0.999, eps=1e-8,
+#                  weight_decay=0, amsgrad=False):
+#         defaults=dict(lr=lr, betas=(momentum, beta2), eps=eps, weight_decay=weight_decay, amsgrad=amsgrad)
+#         super(AdamM, self).__init__(params, defaults)
 
 # # todo: put the training into a class to reduce the functional programming clutter
 # def test(model, testloader, batch_size=50, print_progress=True, device=None):

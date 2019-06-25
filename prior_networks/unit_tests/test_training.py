@@ -11,7 +11,7 @@ from torch.utils.data import TensorDataset
 from prior_networks.training import Trainer
 from prior_networks.priornet.training import TrainerWithOOD
 from prior_networks.priornet.losses import PriorNetMixedLoss, \
-    DirichletReverseKLLoss
+    DirichletKLLoss
 
 
 class ToyNet(nn.Module):
@@ -72,8 +72,8 @@ def new_trainer_with_ood(new_model):
     test_dataset = make_dataset()
 
     criterion = PriorNetMixedLoss(
-        [DirichletReverseKLLoss(target_concentration=1e3),
-         DirichletReverseKLLoss()],
+        [DirichletKLLoss(target_concentration=1e2),
+         DirichletKLLoss()],
         [1., 2.])
     trainer = TrainerWithOOD(new_model, criterion,
                              train_dataset,
