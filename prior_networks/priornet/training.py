@@ -58,7 +58,7 @@ class TrainerWithOOD(Trainer):
 
             # log statistics
             if self.steps % self.log_interval == 0:
-                probs = F.softmax(outputs, dim=1)
+                probs = F.softmax(id_outputs, dim=1)
                 self.train_accuracy.append(
                     calc_accuracy_torch(probs, labels, self.device).item())
                 self.train_loss.append(loss.item())
