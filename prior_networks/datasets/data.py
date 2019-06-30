@@ -1,8 +1,6 @@
 from torch.utils.data import Dataset
 
 
-
-
 class DummyLabelWrapper(Dataset):
     """
     A wrapper to wrap a dataset of only inputs into a dataset that returns inputs and dummy labels.
