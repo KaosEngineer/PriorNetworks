@@ -1,10 +1,8 @@
-import context
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-
 from typing import Optional, Iterable
+
+import numpy as np
+import torch
+import torch.nn.functional as F
 
 
 class PriorNetMixedLoss:
@@ -84,36 +82,58 @@ class DirichletKLLoss:
             loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
         return loss
 
-# class DirichletPriorNetLoss(object):
-#     """
-#     Can be applied to any model which returns logits
-#
-#     """
-#
-#     def __init__(self, target_concentration=1e3, smoothing=1.0, reverse_KL=True):
-#         self.target_concentration = torch.tensor(target_concentration, dtype=torch.float32)
-#         self.smoothing = smoothing
-#         self.reverse_KL = reverse_KL
-#
-#     def __call__(self, logits, labels):
-#         alphas = torch.exp(logits)
-#         return self.forward(alphas, labels)
-#
-#     def forward(self, alphas, labels):
-#         loss = self.compute_loss(alphas, labels)
-#         return torch.mean(loss)
-#
-#     def compute_loss(self, alphas, labels):
-#         # TODO: Need to make sure this actually works right...  so that concentration is either fixed, or on a per-example setup
-#         target_alphas = torch.ones_like(alphas) * self.smoothing
-#         if labels is not None:
-#             target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None], self.target_concentration)
-#
-#         if self.reverse_KL:
-#             in_domain_loss = reverse_kl_divergence_dirichlet(alphas, target_alphas=target_alphas)
-#         else:
-#             in_domain_loss = kl_divergence_dirichlet(alphas, target_alphas=target_alphas)
-#         return in_domain_loss
+
+class DirichletKLLossJoint:
+    """
+    Can be applied to any model which returns logits
+
+    """
+
+    def __init__(self, concentration=1.0, reverse=True):
+        """
+        :param target_concentration: The concentration parameter for the
+        target class (if provided)
+        :param concentration: The 'base' concentration parameters for
+        non-target classes.
+        """
+
+        self.concentration = concentration
+        self.reverse = reverse
+
+    def __call__(self, logits, labels, target_concentration, gamma):
+        alphas = torch.exp(logits)
+        return self.forward(alphas, labels, target_concentration, gamma)
+
+    def forward(self, alphas, labels, target_concentration, gamma):
+        loss = self.compute_loss(alphas, labels, target_concentration, gamma)
+        return torch.mean(loss)
+
+    def compute_loss(self, alphas, labels, target_concentration, gamma):
+        """
+        :param alphas: The alpha parameter outputs from the model
+        :param labels: Optional. The target labels indicating the correct
+        class.
+
+        The loss creates a set of target alpha (concentration) parameters
+        with all values set to self.concentration, except for the correct
+        class (if provided), which is set to self.target_concentration
+        :return: an array of per example loss
+        """
+        # Create array of target (desired) concentration parameters
+
+        target_concentration=target_concentration.to(alphas)
+        gamma=gamma.to(alphas)
+
+        target_alphas = torch.ones_like(alphas) * self.concentration
+        #if labels is not None:
+        target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None], target_concentration[:, None])
+
+        if self.reverse:
+            loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
+        else:
+            loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
+
+        return gamma*loss
 
 
 def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precision=None, epsilon=1e-8):
@@ -136,8 +156,9 @@ def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precis
     precision_term = torch.lgamma(target_precision) - torch.lgamma(precision)
     alphas_term = torch.sum(torch.lgamma(alphas + epsilon) - torch.lgamma(target_alphas + epsilon)
                             + (target_alphas - alphas) * (torch.digamma(target_alphas + epsilon)
-                                                          - torch.digamma(target_precision + epsilon)), dim=1)
-    cost = precision_term + alphas_term
+                                                          - torch.digamma(target_precision + epsilon)), dim=1, keepdim=True)
+
+    cost = torch.squeeze(precision_term + alphas_term)
     return cost
 
 
