@@ -18,13 +18,15 @@ class TrainerWithOOD(Trainer):
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
+                 num_workers=4,
                  pin_memory=False,
                  checkpoint_path='./',
                  checkpoint_steps=0):
-        super().__init__(model, criterion, train_dataset, test_dataset,
-                         optimizer, scheduler, optimizer_params,
-                         scheduler_params, batch_size, device, log_interval,
-                         test_criterion, pin_memory, checkpoint_path, checkpoint_steps)
+        super().__init__(model=model, criterion=criterion, train_dataset=train_dataset, test_dataset=test_dataset,
+                         optimizer=optimizer, scheduler=scheduler, optimizer_params=optimizer_params,
+                         scheduler_params=scheduler_params, batch_size=batch_size, device=device, log_interval=log_interval,
+                         test_criterion=test_criterion, num_workers=num_workers, pin_memory=pin_memory,
+                         checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
         assert len(train_dataset) == len(ood_dataset)
         self.oodloader = DataLoader(ood_dataset, batch_size=batch_size,
@@ -84,12 +86,14 @@ class TrainerWithOODJoint(Trainer):
                  log_interval: int = 100,
                  test_criterion=None,
                  pin_memory=False,
+                 num_workers=4,
                  checkpoint_path='./',
                  checkpoint_steps=0):
-        super().__init__(model, criterion, train_dataset, test_dataset,
-                         optimizer, scheduler, optimizer_params,
-                         scheduler_params, batch_size, device, log_interval,
-                         test_criterion, pin_memory, checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
+        super().__init__(model=model,  criterion=criterion, train_dataset=train_dataset, test_dataset=test_dataset,
+                         optimizer=optimizer, scheduler=scheduler, optimizer_params=optimizer_params,
+                         scheduler_params=scheduler_params, batch_size=batch_size, device=device, log_interval=log_interval,
+                         test_criterion=test_criterion, num_workers=num_workers, pin_memory=pin_memory,
+                         checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
     def _train_single_epoch(self):
         # Set model in train mode
