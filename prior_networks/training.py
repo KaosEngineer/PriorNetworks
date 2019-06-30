@@ -140,8 +140,9 @@ class Trainer:
                 self.train_loss.append(loss.item())
                 self.train_eval_steps.append(self.steps)
 
-            if self.steps % self.checkpoint_steps == 0 and self.checkpoint_steps > 0:
-                self._save_checkpoint(save_at_steps=True)
+            if self.checkpoint_steps > 0:
+                if self.steps % self.checkpoint_steps == 0:
+                    self._save_checkpoint(save_at_steps=True)
 
         return
 

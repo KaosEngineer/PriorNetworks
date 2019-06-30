@@ -91,24 +91,20 @@ def main(argv=None):
                                   test_criterion=DirichletKLLoss(target_concentration=1e2),
                                   train_dataset=train_dataset,
                                   #ood_dataset=ood_dataset,
-                             test_dataset=test_dataset,
+                                  test_dataset=test_dataset,
                                   optimizer=optim.SGD,
                                   device=device,
-                                  #load_checkpoint_path=None,
-                             checkpoint_path='./',
+                                  checkpoint_path='./',
                                   #scheduler=optim.lr_scheduler.MultiStepLR,
-                             scheduler=optim.lr_scheduler.CosineAnnealingLR,
+                                  scheduler=optim.lr_scheduler.CosineAnnealingLR,
                                   optimizer_params={'lr': 5e-4, 'momentum': 0.9,
                                                'nesterov': True,
                                                'weight_decay': 1e-4},
                                   #scheduler_params={'milestones': [150,215]},
-                             scheduler_params={'T_max':25,'eta_min':0.0},
+                                  scheduler_params={'T_max':25,'eta_min':0.0},
                                   batch_size=128)
     trainer.train(300)
     save_model(model, 'model', '/scratch/test/')
-
-
-
 
 if __name__ == '__main__':
     main()
