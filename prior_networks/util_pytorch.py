@@ -1,37 +1,50 @@
+import os
 import re
 from pathlib import Path
 from typing import Union
 
 import numpy as np
 import torch
+from torchvision import models
 
+tv_model_dict = {'vgg11': models.vgg11,
+              'vgg11_bn': models.vgg11_bn,
+              'vgg13': models.vgg13,
+              'vgg13_bn': models.vgg13_bn,
+              'vgg16': models.vgg16,
+              'vgg16_bn': models.vgg16_bn,
+              'vgg19': models.vgg19,
+              'vgg19_bn': models.vgg19_bn,
+              'resnet18': models.resnet18,
+              'resnet34': models.resnet34,
+              'resnet50': models.resnet50,
+              'resnet101': models.resnet101,
+              'resnet152': models.resnet152,
+              'densenet121': models.densenet121,
+              'densenet161': models.densenet161,
+              'densenet169': models.densenet169,
+              'densenet201': models.densenet201}
 
-def save_model(model, path):
-    """
+def save_model(model, model_name, path: Union[Path, str]):
 
-    :param model:
-    :param path:
-    :return:
-    """
-    path = Path(path)  # Make sure path is a pathlib.Path object
-    Path(path.parent).mkdir(parents=True, exist_ok=True)  # Create directories if don't exist
-    torch.save({
-        'init_args': model.init_args,
-        'model_state_dict': model.state_dict(),
-    }, path)
+    torch.save(model, os.path.join(path,model_name+'.pt'))
+
     return
 
 
-def load_model(model_class: torch.nn.Module, path: Union[Path, str]):
-    """
+def load_model(path: Union[Path, str]):
+    return torch.load(path)
 
-    :param model_class:
-    :param path:
-    :return:
-    """
-    checkpoint = torch.load(path)
-    model = model_class(*checkpoint['init_args'])
-    model.load_state_dict(checkpoint['model_state_dict'])
+
+def save_model_state(model, model_name, path: Union[Path, str]):
+    torch.save(model.state_dict(), os.path.join(path, model_name + '_mst.pt'))
+    return
+
+def load_tv_model_state(model_type: str, path: Union[Path, str], num_classes: int, pretrained: bool =False):
+
+
+    model = tv_model_dict[model_type](pretrained=pretrained, num_classes=num_classes)
+    model.load_state_dict(torch.load(path))
     return model
 
 
@@ -78,14 +91,6 @@ def get_grid_eval_points(xrange, yrange, res):
     xx, yy = get_grid(xrange, yrange, res, dtype=np.float32)
     eval_points = torch.from_numpy(np.stack((xx.ravel(), yy.ravel()), axis=1))
     return eval_points
-
-
-def calc_accuracy_torch(y_probs, y_true, device=None):
-    if device is None:
-        accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(torch.float64))
-    else:
-        accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(device, dtype=torch.float64))
-    return accuracy
 
 
 def select_device(device_name):

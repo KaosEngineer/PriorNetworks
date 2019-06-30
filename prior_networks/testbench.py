@@ -1,21 +1,36 @@
+import seaborn as sns
 import torch
 import torch.optim as optim
-from torchvision import models
+from torch.utils import data
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from torchvision.datasets import CIFAR100
-from prior_networks.priornet.dpn import PriorNet
+
+from prior_networks.models.densenet import DenseNet
+from prior_networks.priornet.losses import DirichletKLLoss, DirichletKLLossJoint
+from prior_networks.priornet.training import TrainerWithOODJoint
 from prior_networks.util_pytorch import save_model
-from prior_networks.priornet.training import TrainerWithOOD
-from prior_networks.priornet.losses import PriorNetMixedLoss, \
-    DirichletKLLoss
-import seaborn as sns
 
 sns.set()
 
+class target_transform:
+    def __init__(self, target_concentration, gamma, ood=False):
+        self.target_concentration = target_concentration
+        self.gamma = gamma
+        self.ood = ood
+
+    def __call__(self, label):
+        return self.forward(label)
+
+    def forward(self, label):
+        if self.ood:
+            return (0, self.target_concentration, self.gamma)
+        else:
+            return (label, self.target_concentration, self.gamma)
 
 def main(argv=None):
-    device = torch.device('cuda')
+    print(torch.cuda.device_count())
+    device = torch.device('cuda:0')
 
     data_transforms = {
         'train': transforms.Compose([
@@ -43,57 +58,54 @@ def main(argv=None):
             # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
     }
-
-    id_dataset = CIFAR10(root='/home/malinin',
+    path = 'scratch/test'
+    id_dataset = CIFAR10(root=path,
                          transform=data_transforms['train'], train=True,
+                         target_transform=target_transform(1e2,1.0),
                          download=True)
-    test_dataset = CIFAR10(root='/home/malinin',
+    test_dataset = CIFAR10(root=path,
                            transform=data_transforms['val'], train=False,
+                           #target_transform=target_transform(1e2, 1.0),
                            download=True)
-    ood_dataset = CIFAR100(root='/home/malinin',
+    ood_dataset = CIFAR100(root=path,
                            transform=data_transforms['ood'], train=True,
+                           target_transform=target_transform(0.0, 10.0, ood=True),
                            download=True)
-    #model = models.vgg16(pretrained=False, num_classes=10)
-    # model = models.vgg16_bn(pretrained=False, num_classes=10)
-    model = models.resnet18(pretrained=False, num_classes=10)
+
+    train_dataset = data.ConcatDataset([id_dataset, ood_dataset])
+
+    model = DenseNet(drop_rate=0.2,
+                     num_classes=10,
+                     growth_rate=32,
+                     num_init_features=64,
+                     block_config=(6, 12, 24, 16))
+    model = torch.nn.DataParallel(model)
     model.to(device)
+    # criterion = PriorNetMixedLoss(
+    #     [DirichletKLLoss(target_concentration=1e2),
+    #      DirichletKLLoss()],
+    #     [1., 10.])
 
-    print(len(id_dataset))
-
-    criterion = PriorNetMixedLoss(
-        [DirichletKLLoss(target_concentration=1e2),
-         DirichletKLLoss()],
-        [1., 10.])
-    cycle_len = len(id_dataset) / 64.0 * 30.0
-    trainer = TrainerWithOOD(model, criterion,
-                             train_dataset=id_dataset,
-                             ood_dataset=ood_dataset,
+    criterion = DirichletKLLossJoint()
+    trainer = TrainerWithOODJoint(model, criterion,
+                                  test_criterion=DirichletKLLoss(target_concentration=1e2),
+                                  train_dataset=train_dataset,
+                                  #ood_dataset=ood_dataset,
                              test_dataset=test_dataset,
-                             optimizer=optim.SGD,
-                             #optimizer=AdamM,
-                             device=device,
-                             scheduler=optim.lr_scheduler.CyclicLR,
-                             optimizer_params={'lr': 1e-5, 'momentum': 0.95,
-                                               'weight_decay': 1e-6},
-
-                             scheduler_params={'base_lr': 1e-5, 'max_lr': 1e-4, 'step_size_up': cycle_len/2.0,
-                                               'base_momentum': 0.86, 'max_momentum': 0.95,
-                                               'step_size_down': cycle_len/2.0, 'cycle_momentum': True, 'gamma': 1.0},
-                             batch_size=64)
-    trainer.train(30, device=device)
-    #save_model(model, './test_model')
-    trainer = TrainerWithOOD(model, criterion,
-                             train_dataset=id_dataset,
-                             ood_dataset=ood_dataset,
-                             test_dataset=test_dataset,
-                             optimizer=optim.Adam,
-                             device=device,
-                             scheduler=optim.lr_scheduler.ExponentialLR,
-                             optimizer_params={'lr': 1e-5, 'weight_decay': 1e-6},
-                             scheduler_params={'gamma': 0.95},
-                             batch_size=64)
-    trainer.train(15, device=device)
-    #torch.save(model, 'model.pt')
+                                  optimizer=optim.SGD,
+                                  device=device,
+                                  #load_checkpoint_path=None,
+                             checkpoint_path='./',
+                                  #scheduler=optim.lr_scheduler.MultiStepLR,
+                             scheduler=optim.lr_scheduler.CosineAnnealingLR,
+                                  optimizer_params={'lr': 5e-4, 'momentum': 0.9,
+                                               'nesterov': True,
+                                               'weight_decay': 1e-4},
+                                  #scheduler_params={'milestones': [150,215]},
+                             scheduler_params={'T_max':25,'eta_min':0.0},
+                                  batch_size=128)
+    trainer.train(300)
+    save_model(model, 'model', '/scratch/test/')
 
 
 
