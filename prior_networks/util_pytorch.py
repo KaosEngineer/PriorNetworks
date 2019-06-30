@@ -25,10 +25,8 @@ tv_model_dict = {'vgg11': models.vgg11,
               'densenet169': models.densenet169,
               'densenet201': models.densenet201}
 
-def save_model(model, model_name, path: Union[Path, str]):
-
-    torch.save(model, os.path.join(path,model_name+'.pt'))
-
+def save_model(model, path: Union[Path, str]):
+    torch.save(model, os.path.join(path, 'model.pt'))
     return
 
 
