@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.densenet import _DenseBlock, _Transition
 
+__all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
 class DenseNet(nn.Module):
     r"""Densenet-BC model class, based on
@@ -113,7 +114,6 @@ def densenet121(pretrained=False, progress=True, **kwargs):
     """
     return _densenet('densenet121', 32, (6, 12, 24, 16), 64, pretrained, progress,
                      **kwargs)
-
 
 
 def densenet161(pretrained=False, progress=True, **kwargs):

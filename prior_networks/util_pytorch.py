@@ -5,25 +5,30 @@ from typing import Union
 
 import numpy as np
 import torch
-from torchvision import models
+
+from prior_networks import models
 
 tv_model_dict = {'vgg11': models.vgg11,
-              'vgg11_bn': models.vgg11_bn,
-              'vgg13': models.vgg13,
-              'vgg13_bn': models.vgg13_bn,
-              'vgg16': models.vgg16,
-              'vgg16_bn': models.vgg16_bn,
-              'vgg19': models.vgg19,
-              'vgg19_bn': models.vgg19_bn,
-              'resnet18': models.resnet18,
-              'resnet34': models.resnet34,
-              'resnet50': models.resnet50,
-              'resnet101': models.resnet101,
-              'resnet152': models.resnet152,
-              'densenet121': models.densenet121,
-              'densenet161': models.densenet161,
-              'densenet169': models.densenet169,
-              'densenet201': models.densenet201}
+                 'vgg11_bn': models.vgg11_bn,
+                 'vgg13': models.vgg13,
+                 'vgg13_bn': models.vgg13_bn,
+                 'vgg16': models.vgg16,
+                 'vgg16_bn': models.vgg16_bn,
+                 'vgg19': models.vgg19,
+                 'vgg19_bn': models.vgg19_bn,
+                 'resnet18': models.resnet18,
+                 'resnet34': models.resnet34,
+                 'resnet50': models.resnet50,
+                 'resnet101': models.resnet101,
+                 'resnet152': models.resnet152,
+                 'resnext50_32x4d': models.resnext50_32x4d,
+                 'resnext101_32x8d': models.resnext101_32x8d,
+                 'wide_resnet50_2': models.wide_resnet50_2,
+                 'wide_resnet101_2': models.wide_resnet101_2,
+                 'densenet121': models.densenet121,
+                 'densenet161': models.densenet161,
+                 'densenet169': models.densenet169,
+                 'densenet201': models.densenet201}
 
 def save_model(model, path: Union[Path, str]):
     torch.save(model, os.path.join(path, 'model.pt'))
