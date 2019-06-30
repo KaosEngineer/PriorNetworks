@@ -31,7 +31,6 @@ def main():
 
     # Check that we are training on a sensible GPU
     #TODO Make more sensible device checking code
-    #TODO add multi-gpu support
     assert args.gpu <= torch.cuda.device_count()-1
     device = torch.device('cuda:'+str(args.gpu))
     model.to(device)

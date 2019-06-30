@@ -81,10 +81,6 @@ def main(argv=None):
                      block_config=(6, 12, 24, 16))
     model = torch.nn.DataParallel(model)
     model.to(device)
-    # criterion = PriorNetMixedLoss(
-    #     [DirichletKLLoss(target_concentration=1e2),
-    #      DirichletKLLoss()],
-    #     [1., 10.])
 
     criterion = DirichletKLLossJoint()
     trainer = TrainerWithOODJoint(model, criterion,
