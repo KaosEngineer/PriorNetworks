@@ -1,10 +1,9 @@
-from torch.utils.data import Dataset
-
-import numpy as np
-from sklearn.mixture import GaussianMixture as GMM
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 from scipy.stats import norm
+from sklearn.mixture import GaussianMixture as GMM
+from torch.utils.data import Dataset
 
 
 class MixtureOfGaussiansDataset(Dataset):

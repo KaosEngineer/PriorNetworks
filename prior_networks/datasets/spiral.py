@@ -1,12 +1,10 @@
 #! /usr/bin/env python
-import numpy as np
-import torch
-from torch.utils.data import Dataset, DataLoader
-import scipy.stats as stats
-import scipy.integrate as integrate
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as stats
 import seaborn as sns
-
+import torch
+from torch.utils.data import Dataset
 
 
 class SpiralDataset(Dataset):

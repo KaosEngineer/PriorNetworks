@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import torch
 import torch.functional as F
-from prior_networks.util_pytorch import get_grid, load_model, save_model
-from pathlib import Path
+
+from prior_networks.util_pytorch import get_grid, load_model
+
 
 class Ensemble(object):
     def __init__(self, models):

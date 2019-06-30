@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from scipy.interpolate import griddata
 from matplotlib import cm
-
+from scipy.interpolate import griddata
 
 
 def plot_training_progress(train_loss, train_accuracy, test_loss, test_accuracy, test_steps, title=''):
