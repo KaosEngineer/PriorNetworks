@@ -43,4 +43,3 @@ def eval_logits_on_dataset(model: nn.Module, dataset: Dataset, batch_size: int =
     logits = torch.cat(logits_list, dim=0)
     labels = torch.cat(labels_list, dim=0)
     return logits.cpu(), labels.cpu()
-

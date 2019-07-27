@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader
 from prior_networks.training import Trainer, calc_accuracy_torch
 from torch.distributions.categorical import Categorical
 from torch.distributions.normal import Normal
+
+
 class TrainerWithOOD(Trainer):
     def __init__(self, model, criterion,
                  train_dataset, ood_dataset, test_dataset,
@@ -27,7 +29,8 @@ class TrainerWithOOD(Trainer):
                          test_dataset=test_dataset, optimizer=optimizer, scheduler=scheduler,
                          optimizer_params=optimizer_params, scheduler_params=scheduler_params,
                          batch_size=batch_size, device=device, log_interval=log_interval,
-                         test_criterion=test_criterion, num_workers=num_workers, pin_memory=pin_memory,
+                         test_criterion=test_criterion, num_workers=num_workers,
+                         pin_memory=pin_memory,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
         assert len(train_dataset) == len(ood_dataset)
@@ -56,7 +59,7 @@ class TrainerWithOOD(Trainer):
             outputs = self.model(inputs)
             id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
             loss = self.criterion((id_outputs, ood_outputs), (labels, None))
-            assert torch.isnan(loss) == torch.tensor([ 0 ], dtype=torch.uint8).to(self.device)
+            assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()
             self.optimizer.step()
 
@@ -92,11 +95,12 @@ class TrainerWithOODJoint(Trainer):
                  num_workers=4,
                  checkpoint_path='./',
                  checkpoint_steps=0):
-        super().__init__(model=model,  criterion=criterion, train_dataset=train_dataset,
+        super().__init__(model=model, criterion=criterion, train_dataset=train_dataset,
                          test_dataset=test_dataset, optimizer=optimizer, scheduler=scheduler,
                          optimizer_params=optimizer_params, scheduler_params=scheduler_params,
                          batch_size=batch_size, device=device, log_interval=log_interval,
-                         test_criterion=test_criterion, num_workers=num_workers, pin_memory=pin_memory,
+                         test_criterion=test_criterion, num_workers=num_workers,
+                         pin_memory=pin_memory,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
     def _train_single_epoch(self):
@@ -106,13 +110,13 @@ class TrainerWithOODJoint(Trainer):
         id_alpha_0, ood_alpha_0 = 0.0, 0.0
         train_loss = 0.0
         init_steps = self.steps
-        for i,  data in enumerate(self.trainloader, 0):
+        for i, data in enumerate(self.trainloader, 0):
             # Get inputs
             inputs, labels = data
             if self.device is not None:
                 # Move data to adequate device
                 inputs, *labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
-                                    (inputs, *labels))
+                                      (inputs, *labels))
 
             # zero the parameter gradients
             self.optimizer.zero_grad()
@@ -126,8 +130,8 @@ class TrainerWithOODJoint(Trainer):
             weights = weights.to(dtype=torch.float32)
             ood_weights = 1 - weights
             alpha_0 = torch.sum(torch.exp(outputs), dim=1)
-            id_alpha_0 += (torch.sum(alpha_0 * weights)/torch.sum(weights)).item()
-            ood_alpha_0 += (torch.sum(alpha_0 * ood_weights)/torch.sum(ood_weights)).item()
+            id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
+            ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
 
             # Update the number of steps
             self.steps += 1
@@ -238,8 +242,8 @@ class TrainerWithAdv(Trainer):
         with torch.enable_grad():
             outputs = self.model(adv_inputs)
 
-            probs = torch.ones(size=[outputs.size()[1]])/outputs.size()[1]
-            target_sampler= Categorical(probs=probs)
+            probs = torch.ones(size=[outputs.size()[1]]) / outputs.size()[1]
+            target_sampler = Categorical(probs=probs)
             targets = target_sampler.sample(torch.Size([outputs.size()[0]]))
 
             epsilon_sampler = Normal(0, self.adv_noise)
@@ -268,7 +272,7 @@ class TrainerWithAdv(Trainer):
 
             update = epsilon * grads.sign()
 
-            perturbed_image = torch.clamp(adv_inputs-update, 0, 1)
+            perturbed_image = torch.clamp(adv_inputs - update, 0, 1)
             adv_inputs.data = perturbed_image
 
         # Return the perturbed image
@@ -279,19 +283,20 @@ class TrainerWithAdv(Trainer):
         # Set model in train mode
         self.model.train()
 
-        for i,  data in enumerate(self.trainloader, 0):
+        for i, data in enumerate(self.trainloader, 0):
             # Get inputs
             inputs, labels = data
             if self.device is not None:
                 # Move data to adequate device
                 inputs, labels = map(lambda x: x.to(self.device,
-                                                     non_blocking=self.pin_memory),
+                                                    non_blocking=self.pin_memory),
                                      (inputs, labels))
 
             adv_inputs = self._construct_FGSM_attack(labels=labels,
                                                      inputs=inputs)
             self.model.zero_grad()
-            cat_inputs = torch.cat([inputs, adv_inputs], dim=1).view(torch.Size([2*inputs.size()[0]])+inputs.size()[1:])
+            cat_inputs = torch.cat([inputs, adv_inputs], dim=1).view(
+                torch.Size([2 * inputs.size()[0]]) + inputs.size()[1:])
             logits = self.model(cat_inputs).view([inputs.size()[0], -1])
             logits, adv_logits = torch.chunk(logits, 2, dim=1)
             loss = self.criterion([logits, adv_logits], [labels, labels])

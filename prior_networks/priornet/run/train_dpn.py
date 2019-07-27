@@ -63,19 +63,20 @@ def main():
     # Load up the model
     ckpt = torch.load('./model/model.tar')
     model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])#,
-                                     #dropout_rate=args.dropout_rate)
+                                     small_inputs=ckpt['small_inputs'])  # ,
+    # dropout_rate=args.dropout_rate)
     model.load_state_dict(ckpt['model_state_dict'])
 
     # Load the in-domain training and validation data
     train_dataset = dataset_dict[args.id_dataset](root=args.data_path,
-                                               transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                              mode='train',
-                                                                              augment=args.augment),
-                                               target_transform=TargetTransform(args.target_concentration,
-                                                                                1.0),
-                                               download=True,
-                                               split='train')
+                                                  transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                 mode='train',
+                                                                                 augment=args.augment),
+                                                  target_transform=TargetTransform(
+                                                      args.target_concentration,
+                                                      1.0),
+                                                  download=True,
+                                                  split='train')
 
     val_dataset = dataset_dict[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
@@ -87,8 +88,9 @@ def main():
     if args.gamma > 0.0:
         # Load the out-of-domain training dataset
         ood_dataset = dataset_dict[args.id_dataset](root=args.data_path,
-                                                    transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                                  mode='ood'),
+                                                    transform=construct_transforms(
+                                                        n_in=ckpt['n_in'],
+                                                        mode='ood'),
                                                     target_transform=TargetTransform(0.0,
                                                                                      args.gamma,
                                                                                      ood=True),
@@ -100,7 +102,7 @@ def main():
         train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
 
     # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count()-1
+    assert args.gpu <= torch.cuda.device_count() - 1
     device = select_gpu(args.gpu)
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
@@ -125,8 +127,8 @@ def main():
                                   checkpoint_path='./model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                               'nesterov': True,
-                                               'weight_decay': args.weight_decay},
+                                                    'nesterov': True,
+                                                    'weight_decay': args.weight_decay},
                                   scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
                                   batch_size=args.batch_size)
     trainer.train(args.n_epochs)
@@ -141,6 +143,7 @@ def main():
                arch=ckpt['arch'],
                small_inputs=ckpt['small_inputs'],
                path='model')
+
 
 if __name__ == "__main__":
     main()

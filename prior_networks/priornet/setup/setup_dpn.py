@@ -28,6 +28,7 @@ parser.add_argument('--n_channels', type=int, default=3,
 parser.add_argument('--small_inputs', action='store_true',
                     help='Whether model should be setup to use small inputs.')
 
+
 def main():
     args = parser.parse_args()
 

@@ -13,7 +13,6 @@ from prior_networks.util_pytorch import save_model, TargetTransform
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
 
-
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
@@ -43,6 +42,8 @@ parser.add_argument('--gpu',
                     type=int,
                     default=0,
                     help='Specify which GPU to to run on.')
+
+
 def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
@@ -58,7 +59,7 @@ def main():
     model.load_state_dict(ckpt['model_state_dict'])
     model.eval()
 
-    fmodel = foolbox.models.PytorchModel(model, bound=(0,1), num_classes=ckpt['num_classes'])
+    fmodel = foolbox.models.PytorchModel(model, bound=(0, 1), num_classes=ckpt['num_classes'])
 
 
 if __name__ == "__main__":

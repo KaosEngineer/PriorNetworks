@@ -19,7 +19,7 @@ from prior_networks.util_pytorch import model_dict, dataset_dict, select_gpu
 matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
-                                                        'on in-domain test data')
+                                             'on in-domain test data')
 parser.add_argument('dataset', choices=dataset_dict.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
@@ -47,7 +47,7 @@ def main():
         print(f'Directory {args.output_path} exists. Exiting...')
         sys.exit()
     elif os.path.isdir(args.output_path) and args.overwrite:
-        os.remove(args.output_path+'/*')
+        os.remove(args.output_path + '/*')
     else:
         os.makedirs(args.output_path)
 
@@ -82,7 +82,7 @@ def main():
     np.savetxt(os.path.join(args.output_path, 'probs.txt'), probs)
     np.savetxt(os.path.join(args.output_path, 'logits.txt'), logits)
 
-    accuracy = np.mean(np.asarray(labels==np.argmax(probs, axis=1), dtype=np.float32))
+    accuracy = np.mean(np.asarray(labels == np.argmax(probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
         f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} % \n')
 
@@ -90,7 +90,7 @@ def main():
     uncertainties = dirichlet_prior_network_uncertainty(logits)
     # Save uncertainties
     for key in uncertainties.keys():
-        np.savetxt(os.path.join(args.output_path, key+'.txt'), uncertainties[key])
+        np.savetxt(os.path.join(args.output_path, key + '.txt'), uncertainties[key])
 
     # TODO: Have different results files? Or maybedifferent folders
     # Assess Misclassification Detection
@@ -100,7 +100,9 @@ def main():
     classification_calibration(labels=labels, probs=probs, save_path=args.output_path)
 
     # Assess Rejection Performance
-    eval_rejection_ratio_class(labels=labels, probs=probs, uncertainties=uncertainties, save_path=args.output_path)
+    eval_rejection_ratio_class(labels=labels, probs=probs, uncertainties=uncertainties,
+                               save_path=args.output_path)
+
 
 if __name__ == '__main__':
     main()

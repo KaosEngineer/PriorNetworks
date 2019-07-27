@@ -13,6 +13,7 @@ import seaborn as sns
 sns.set()
 sns.set(font_scale=1.25)
 
+
 # TODO: Maybe find a better name??
 def eval_misc_detect(class_labels, class_probs, uncertainties, save_path, misc_positive=True):
     for mode in ['PR', 'ROC']:
@@ -23,11 +24,14 @@ def eval_misc_detect(class_labels, class_probs, uncertainties, save_path, misc_p
 
             try:
                 misc_detect(class_labels, class_probs, uncertainties[key], key,
-                            save_path=save_path, mode=mode, pos_label=pos_label, misc_positive=misc_positive)
+                            save_path=save_path, mode=mode, pos_label=pos_label,
+                            misc_positive=misc_positive)
             except:
                 pass
 
-def misc_detect(class_labels, class_probs, measure, measure_name, save_path, mode, pos_label=1, misc_positive=None):
+
+def misc_detect(class_labels, class_probs, measure, measure_name, save_path, mode, pos_label=1,
+                misc_positive=None):
     # TODO: Is this necessary???
     measure = np.asarray(measure, dtype=np.float128)[:, np.newaxis]
     min_measure = np.min(measure)
@@ -45,7 +49,7 @@ def misc_detect(class_labels, class_probs, measure, measure_name, save_path, mod
 
     if pos_label != 1: measure *= -1.0
 
-    if mode=='PR':
+    if mode == 'PR':
         precision, recall, thresholds = precision_recall_curve(rightwrong, measure)
         aupr = auc(recall, precision)
         np.round(aupr, 4)

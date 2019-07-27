@@ -1,6 +1,7 @@
 from foolbox.attacks import CarliniWagnerL2Attack
 import numpy as np
 
+
 class AdaptiveCarliniWagnerL2Attack(CarliniWagnerL2Attack):
     """The Adaptive L2 version of the Carlini & Wagner attack.
     This attack is described in [1]_. This implementation
@@ -36,7 +37,7 @@ class AdaptiveCarliniWagnerL2Attack(CarliniWagnerL2Attack):
         is_adv_loss = max(0, is_adv_loss)
 
         s = max_ - min_
-        squared_l2_distance = np.sum((x - reconstructed_original)**2) / s**2
+        squared_l2_distance = np.sum((x - reconstructed_original) ** 2) / s ** 2
         total_loss = squared_l2_distance + const * is_adv_loss
 
         # calculate the gradient of total_loss w.r.t. x
@@ -48,7 +49,7 @@ class AdaptiveCarliniWagnerL2Attack(CarliniWagnerL2Attack):
         if is_adv_loss == 0:
             is_adv_loss_grad = 0
 
-        squared_l2_distance_grad = (2 / s**2) * (x - reconstructed_original)
+        squared_l2_distance_grad = (2 / s ** 2) * (x - reconstructed_original)
 
         total_loss_grad = squared_l2_distance_grad + const * is_adv_loss_grad
         return total_loss, total_loss_grad

@@ -77,7 +77,7 @@ class DirichletKLLoss:
         target_alphas = torch.ones_like(alphas) * self.concentration
         if labels is not None:
             target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None],
-                            self.target_concentration)
+                                                               self.target_concentration)
 
         if self.reverse:
             loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
@@ -128,22 +128,24 @@ class DirichletKLLossJoint:
         """
         # Create array of target (desired) concentration parameters
 
-        target_concentration=target_concentration.to(alphas)
-        gamma=gamma.to(alphas)
+        target_concentration = target_concentration.to(alphas)
+        gamma = gamma.to(alphas)
 
         target_alphas = torch.ones_like(alphas) * self.concentration
-        #if labels is not None:
-        target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None], target_concentration[:, None])
+        # if labels is not None:
+        target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None],
+                                                           target_concentration[:, None])
 
         if self.reverse:
             loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
         else:
             loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
 
-        return gamma*loss
+        return gamma * loss
 
 
-def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precision=None, epsilon=1e-8):
+def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precision=None,
+                            epsilon=1e-8):
     """
     This function computes the Forward KL divergence between a model Dirichlet distribution
     and a target Dirichlet distribution based on the concentration (alpha) parameters of each.
@@ -163,13 +165,15 @@ def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precis
     precision_term = torch.lgamma(target_precision) - torch.lgamma(precision)
     alphas_term = torch.sum(torch.lgamma(alphas + epsilon) - torch.lgamma(target_alphas + epsilon)
                             + (target_alphas - alphas) * (torch.digamma(target_alphas + epsilon)
-                                                          - torch.digamma(target_precision + epsilon)), dim=1, keepdim=True)
+                                                          - torch.digamma(
+        target_precision + epsilon)), dim=1, keepdim=True)
 
     cost = torch.squeeze(precision_term + alphas_term)
     return cost
 
 
-def dirichlet_reverse_kl_divergence(alphas, target_alphas, precision=None, target_precision=None, epsilon=1e-8):
+def dirichlet_reverse_kl_divergence(alphas, target_alphas, precision=None, target_precision=None,
+                                    epsilon=1e-8):
     """
     This function computes the Reverse KL divergence between a model Dirichlet distribution
     and a target Dirichlet distribution based on the concentration (alpha) parameters of each.
@@ -181,12 +185,14 @@ def dirichlet_reverse_kl_divergence(alphas, target_alphas, precision=None, targe
     :param epsilon: Smoothing factor for numercal stability. Default value is 1e-8
     :return: Tensor for Batchsize X 1 of reverse KL divergences between target Dirichlet and model
     """
-    return dirichlet_kl_divergence(alphas=target_alphas, target_alphas=alphas, precision=target_precision,
+    return dirichlet_kl_divergence(alphas=target_alphas, target_alphas=alphas,
+                                   precision=target_precision,
                                    target_precision=precision, epsilon=epsilon)
 
 
 class DirichletEnDDLoss(object):
     """Standard Negative Log-likelihood of the ensemble predictions"""
+
     def __init__(self, smoothing=0., teacher_prob_smoothing=1e-7):
         self.smooth_val = smoothing
         self.tp_scaling = 1 - teacher_prob_smoothing
@@ -208,7 +214,8 @@ class DirichletEnDDLoss(object):
         log_teacher_probs_geo_mean = torch.mean(torch.log(teacher_probs), dim=2)
 
         # Define the cost in two parts (dependent on targets and independent of targets)
-        target_independent_term = torch.sum(torch.lgamma(alphas + self.smooth_val), dim=1) - torch.lgamma(
+        target_independent_term = torch.sum(torch.lgamma(alphas + self.smooth_val),
+                                            dim=1) - torch.lgamma(
             precision + self.smooth_val)
         target_dependent_term = - torch.sum((alphas - 1.) * log_teacher_probs_geo_mean, dim=1)
         cost = target_dependent_term + target_independent_term

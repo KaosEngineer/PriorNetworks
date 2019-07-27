@@ -12,6 +12,7 @@ import seaborn as sns
 sns.set()
 sns.set(font_scale=1.25)
 
+
 # TODO: Maybe find a better name??
 def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
     for key in uncertainties.keys():
@@ -21,10 +22,11 @@ def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
 
         try:
             reject_class(labels, probs, uncertainties[key], key, save_path=save_path, rev=rev)
-        except: pass
+        except:
+            pass
+
 
 def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev: bool, show=True):
-
     # Get predictions
     preds = np.argmax(probs, axis=1)
 
@@ -37,7 +39,8 @@ def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev:
     errors, percentages = [], []
 
     for i in range(preds.shape[0]):
-        errors.append(np.sum(np.asarray(labels[inds[:i]] != preds[inds[:i]], dtype=np.float32)) * 100.0 / total_data)
+        errors.append(np.sum(
+            np.asarray(labels[inds[:i]] != preds[inds[:i]], dtype=np.float32)) * 100.0 / total_data)
         percentages.append(float(i + 1) / total_data * 100.0)
     errors, percentages = np.asarray(errors)[:, np.newaxis], np.asarray(percentages)
 
@@ -45,11 +48,13 @@ def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev:
     n_items = errors.shape[0]
     auc_uns = 1.0 - auc(percentages / 100.0, errors[::-1] / 100.0)
 
-    random_rejection = np.asarray([base_error * (1.0 - float(i) / float(n_items)) for i in range(n_items)],
-                                  dtype=np.float32)
+    random_rejection = np.asarray(
+        [base_error * (1.0 - float(i) / float(n_items)) for i in range(n_items)],
+        dtype=np.float32)
     auc_rnd = 1.0 - auc(percentages / 100.0, random_rejection / 100.0)
-    orc_rejection = np.asarray([base_error * (1.0 - float(i) / float(base_error / 100.0 * n_items)) for i in
-                                range(int(base_error / 100.0 * n_items))], dtype=np.float32)
+    orc_rejection = np.asarray(
+        [base_error * (1.0 - float(i) / float(base_error / 100.0 * n_items)) for i in
+         range(int(base_error / 100.0 * n_items))], dtype=np.float32)
     orc = np.zeros_like(errors)
     orc[0:orc_rejection.shape[0]] = orc_rejection
     auc_orc = 1.0 - auc(percentages / 100.0, orc / 100.0)
@@ -277,4 +282,3 @@ def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev:
 #
 #     AUC_RR = (var_auc - min_auc) / (max_auc - min_auc)
 #     with open(os.path.join(save_path, 'results.txt'), 'a') as f:
-

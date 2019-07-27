@@ -70,12 +70,12 @@ def main():
 
     # Load the in-domain training and validation data
     train_dataset = dataset_dict[args.id_dataset](root=args.data_path,
-                                               transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                              mode='train',
-                                                                              augment=args.augment),
-                                               target_transform=None,
-                                               download=True,
-                                               split='train')
+                                                  transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                 mode='train',
+                                                                                 augment=args.augment),
+                                                  target_transform=None,
+                                                  download=True,
+                                                  split='train')
 
     val_dataset = dataset_dict[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
@@ -84,9 +84,8 @@ def main():
                                                 download=True,
                                                 split='val')
 
-
     # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count()-1
+    assert args.gpu <= torch.cuda.device_count() - 1
     device = select_gpu(args.gpu)
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
@@ -98,8 +97,8 @@ def main():
                                      concentration=args.concentration,
                                      reverse=args.reverse_KL)
     adv_criterion = DirichletKLLoss(target_concentration=args.adv_concentration,
-                    concentration=args.concentration,
-                    reverse=args.reverse_KL)
+                                    concentration=args.concentration,
+                                    reverse=args.reverse_KL)
 
     train_criterion = PriorNetMixedLoss([test_criterion, adv_criterion],
                                         [1.0, args.gamma])
@@ -117,8 +116,8 @@ def main():
                              checkpoint_path='./model',
                              scheduler=optim.lr_scheduler.MultiStepLR,
                              optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                          'nesterov': True,
-                                          'weight_decay': args.weight_decay},
+                                               'nesterov': True,
+                                               'weight_decay': args.weight_decay},
                              scheduler_params={'milestones': [25, 40]},
                              batch_size=args.batch_size)
     trainer.train(args.n_epochs)
@@ -133,6 +132,7 @@ def main():
                arch=args.arch,
                small_inputs=args.small_inputs,
                path='model')
+
 
 if __name__ == "__main__":
     main()

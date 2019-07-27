@@ -89,4 +89,3 @@ def test_trainer_with_ood(new_trainer_with_ood):
     trainer: Trainer = new_trainer_with_ood
     trainer.train(n_epochs=2)
     trainer.test()
-

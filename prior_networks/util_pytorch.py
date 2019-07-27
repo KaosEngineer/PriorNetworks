@@ -2,7 +2,7 @@ import os
 import re
 from pathlib import Path
 from typing import Union
-#import context.py
+# import context.py
 import numpy as np
 import torch
 
@@ -42,6 +42,7 @@ dataset_dict = {'MNIST': image.MNIST,
                 'CIFAR100': image.CIFAR100,
                 'ImageNet': image.ImageNet}
 
+
 def save_model(model: torch.nn.Module, n_in: int, n_channels: int,
                num_classes: int, arch: str, small_inputs: bool, path: Union[Path, str]):
     assert arch in model_dict.keys()
@@ -61,7 +62,8 @@ def categorical_entropy(probs, axis=1, keepdims=False):
     :param keepdims:
     :return:
     """
-    return -np.sum(probs * np.log(probs, out=np.zeros_like(probs), where=(probs != 0.)), axis=axis, keepdims=keepdims)
+    return -np.sum(probs * np.log(probs, out=np.zeros_like(probs), where=(probs != 0.)), axis=axis,
+                   keepdims=keepdims)
 
 
 def categorical_entropy_torch(probs, dim=1, keepdim=False):
@@ -101,8 +103,8 @@ def select_device(device_name):
         device = torch.device(device_name)
     return device
 
-def select_gpu(gpu_id: int):
 
+def select_gpu(gpu_id: int):
     if torch.cuda.is_available():
         assert torch.cuda.device_count() > gpu_id
         device = torch.device(f"cuda:{gpu_id}")

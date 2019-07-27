@@ -7,7 +7,6 @@ __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
 
 
 class ResNet(nn.Module):
-
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None,
                  norm_layer=None, small_inputs=True):
@@ -15,7 +14,7 @@ class ResNet(nn.Module):
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
-        self.small_inputs=small_inputs
+        self.small_inputs = small_inputs
 
         self.inplanes = 64
         self.dilation = 1
@@ -106,6 +105,7 @@ class ResNet(nn.Module):
 
         return x
 
+
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained:
@@ -116,7 +116,7 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     return model
 
 
-def resnet18(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnet18(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -126,7 +126,7 @@ def resnet18(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
                    **kwargs)
 
 
-def resnet34(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnet34(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -136,7 +136,7 @@ def resnet34(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
                    **kwargs)
 
 
-def resnet50(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnet50(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -146,7 +146,7 @@ def resnet50(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
                    **kwargs)
 
 
-def resnet101(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnet101(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNet-101 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -156,7 +156,7 @@ def resnet101(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
                    **kwargs)
 
 
-def resnet152(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnet152(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNet-152 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -166,7 +166,7 @@ def resnet152(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
                    **kwargs)
 
 
-def resnext50_32x4d(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnext50_32x4d(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNeXt-50 32x4d model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -178,7 +178,7 @@ def resnext50_32x4d(pretrained=False, progress=True, dropout_rate=None,  **kwarg
                    pretrained, progress, **kwargs)
 
 
-def resnext101_32x8d(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def resnext101_32x8d(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a ResNeXt-101 32x8d model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
@@ -190,7 +190,7 @@ def resnext101_32x8d(pretrained=False, progress=True, dropout_rate=None,  **kwar
                    pretrained, progress, **kwargs)
 
 
-def wide_resnet50_2(pretrained=False, progress=True, dropout_rate=None,  **kwargs):
+def wide_resnet50_2(pretrained=False, progress=True, dropout_rate=None, **kwargs):
     """Constructs a Wide ResNet-50-2 model.
     The model is the same as ResNet except for the bottleneck number of channels
     which is twice larger in every block. The number of channels in outer 1x1

@@ -17,7 +17,8 @@ class SpiralDataset(Dataset):
         self.n_spirals = n_spirals
         self.seed = seed
 
-        self.x, self.y = create_spirals(n_examples_per_class, n_spirals=n_spirals, noise=noise, seed=seed)
+        self.x, self.y = create_spirals(n_examples_per_class, n_spirals=n_spirals, noise=noise,
+                                        seed=seed)
         return
 
     def __len__(self):
@@ -49,7 +50,8 @@ class SpiralDataset(Dataset):
         x_shuffled = self.x[shuffle_idx]
         y_shuffled = self.y[shuffle_idx]
         for i in range(x_shuffled.shape[0]):
-            plt.scatter(x_shuffled[i, 0], x_shuffled[i, 1], color=colors[y_shuffled[i]], s=s, alpha=alpha)
+            plt.scatter(x_shuffled[i, 0], x_shuffled[i, 1], color=colors[y_shuffled[i]], s=s,
+                        alpha=alpha)
         return ax
 
     def calc_prob_of_x(self, data_points, n_samples):
@@ -71,7 +73,8 @@ class SpiralDataset(Dataset):
         prob_of_x_given_s = []
 
         for k in range(self.n_spirals):
-            prob_of_x_given_s.append(self.calc_prob_of_x_given_class(data_points, spiral_class=k, n_samples=n_samples))
+            prob_of_x_given_s.append(
+                self.calc_prob_of_x_given_class(data_points, spiral_class=k, n_samples=n_samples))
         prob_of_x_given_s = np.stack(prob_of_x_given_s, axis=1)
         return np.mean(prob_of_x_given_s, axis=1)
 
@@ -79,7 +82,8 @@ class SpiralDataset(Dataset):
         angle_offset = spiral_class * 2 * np.pi / self.n_spirals  # The angle offset of spiral k
         # Integrate over uniform u for each of the spirals
         # to get p(x|s=k)
-        prob_of_x_given_s_u = self.calc_prob_of_x_given_u(data_points, u=np.linspace(1e-30, 1., n_samples),
+        prob_of_x_given_s_u = self.calc_prob_of_x_given_u(data_points,
+                                                          u=np.linspace(1e-30, 1., n_samples),
                                                           angle_offset=angle_offset)
         res = np.trapz(prob_of_x_given_s_u, dx=1. / n_samples, axis=1)
         return res
@@ -106,7 +110,8 @@ class SpiralDataset(Dataset):
         """Make the optimal prediction of model's class using Baye's rule and the generative model of the data."""
         prob_of_x_given_s = []
         for k in range(self.n_spirals):
-            prob_of_x_given_s.append(self.calc_prob_of_x_given_class(x, spiral_class=k, n_samples=n_samples))
+            prob_of_x_given_s.append(
+                self.calc_prob_of_x_given_class(x, spiral_class=k, n_samples=n_samples))
         prob_of_x_given_s = np.stack(prob_of_x_given_s, axis=1)
         probs = prob_of_x_given_s / prob_of_x_given_s.sum(axis=1, keepdims=True)
         return probs
@@ -115,8 +120,10 @@ class SpiralDataset(Dataset):
         probs = self.optimal_predict(x.cpu().numpy(), n_samples=n_samples)
         return torch.tensor(probs)
 
+
 class OODSpiralDataset(Dataset):
     """ Genereate out of domain spiral dataset """
+
     def __init__(self, n_examples, noise=1.0, seed=100, radius=410):
         self.n_examples = n_examples
         self.size = self.n_examples
@@ -139,6 +146,7 @@ class OODSpiralDataset(Dataset):
         plt.scatter(*np.hsplit(self.x, 2), color=color, s=s, alpha=alpha)
         return ax
 
+
 def create_single_spiral(n_points, angle_offset, noise=0.1):
     # Create numbers in the range [0., 6 pi], where the initial square root maps the uniformly
     # distributed points to lie mainly towards the upper limit of the range
@@ -149,6 +157,7 @@ def create_single_spiral(n_points, angle_offset, noise=0.1):
     y = np.sin(n + angle_offset) * n ** 2 + np.random.randn(n_points, 1) * noise * n * np.sqrt(n)
 
     return np.hstack((x, y))
+
 
 def create_spirals(n_points, n_spirals=3, noise=0.1, seed=100):
     """
@@ -167,6 +176,7 @@ def create_spirals(n_points, n_spirals=3, noise=0.1, seed=100):
     Y = np.concatenate(Y, axis=0)
     return np.asarray(X, dtype=np.float32), np.asarray(Y, dtype=np.long)
 
+
 def create_circle_data(n_points, radius=410, noise=0.01, seed=100):
     np.random.seed(seed)
 
@@ -175,4 +185,3 @@ def create_circle_data(n_points, radius=410, noise=0.01, seed=100):
     circle = radius * samples / (np.sqrt(np.sum(samples ** 2, axis=1, keepdims=True)))
     noisy_circle = circle + noise * np.random.randn(n_points, 2)
     return np.asarray(noisy_circle, dtype=np.float32)
-

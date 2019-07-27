@@ -13,9 +13,10 @@ import seaborn as sns
 sns.set()
 sns.set(font_scale=1.25)
 
-# TODO DECIDE HOW TO COMBINE THIS WITH ADV STUFF
-def eval_ood_detect(domain_labels, in_uncertainties, out_uncertainties, save_path, classes_flipped=None, adversarial=False):
 
+# TODO DECIDE HOW TO COMBINE THIS WITH ADV STUFF
+def eval_ood_detect(domain_labels, in_uncertainties, out_uncertainties, save_path,
+                    classes_flipped=None, adversarial=False):
     # if adversarial == True:
     #     functions = [plot_mod_roc_curve]
     for mode in ['PR', 'ROC']:
@@ -24,7 +25,7 @@ def eval_ood_detect(domain_labels, in_uncertainties, out_uncertainties, save_pat
             if key == 'confidence':
                 pos_label = 0
 
-           # try:
+                # try:
                 # if adversarial == True:
                 #     function(domain_labels, in_uncertainties[key][0], out_uncertainties[key][0], classes_flipped,
                 #              in_uncertainties[key][1],
@@ -107,8 +108,8 @@ def mod_roc_curve(y_true, y_score, class_flipped, pos_label=1):
     # y_score = column_or_1d(y_score)
 
     # make y_true a boolean vector
-    #y_true = (y_true == pos_label)
-    #print y_true
+    # y_true = (y_true == pos_label)
+    # print y_true
 
     # sort scores and corresponding truth values
     desc_score_indices = np.argsort(y_score, kind="mergesort")
@@ -126,14 +127,12 @@ def mod_roc_curve(y_true, y_score, class_flipped, pos_label=1):
     tps = np.cumsum(y_true)[threshold_idxs]
     tpr = tps / np.float(tps[-1])
 
-
-    y_true = 1- y_true
+    y_true = 1 - y_true
     total_neg = np.float(np.sum(y_true))
-    y_true = y_true*class_flipped
-    #print total_neg, np.sum(y_true)
+    y_true = y_true * class_flipped
+    # print total_neg, np.sum(y_true)
     fps = np.cumsum(y_true)[threshold_idxs]
     fpr = fps / total_neg
-
 
     fpr = np.r_[fpr, 1.0]
     tpr = np.r_[tpr, 1.0]
@@ -143,17 +142,20 @@ def mod_roc_curve(y_true, y_score, class_flipped, pos_label=1):
     return auc_score, fpr, tpr, y_score[threshold_idxs]
 
 
-def plot_mod_roc_curve(domain_labels, in_measure, out_measure, class_flipped, measure_name, save_path, pos_label=1, show=True):
+def plot_mod_roc_curve(domain_labels, in_measure, out_measure, class_flipped, measure_name,
+                       save_path, pos_label=1, show=True):
     scores = np.concatenate((in_measure, out_measure), axis=0)
     scores = np.asarray(scores, dtype=np.float128)
     not_flipped = np.asarray(np.zeros_like(in_measure), dtype=np.int32)
     class_flipped = np.r_[not_flipped, class_flipped]
     if pos_label != 1:
-        scores = -1.0*scores
+        scores = -1.0 * scores
 
-    roc_auc, fpr, tpr, thresholds = mod_roc_curve(domain_labels, scores, class_flipped=class_flipped)
+    roc_auc, fpr, tpr, thresholds = mod_roc_curve(domain_labels, scores,
+                                                  class_flipped=class_flipped)
     with open(os.path.join(save_path, 'results.txt'), 'a') as f:
-        f.write('MOD ROC AUC using ' + measure_name + ": " + str(np.round(roc_auc * 100.0, 1)) + '\n')
+        f.write(
+            'MOD ROC AUC using ' + measure_name + ": " + str(np.round(roc_auc * 100.0, 1)) + '\n')
     np.savetxt(os.path.join(save_path, measure_name + '_trp.txt'), tpr)
     np.savetxt(os.path.join(save_path, measure_name + '_frp.txt'), fpr)
 

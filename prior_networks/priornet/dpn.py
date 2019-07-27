@@ -46,8 +46,9 @@ class PriorNet(nn.Module):
         alphas = self.alphas(x)
         alpha0 = torch.sum(alphas, dim=1, keepdim=True)
 
-        return torch.sum(torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
-                         dim=1) - torch.lgamma(alpha0)
+        return torch.sum(
+            torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
+            dim=1) - torch.lgamma(alpha0)
 
     def epkl(self, x):
         alphas = self.alphas(x)
@@ -61,8 +62,9 @@ class PriorNet(nn.Module):
     def expected_entropy_from_alphas(alphas, alpha0=None):
         if alpha0 is None:
             alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-        expected_entropy = -torch.sum((alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
-                                      dim=1)
+        expected_entropy = -torch.sum(
+            (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
+            dim=1)
         return expected_entropy
 
     @staticmethod
@@ -73,15 +75,17 @@ class PriorNet(nn.Module):
         alpha0 = torch.sum(alphas, dim=1, keepdim=True)
         probs = alphas / alpha0
 
-        epkl = (alphas.size()[1]-1.0)/alphas
+        epkl = (alphas.size()[1] - 1.0) / alphas
 
-        dentropy = torch.sum(torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
-                         dim=1) - torch.lgamma(alpha0)
+        dentropy = torch.sum(
+            torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
+            dim=1) - torch.lgamma(alpha0)
 
-        conf = torch.max(probs,dim=1)
+        conf = torch.max(probs, dim=1)
 
-        expected_entropy = -torch.sum((alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
-                                      dim=1)
+        expected_entropy = -torch.sum(
+            (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
+            dim=1)
         entropy_of_exp = categorical_entropy_torch(probs)
         mutual_info = entropy_of_exp - expected_entropy
         return conf, entropy_of_exp, expected_entropy, mutual_info, epkl, dentropy
@@ -101,17 +105,19 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10):
 
     conf = np.max(probs, axis=1)
 
-    entropy_of_exp = -np.sum(probs*np.log(probs+epsilon), axis=1)
-    expected_entropy = -np.sum((alphas / alpha0) * (digamma(alphas + 1) - digamma(alpha0 + 1.0)), axis=1)
+    entropy_of_exp = -np.sum(probs * np.log(probs + epsilon), axis=1)
+    expected_entropy = -np.sum((alphas / alpha0) * (digamma(alphas + 1) - digamma(alpha0 + 1.0)),
+                               axis=1)
     mutual_info = entropy_of_exp - expected_entropy
 
     epkl = np.squeeze((alphas.shape[1] - 1.0) / alpha0)
 
-    dentropy = np.sum(gammaln(alphas) - (alphas - 1.0) * (digamma(alphas) - digamma(alpha0)), axis=1, keepdims=True) \
-                 - gammaln(alpha0)
+    dentropy = np.sum(gammaln(alphas) - (alphas - 1.0) * (digamma(alphas) - digamma(alpha0)),
+                      axis=1, keepdims=True) \
+               - gammaln(alpha0)
 
-    uncertainty = {'confidence' : conf,
-                   'entropy_of_expected' : entropy_of_exp,
+    uncertainty = {'confidence': conf,
+                   'entropy_of_expected': entropy_of_exp,
                    'expected_entropy': expected_entropy,
                    'mutual_information': mutual_info,
                    'EPKL': epkl,
