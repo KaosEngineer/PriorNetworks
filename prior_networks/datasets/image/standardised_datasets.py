@@ -25,31 +25,28 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
 
     transf_list = []
 
-    if mode == 'eval':
-        transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
-                            transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                                 (0.2023, 0.1994, 0.2010))])
-    elif mode == 'train':
-        if augment:
-            transf_list.append(transforms.RandomHorizontalFlip())
-        transf_list.extend([transforms.RandomRotation(15, resample=Image.BICUBIC),
-                            transforms.Resize(n_in, Image.BICUBIC),
-                            transforms.Pad(4, padding_mode='symmetric'),
-                            transforms.RandomCrop(n_in),
-                            transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                                 (0.2023, 0.1994, 0.2010))])
+    if augment:
+        if mode == 'eval':
+            transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
+        elif mode == 'train':
+            transf_list.extend([transforms.RandomHorizontalFlip(),
+                                transforms.RandomRotation(15, resample=Image.BICUBIC),
+                                transforms.Resize(n_in, Image.BICUBIC),
+                                transforms.Pad(4, padding_mode='symmetric'),
+                                transforms.RandomCrop(n_in)])
+        else:
+            transf_list.extend([transforms.RandomHorizontalFlip(),
+                                transforms.RandomVerticalFlip(),
+                                transforms.RandomRotation(15, resample=Image.BICUBIC),
+                                transforms.Resize(n_in, Image.BICUBIC),
+                                transforms.Pad(4, padding_mode='symmetric'),
+                                transforms.RandomCrop(n_in)])
     else:
-        transf_list.extend([transforms.RandomHorizontalFlip(),
-                            transforms.RandomVerticalFlip(),
-                            transforms.RandomRotation(15, resample=Image.BICUBIC),
-                            transforms.Resize(n_in, Image.BICUBIC),
-                            transforms.Pad(4, padding_mode='symmetric'),
-                            transforms.RandomCrop(n_in),
-                            transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                                 (0.2023, 0.1994, 0.2010))])
+        transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
+
+    transf_list.extend([transforms.ToTensor(),
+                        transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                             (0.2023, 0.1994, 0.2010))])
 
     return transforms.Compose(transf_list)
 
