@@ -37,6 +37,7 @@ class Trainer:
         self.num_workers = num_workers
         self.checkpoint_path = checkpoint_path
         self.checkpoint_steps = checkpoint_steps
+        self.batch_size = batch_size
         if test_criterion is not None:
             self.test_criterion = test_criterion
         else:
@@ -52,10 +53,16 @@ class Trainer:
             scheduler_params = {}
         self.scheduler = scheduler(self.optimizer, **scheduler_params)
 
-        self.trainloader = DataLoader(train_dataset, batch_size=batch_size,
-                                      shuffle=True, num_workers=self.num_workers, pin_memory=self.pin_memory)
-        self.testloader = DataLoader(test_dataset, batch_size=batch_size,
-                                     shuffle=False, num_workers=self.num_workers, pin_memory=self.pin_memory)
+        self.trainloader = DataLoader(train_dataset,
+                                      batch_size=batch_size,
+                                      shuffle=True,
+                                      num_workers=self.num_workers,
+                                      pin_memory=self.pin_memory)
+        self.testloader = DataLoader(test_dataset,
+                                     batch_size=batch_size,
+                                     shuffle=False,
+                                     num_workers=self.num_workers,
+                                     pin_memory=self.pin_memory)
 
         # Lists for storing training metrics
         self.train_loss, self.train_accuracy, self.train_eval_steps = [], [], []
@@ -90,7 +97,7 @@ class Trainer:
         if load_scheduler_state:
             self.scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
-    def train(self, n_epochs=None, n_iter=None, device=None):
+    def train(self, n_epochs=None, n_iter=None):
         # Calc num of epochs
         if n_epochs is None:
             assert isinstance(n_iter, int)
@@ -119,7 +126,9 @@ class Trainer:
             inputs, labels = data
             if self.device is not None:
                 # Move data to adequate device
-                inputs, labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory), (inputs, labels))
+                inputs, labels = map(lambda x: x.to(self.device,
+                                                    non_blocking=self.pin_memory),
+                                     (inputs, labels))
             # zero the parameter gradients
             self.optimizer.zero_grad()
 
@@ -184,12 +193,16 @@ class Trainer:
 
 def calc_accuracy_torch(y_probs, y_true, device=None, weights=None):
     if weights is None:
-        weights = torch.ones_like(y_probs)
-
-    if device is None:
-        weights.to(torch.float64)
-        accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(torch.float64))
+        if device is None:
+            accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
+        else:
+            accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(device,torch.float64))
     else:
-        weights.to(device, torch.float64)
-        accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(device, dtype=torch.float64))
+        if device is None:
+            weights.to(dtype=torch.float64)
+            accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
+        else:
+            weights.to(device=device, dtype=torch.float64)
+            accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(device=device,
+                                                                                      dtype=torch.float64))
     return accuracy

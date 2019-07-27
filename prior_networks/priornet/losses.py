@@ -48,13 +48,17 @@ class DirichletKLLoss:
         self.concentration = concentration
         self.reverse = reverse
 
-    def __call__(self, logits, labels):
+    def __call__(self, logits, labels, mean=True):
         alphas = torch.exp(logits)
-        return self.forward(alphas, labels)
+        return self.forward(alphas, labels, mean=mean)
 
-    def forward(self, alphas, labels):
+    def forward(self, alphas, labels, mean):
         loss = self.compute_loss(alphas, labels)
-        return torch.mean(loss)
+
+        if mean:
+            return torch.mean(loss)
+        else:
+            return loss
 
     def compute_loss(self, alphas, labels: Optional[torch.tensor] = None):
         """
@@ -72,9 +76,8 @@ class DirichletKLLoss:
         # Create array of target (desired) concentration parameters
         target_alphas = torch.ones_like(alphas) * self.concentration
         if labels is not None:
-            target_conc = torch.zeros_like(alphas).scatter_(1, labels[:, None],
+            target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None],
                             self.target_concentration)
-            target_alphas += target_conc
 
         if self.reverse:
             loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
@@ -100,13 +103,17 @@ class DirichletKLLossJoint:
         self.concentration = concentration
         self.reverse = reverse
 
-    def __call__(self, logits, labels, target_concentration, gamma):
+    def __call__(self, logits, labels, target_concentration, gamma, mean=True):
         alphas = torch.exp(logits)
-        return self.forward(alphas, labels, target_concentration, gamma)
+        return self.forward(alphas, labels, target_concentration, gamma, mean)
 
-    def forward(self, alphas, labels, target_concentration, gamma):
+    def forward(self, alphas, labels, target_concentration, gamma, mean):
         loss = self.compute_loss(alphas, labels, target_concentration, gamma)
-        return torch.mean(loss)
+
+        if mean:
+            return torch.mean(loss)
+        else:
+            return loss
 
     def compute_loss(self, alphas, labels, target_concentration, gamma):
         """

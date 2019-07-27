@@ -2,53 +2,55 @@ import os
 import re
 from pathlib import Path
 from typing import Union
-
+#import context.py
 import numpy as np
 import torch
 
 from prior_networks import models
+from prior_networks.datasets import image
 
-tv_model_dict = {'vgg11': models.vgg11,
-                 'vgg11_bn': models.vgg11_bn,
-                 'vgg13': models.vgg13,
-                 'vgg13_bn': models.vgg13_bn,
-                 'vgg16': models.vgg16,
-                 'vgg16_bn': models.vgg16_bn,
-                 'vgg19': models.vgg19,
-                 'vgg19_bn': models.vgg19_bn,
-                 'resnet18': models.resnet18,
-                 'resnet34': models.resnet34,
-                 'resnet50': models.resnet50,
-                 'resnet101': models.resnet101,
-                 'resnet152': models.resnet152,
-                 'resnext50_32x4d': models.resnext50_32x4d,
-                 'resnext101_32x8d': models.resnext101_32x8d,
-                 'wide_resnet50_2': models.wide_resnet50_2,
-                 'wide_resnet101_2': models.wide_resnet101_2,
-                 'densenet121': models.densenet121,
-                 'densenet161': models.densenet161,
-                 'densenet169': models.densenet169,
-                 'densenet201': models.densenet201}
+# TODO Add LeNet for MNIST and MNIST-like stuff
+model_dict = {'vgg11': models.vgg11,
+              'vgg11_bn': models.vgg11_bn,
+              'vgg13': models.vgg13,
+              'vgg13_bn': models.vgg13_bn,
+              'vgg16': models.vgg16,
+              'vgg16_bn': models.vgg16_bn,
+              'vgg19': models.vgg19,
+              'vgg19_bn': models.vgg19_bn,
+              'resnet18': models.resnet18,
+              'resnet34': models.resnet34,
+              'resnet50': models.resnet50,
+              'resnet101': models.resnet101,
+              'resnet152': models.resnet152,
+              'resnext50_32x4d': models.resnext50_32x4d,
+              'resnext101_32x8d': models.resnext101_32x8d,
+              'wide_resnet50_2': models.wide_resnet50_2,
+              'wide_resnet101_2': models.wide_resnet101_2,
+              'wide_resnet28_10': models.wide_resnet28_10,
+              'densenet121': models.densenet121,
+              'densenet161': models.densenet161,
+              'densenet169': models.densenet169,
+              'densenet201': models.densenet201}
 
-def save_model(model, path: Union[Path, str]):
-    torch.save(model, os.path.join(path, 'model.pt'))
-    return
+dataset_dict = {'MNIST': image.MNIST,
+                'KMNIST': image.KMNIST,
+                'FMNIST': image.FashionMNIST,
+                'EMNIST': image.EMNIST,
+                'SVHN': image.SVHN,
+                'CIFAR10': image.CIFAR10,
+                'CIFAR100': image.CIFAR100,
+                'ImageNet': image.ImageNet}
 
-
-def load_model(path: Union[Path, str]):
-    return torch.load(path)
-
-
-def save_model_state(model, model_name, path: Union[Path, str]):
-    torch.save(model.state_dict(), os.path.join(path, model_name + '_mst.pt'))
-    return
-
-def load_tv_model_state(model_type: str, path: Union[Path, str], num_classes: int, pretrained: bool =False):
-
-
-    model = tv_model_dict[model_type](pretrained=pretrained, num_classes=num_classes)
-    model.load_state_dict(torch.load(path))
-    return model
+def save_model(model: torch.nn.Module, n_in: int, n_channels: int,
+               num_classes: int, arch: str, small_inputs: bool, path: Union[Path, str]):
+    assert arch in model_dict.keys()
+    torch.save({'num_classes': num_classes,
+                'n_in': n_in,
+                'n_channels': n_channels,
+                'model_state_dict': model.state_dict(),
+                'arch': arch,
+                'small_inputs': small_inputs}, os.path.join(path, 'model.tar'))
 
 
 def categorical_entropy(probs, axis=1, keepdims=False):
@@ -68,19 +70,6 @@ def categorical_entropy_torch(probs, dim=1, keepdim=False):
     log_probs = torch.where(torch.isfinite(log_probs), log_probs, torch.zeros_like(log_probs))
     entropy = -torch.sum(probs * log_probs, dim=dim, keepdim=keepdim)
     return entropy
-
-
-# def ensemble_mutual_information(probs):
-#     """Calculate mutual information of ensemble predictions"""
-#     mean_probs = np.mean(probs, axis=2)
-#
-#     entropy_mean = categorical_entropy(mean_probs)
-#
-#     entropies = categorical_entropy(probs)
-#     mean_entropies = np.mean(entropies, axis=1)
-#
-#     mutual_info = entropy_mean - mean_entropies
-#     return mutual_info
 
 
 def get_grid(xrange=(-500, 500), yrange=(-500, 500), resolution=200, dtype=np.float32):
@@ -110,6 +99,18 @@ def select_device(device_name):
         elif device_name != "cpu":
             raise AttributeError(f"No such device allowed: {device_name}")
         device = torch.device(device_name)
+    return device
+
+def select_gpu(gpu_id: int):
+
+    if torch.cuda.is_available():
+        assert torch.cuda.device_count() > gpu_id
+        device = torch.device(f"cuda:{gpu_id}")
+        print(f"Using device: {torch.cuda.get_device_name(device)} unit {gpu_id}.")
+    else:
+        print(f"Using CPU device.")
+        device = torch.device("cpu")
+
     return device
 
 
@@ -170,3 +171,30 @@ def select_device(device_name):
 #     return barom
 #
 #
+# def ensemble_mutual_information(probs):
+#     """Calculate mutual information of ensemble predictions"""
+#     mean_probs = np.mean(probs, axis=2)
+#
+#     entropy_mean = categorical_entropy(mean_probs)
+#
+#     entropies = categorical_entropy(probs)
+#     mean_entropies = np.mean(entropies, axis=1)
+#
+#     mutual_info = entropy_mean - mean_entropies
+#     return mutual_info
+
+
+class TargetTransform:
+    def __init__(self, target_concentration, gamma, ood=False):
+        self.target_concentration = target_concentration
+        self.gamma = gamma
+        self.ood = ood
+
+    def __call__(self, label):
+        return self.forward(label)
+
+    def forward(self, label):
+        if self.ood:
+            return (0, self.target_concentration, self.gamma)
+        else:
+            return (label, self.target_concentration, self.gamma)

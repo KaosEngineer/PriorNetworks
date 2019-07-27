@@ -27,8 +27,8 @@ def eval_logits_on_dataset(model: nn.Module, dataset: Dataset, batch_size: int =
 
     testloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=False, num_workers=num_workers)
-    logits = []
-    labels = []
+    logits_list = []
+    labels_list = []
     with torch.no_grad():
         for i, data in enumerate(testloader, 0):
             # Get inputs
@@ -36,10 +36,11 @@ def eval_logits_on_dataset(model: nn.Module, dataset: Dataset, batch_size: int =
             if device is not None:
                 inputs, labels = map(lambda x: x.to(device),
                                      (inputs, labels))
-            logits.append(model(inputs))
-            labels.append(labels)
+                logits = model(inputs)
+            logits_list.append(logits)
+            labels_list.append(labels)
 
-    logits = torch.stack(logits, dim=0)
-    labels = torch.stack(labels, dim=0)
-    return logits, labels
+    logits = torch.cat(logits_list, dim=0)
+    labels = torch.cat(labels_list, dim=0)
+    return logits.cpu(), labels.cpu()
 
