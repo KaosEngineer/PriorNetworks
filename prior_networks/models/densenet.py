@@ -21,7 +21,7 @@ class DenseNet(nn.Module):
     """
 
     def __init__(self, growth_rate=32, block_config=(6, 12, 24, 16),
-                 num_init_features=64, bn_size=4, drop_rate=0, num_classes=1000, small_inputs=True):
+                 num_init_features=64, bn_size=4, dropout_rate=0, num_classes=1000, small_inputs=True):
 
         super(DenseNet, self).__init__()
 
@@ -47,7 +47,7 @@ class DenseNet(nn.Module):
         for i, num_layers in enumerate(block_config):
             block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
                                 bn_size=bn_size, growth_rate=growth_rate,
-                                drop_rate=drop_rate)
+                                drop_rate=dropout_rate)
             self.features.add_module('denseblock%d' % (i + 1), block)
             num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
@@ -129,7 +129,7 @@ def densenet161(pretrained=False, progress=True, **kwargs):
 
 
 
-def densenet169(pretrained=False, progress=True, **kwargs):
+def densenet169(pretrained=False, progress=True **kwargs):
     r"""Densenet-169 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
 
@@ -142,7 +142,7 @@ def densenet169(pretrained=False, progress=True, **kwargs):
 
 
 
-def densenet201(pretrained=False, progress=True, **kwargs):
+def densenet201(pretrained=False, progress=True **kwargs):
     r"""Densenet-201 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
 
