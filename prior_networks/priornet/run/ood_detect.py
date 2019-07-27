@@ -12,15 +12,15 @@ from prior_networks.assessment.ood_detection import eval_ood_detect
 from prior_networks.evaluation import eval_logits_on_dataset
 from prior_networks.datasets.image import construct_transforms
 from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
-from prior_networks.util_pytorch import model_dict, dataset_dict, select_gpu
+from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
 
 matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
-                                                        'on in-domain test data')
-parser.add_argument('id_dataset', choices=dataset_dict.keys(),
+                                             'on in-domain test data')
+parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the in-dimain dataset to evaluate model on.')
-parser.add_argument('ood_dataset', choices=dataset_dict.keys(),
+parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the out-of-domain dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
@@ -47,7 +47,7 @@ def main():
         print(f'Directory {args.output_path} exists. Exiting...')
         sys.exit()
     elif os.path.isdir(args.output_path) and args.overwrite:
-        os.remove(args.output_path+'/*')
+        os.remove(args.output_path + '/*')
     else:
         os.makedirs(args.output_path)
 
@@ -56,40 +56,42 @@ def main():
 
     # Load up the model
     ckpt = torch.load('./model/model.tar')
-    model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
+    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])
     model.to(device)
     model.eval()
 
     # Load the in-domain evaluation data
-    id_dataset = dataset_dict[args.id_dataset](root=args.data_path,
-                                         transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                        mode='eval'),
-                                         target_transform=None,
-                                         download=True,
-                                         split='test')
+    id_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
+                                               transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                              mode='eval'),
+                                               target_transform=None,
+                                               download=True,
+                                               split='test')
 
-    ood_dataset = dataset_dict[args.ood_dataset](root=args.data_path,
-                                         transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                        mode='eval'),
-                                         target_transform=None,
-                                         download=True,
-                                         split='test')
+    ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+                                                 transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                mode='eval'),
+                                                 target_transform=None,
+                                                 download=True,
+                                                 split='test')
 
     # Evaluate the model
     id_logits, id_labels = eval_logits_on_dataset(model=model,
-                                            dataset=id_dataset,
-                                            batch_size=args.batch_size,
-                                            device=device)
+                                                  dataset=id_dataset,
+                                                  batch_size=args.batch_size,
+                                                  device=device)
 
     ood_logits, ood_labels = eval_logits_on_dataset(model=model,
-                                            dataset=ood_dataset,
-                                            batch_size=args.batch_size,
-                                            device=device)
+                                                    dataset=ood_dataset,
+                                                    batch_size=args.batch_size,
+                                                    device=device)
 
-    id_labels, id_probs, id_logits = id_labels.numpy(), F.softmax(id_logits, dim=1).numpy(), id_logits.numpy()
-    ood_labels, ood_probs, ood_logits = ood_labels.numpy(), F.softmax(ood_logits, dim=1).numpy(), ood_logits.numpy()
+    id_labels, id_probs, id_logits = id_labels.numpy(), F.softmax(id_logits,
+                                                                  dim=1).numpy(), id_logits.numpy()
+    ood_labels, ood_probs, ood_logits = ood_labels.numpy(), F.softmax(ood_logits,
+                                                                      dim=1).numpy(), ood_logits.numpy()
 
     # Save model outputs
     np.savetxt(os.path.join(args.output_path, 'id_labels.txt'), id_labels)
@@ -105,10 +107,10 @@ def main():
     ood_uncertainties = dirichlet_prior_network_uncertainty(ood_logits)
     # Save uncertainties
     for key in id_uncertainties.keys():
-        np.savetxt(os.path.join(args.output_path, key+'_id.txt'), id_uncertainties[key])
+        np.savetxt(os.path.join(args.output_path, key + '_id.txt'), id_uncertainties[key])
         np.savetxt(os.path.join(args.output_path, key + '_ood.txt'), ood_uncertainties[key])
 
-    #Compute Labels
+    # Compute Labels
     in_domain = np.zeros_like(id_labels)
     out_domain = np.ones_like(ood_labels)
     domain_labels = np.concatenate((in_domain, out_domain), axis=0)
@@ -117,8 +119,6 @@ def main():
                     in_uncertainties=id_uncertainties,
                     out_uncertainties=ood_uncertainties,
                     save_path=args.output_path)
-
-
 
 
 if __name__ == '__main__':

@@ -72,7 +72,7 @@ class Trainer:
 
     def _save_checkpoint(self, save_at_steps=False):
         if save_at_steps:
-            checkpoint_name= 'checkpoint-'+str(self.steps)+'.tar'
+            checkpoint_name = 'checkpoint-' + str(self.steps) + '.tar'
         else:
             checkpoint_name = 'checkpoint.tar'
 
@@ -113,7 +113,7 @@ class Trainer:
             self._train_single_epoch()
             self._save_checkpoint()
             # Test
-            self.test(time=time.time()-start)
+            self.test(time=time.time() - start)
         return
 
     def _train_single_epoch(self):
@@ -196,13 +196,16 @@ def calc_accuracy_torch(y_probs, y_true, device=None, weights=None):
         if device is None:
             accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
         else:
-            accuracy = torch.mean((torch.argmax(y_probs, dim=1) == y_true).to(device,torch.float64))
+            accuracy = torch.mean(
+                (torch.argmax(y_probs, dim=1) == y_true).to(device, torch.float64))
     else:
         if device is None:
             weights.to(dtype=torch.float64)
-            accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
+            accuracy = torch.mean(
+                weights * (torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
         else:
             weights.to(device=device, dtype=torch.float64)
-            accuracy = torch.mean(weights*(torch.argmax(y_probs, dim=1) == y_true).to(device=device,
-                                                                                      dtype=torch.float64))
+            accuracy = torch.mean(
+                weights * (torch.argmax(y_probs, dim=1) == y_true).to(device=device,
+                                                                      dtype=torch.float64))
     return accuracy

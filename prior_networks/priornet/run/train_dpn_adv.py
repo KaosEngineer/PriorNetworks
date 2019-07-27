@@ -5,7 +5,7 @@ import sys
 import torch
 from torch.utils import data
 from prior_networks.priornet.losses import DirichletKLLoss, PriorNetMixedLoss
-from prior_networks.util_pytorch import model_dict, dataset_dict, select_gpu
+from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithAdv
 from prior_networks.util_pytorch import save_model, TargetTransform
 from torch import optim
@@ -14,7 +14,7 @@ from prior_networks.datasets.image.standardised_datasets import construct_transf
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
-parser.add_argument('id_dataset', choices=dataset_dict.keys(),
+parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
 parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
@@ -64,29 +64,28 @@ def main():
 
     # Load up the model
     ckpt = torch.load('./model/model.tar')
-    model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
+    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])
 
     # Load the in-domain training and validation data
-    train_dataset = dataset_dict[args.id_dataset](root=args.data_path,
-                                               transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                              mode='train',
-                                                                              augment=args.augment),
-                                               target_transform=None,
-                                               download=True,
-                                               split='train')
+    train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
+                                                  transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                 mode='train',
+                                                                                 augment=args.augment),
+                                                  target_transform=None,
+                                                  download=True,
+                                                  split='train')
 
-    val_dataset = dataset_dict[args.id_dataset](root=args.data_path,
+    val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
                                                                                mode='eval'),
                                                 target_transform=None,
                                                 download=True,
                                                 split='val')
 
-
     # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count()-1
+    assert args.gpu <= torch.cuda.device_count() - 1
     device = select_gpu(args.gpu)
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
@@ -98,8 +97,8 @@ def main():
                                      concentration=args.concentration,
                                      reverse=args.reverse_KL)
     adv_criterion = DirichletKLLoss(target_concentration=args.adv_concentration,
-                    concentration=args.concentration,
-                    reverse=args.reverse_KL)
+                                    concentration=args.concentration,
+                                    reverse=args.reverse_KL)
 
     train_criterion = PriorNetMixedLoss([test_criterion, adv_criterion],
                                         [1.0, args.gamma])
@@ -117,8 +116,8 @@ def main():
                              checkpoint_path='./model',
                              scheduler=optim.lr_scheduler.MultiStepLR,
                              optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                          'nesterov': True,
-                                          'weight_decay': args.weight_decay},
+                                               'nesterov': True,
+                                               'weight_decay': args.weight_decay},
                              scheduler_params={'milestones': [25, 40]},
                              batch_size=args.batch_size)
     trainer.train(args.n_epochs)
@@ -133,6 +132,7 @@ def main():
                arch=args.arch,
                small_inputs=args.small_inputs,
                path='model')
+
 
 if __name__ == "__main__":
     main()

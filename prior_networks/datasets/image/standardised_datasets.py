@@ -2,11 +2,12 @@
 A number of classes that transform the torch vision datasets into a standard format
 usable for uncertainty (e.g. out-of-domain vs. in-domain) experimentation.
 """
-#import context
+# import context
 import torchvision
 from torchvision import transforms
 from PIL import Image
 import torchvision.datasets as datasets
+
 #
 
 split_options = ['train', 'val', 'test']
@@ -27,7 +28,8 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
     if mode == 'eval':
         transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                             transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+                            transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                 (0.2023, 0.1994, 0.2010))])
     elif mode == 'train':
         if augment:
             transf_list.append(transforms.RandomHorizontalFlip())
@@ -36,7 +38,8 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
                             transforms.Pad(4, padding_mode='symmetric'),
                             transforms.RandomCrop(n_in),
                             transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+                            transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                 (0.2023, 0.1994, 0.2010))])
     else:
         transf_list.extend([transforms.RandomHorizontalFlip(),
                             transforms.RandomVerticalFlip(),
@@ -45,15 +48,14 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
                             transforms.Pad(4, padding_mode='symmetric'),
                             transforms.RandomCrop(n_in),
                             transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+                            transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                 (0.2023, 0.1994, 0.2010))])
 
     return transforms.Compose(transf_list)
 
 
 class MNIST(torchvision.datasets.MNIST):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -67,9 +69,7 @@ class MNIST(torchvision.datasets.MNIST):
 
 
 class FashionMNIST(torchvision.datasets.FashionMNIST):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -83,9 +83,7 @@ class FashionMNIST(torchvision.datasets.FashionMNIST):
 
 
 class KMNIST(torchvision.datasets.KMNIST):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -99,9 +97,7 @@ class KMNIST(torchvision.datasets.KMNIST):
 
 
 class EMNIST(torchvision.datasets.EMNIST):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -116,9 +112,7 @@ class EMNIST(torchvision.datasets.EMNIST):
 
 
 class SEMEION(torchvision.datasets.SEMEION):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         print('SEMEION does not have standard test/train splits. '
               'Generating full dataset...')
@@ -130,9 +124,7 @@ class SEMEION(torchvision.datasets.SEMEION):
 
 
 class Omniglot(torchvision.datasets.Omniglot):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -146,9 +138,7 @@ class Omniglot(torchvision.datasets.Omniglot):
 
 
 class CIFAR10(torchvision.datasets.CIFAR10):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -162,9 +152,7 @@ class CIFAR10(torchvision.datasets.CIFAR10):
 
 
 class CIFAR100(torchvision.datasets.CIFAR100):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         train = False
         if split == 'train':
@@ -178,9 +166,7 @@ class CIFAR100(torchvision.datasets.CIFAR100):
 
 
 class SVHN(torchvision.datasets.SVHN):
-
     def __init__(self, root, transform, target_transform, download, split):
-
         assert split in split_options
         if split == 'val':
             split = 'test'
@@ -193,7 +179,6 @@ class SVHN(torchvision.datasets.SVHN):
 
 
 class ImageNet(torchvision.datasets.ImageNet):
-
     def __init__(self, root, transform, target_transform, download, split):
         # TODO Add standard transforms for imagenet
         assert split in split_options

@@ -17,9 +17,9 @@ class MixtureOfGaussiansDataset(Dataset):
         self.OOD = OOD
 
         self.x, self.y, self.ood_data = create_mixture_of_gaussians(size=self.size,
-                                                               noise=self.noise,
-                                                               scale=self.scale,
-                                                               seed=self.seed)
+                                                                    noise=self.noise,
+                                                                    scale=self.scale,
+                                                                    seed=self.seed)
         return
 
     def __len__(self):
@@ -85,4 +85,5 @@ def create_mixture_of_gaussians(size, noise, scale=4.0, seed=100):
     OOD_data = OOD_data[inds]
     OOD_data = OOD_data[:3 * size]
 
-    return np.asarray(data, dtype=np.float32), np.asarray(labels, dtype=np.long), np.asarray(OOD_data, dtype=np.float32)
+    return np.asarray(data, dtype=np.float32), np.asarray(labels, dtype=np.long), np.asarray(
+        OOD_data, dtype=np.float32)

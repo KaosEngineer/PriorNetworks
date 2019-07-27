@@ -6,6 +6,7 @@ from torchvision.models.densenet import _DenseBlock, _Transition
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
+
 class DenseNet(nn.Module):
     r"""Densenet-BC model class, based on
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -21,7 +22,8 @@ class DenseNet(nn.Module):
     """
 
     def __init__(self, growth_rate=32, block_config=(6, 12, 24, 16),
-                 num_init_features=64, bn_size=4, dropout_rate=0, num_classes=1000, small_inputs=True):
+                 num_init_features=64, bn_size=4, dropout_rate=0, num_classes=1000,
+                 small_inputs=True):
 
         super(DenseNet, self).__init__()
 
@@ -40,7 +42,6 @@ class DenseNet(nn.Module):
             self.features.add_module('relu0', nn.ReLU(inplace=True))
             self.features.add_module('pool0', nn.MaxPool2d(kernel_size=3, stride=2, padding=1,
                                                            ceil_mode=False))
-
 
         # Each denseblock
         num_features = num_init_features
@@ -78,6 +79,7 @@ class DenseNet(nn.Module):
         out = F.adaptive_avg_pool2d(out, (1, 1)).view(features.size(0), -1)
         out = self.classifier(out)
         return out
+
 
 # def _load_state_dict(model, model_url, progress):
 #     # '.'s are no longer allowed in module names, but previous _DenseLayer
@@ -128,7 +130,6 @@ def densenet161(pretrained=False, progress=True, **kwargs):
                      **kwargs)
 
 
-
 def densenet169(pretrained=False, progress=True, **kwargs):
     r"""Densenet-169 model from
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_
@@ -139,7 +140,6 @@ def densenet169(pretrained=False, progress=True, **kwargs):
     """
     return _densenet('densenet169', 32, (6, 12, 32, 32), 64, pretrained, progress,
                      **kwargs)
-
 
 
 def densenet201(pretrained=False, progress=True, **kwargs):

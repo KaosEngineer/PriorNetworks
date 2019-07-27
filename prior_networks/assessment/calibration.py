@@ -19,8 +19,8 @@ def classification_calibration(labels, probs, save_path, bins=10):
     lower = 0.0
     increment = 1.0 / bins
     upper = increment
-    accs = np.zeros([bins+1], dtype=np.float32)
-    gaps = np.zeros([bins+1], dtype=np.float32)
+    accs = np.zeros([bins + 1], dtype=np.float32)
+    gaps = np.zeros([bins + 1], dtype=np.float32)
     confs = np.arange(0.0, 1.01, increment)
     ECE = 0.0
     for i in range(bins):
@@ -57,7 +57,6 @@ def classification_calibration(labels, probs, save_path, bins=10):
     with open(os.path.join(save_path, 'results.txt'), 'a') as f:
         f.write('ECE: ' + str(np.round(ECE * 100.0, 2)) + '\n')
         f.write('MCE: ' + str(np.round(MCE * 100.0, 2)) + '\n')
-
 
 # def regression_calibration_curve(targets, preds, intervals, save_path):
 #     diff = np.squeeze(abs(targets - preds))[:, np.newaxis]
