@@ -12,6 +12,7 @@ import seaborn as sns
 sns.set()
 sns.set(font_scale=1.25)
 
+
 # TODO: Maybe find a better name??
 def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
     for key in uncertainties.keys():
@@ -21,10 +22,11 @@ def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
 
         try:
             reject_class(labels, probs, uncertainties[key], key, save_path=save_path, rev=rev)
-        except: pass
+        except:
+            pass
+
 
 def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev: bool, show=True):
-
     # Get predictions
     preds = np.argmax(probs, axis=1)
 
@@ -277,4 +279,3 @@ def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev:
 #
 #     AUC_RR = (var_auc - min_auc) / (max_auc - min_auc)
 #     with open(os.path.join(save_path, 'results.txt'), 'a') as f:
-
