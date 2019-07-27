@@ -7,11 +7,12 @@ from pathlib import Path
 import torch
 from torch.utils import data
 from prior_networks.priornet.losses import DirichletKLLoss, DirichletKLLossJoint
-from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithOODJoint
-from prior_networks.util_pytorch import save_model, TargetTransform
+from prior_networks.util_pytorch import TargetTransform
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
+from prior_networks.models.model_factory import ModelFactory
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
@@ -67,10 +68,8 @@ def main():
     model_dir = Path(args.model_dir)
     # Load up the model
     ckpt = torch.load(model_dir / 'model/model.tar')
-    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])  # ,
-    # dropout_rate=args.dropout_rate)
-    model.load_state_dict(ckpt['model_state_dict'])
+    model = ModelFactory.model_from_checkpoint(ckpt)
+
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
@@ -141,13 +140,13 @@ def main():
     # Save final model
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = model.module
-    save_model(model=model,
-               n_in=ckpt['n_in'],
-               n_channels=ckpt['n_channels'],
-               num_classes=ckpt['num_classes'],
-               arch=ckpt['arch'],
-               small_inputs=ckpt['small_inputs'],
-               path='model')
+    ModelFactory.checkpoint_model(path='model/model.tar',
+                                  model=model,
+                                  arch=ckpt['arch'],
+                                  n_channels=ckpt['n_channels'],
+                                  num_classes=ckpt['num_classes'],
+                                  small_inputs=ckpt['small_inputs'],
+                                  n_in=ckpt['n_in'])
 
 
 if __name__ == "__main__":

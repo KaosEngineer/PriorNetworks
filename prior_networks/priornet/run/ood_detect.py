@@ -13,7 +13,8 @@ from prior_networks.assessment.ood_detection import eval_ood_detect
 from prior_networks.evaluation import eval_logits_on_dataset
 from prior_networks.datasets.image import construct_transforms
 from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
-from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu
+from prior_networks.models.model_factory import ModelFactory
 
 matplotlib.use('agg')
 
@@ -60,10 +61,8 @@ def main():
     model_dir = Path(args.model_dir)
     # Load up the model
     ckpt = torch.load(model_dir / 'model/model.tar')
+    model = ModelFactory.model_from_checkpoint(ckpt)
 
-    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])
-    model.load_state_dict(ckpt['model_state_dict'])
     model.to(device)
     model.eval()
 
