@@ -116,7 +116,7 @@ def main():
         # Save final model
         if args.multi_gpu and torch.cuda.device_count() > 1:
             model = model.module
-        ModelFactory.checkpoint_model(path='model/model.tar',
+        ModelFactory.checkpoint_model(path=model_dir / 'model.tar',
                                       model=model,
                                       arch=ckpt['arch'],
                                       n_channels=ckpt['n_channels'],

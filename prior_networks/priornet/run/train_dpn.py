@@ -129,7 +129,7 @@ def main():
                                   test_dataset=val_dataset,
                                   optimizer=optim.SGD,
                                   device=device,
-                                  checkpoint_path='./model',
+                                  checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                     'nesterov': True,

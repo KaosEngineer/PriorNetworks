@@ -116,7 +116,7 @@ def main():
                              test_dataset=val_dataset,
                              optimizer=optim.SGD,
                              device=device,
-                             checkpoint_path='./model',
+                             checkpoint_path=model_dir /'model',
                              scheduler=optim.lr_scheduler.MultiStepLR,
                              optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                'nesterov': True,
@@ -128,7 +128,7 @@ def main():
     # Save final model
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = model.module
-    ModelFactory.checkpoint_model(path='model/model.tar',
+    ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
                                   model=model,
                                   arch=ckpt['arch'],
                                   n_channels=ckpt['n_channels'],
