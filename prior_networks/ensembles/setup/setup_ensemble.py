@@ -5,15 +5,15 @@ import sys
 import torch
 from prior_networks.util_pytorch import MODEL_DICT, save_model
 
-parser = argparse.ArgumentParser(description='Setup a Dirichlet Prior Network model using a '
+parser = argparse.ArgumentParser(description='Setup an ensemble of models using a '
                                              'standard Torchvision architecture on a Torchvision'
                                              ' dataset.')
 parser.add_argument('data_path', type=str,
-                    help='absolute path to data?')
+                    help='absolute path to training data.')
 parser.add_argument('destination_path', type=str,
-                    help='absolute directory path where to save model and associated data.')
+                    help='absolute directory path to the directory in which to save the ensemble.')
 parser.add_argument('library_path', type=str,
-                    help='absolute path to this library')
+                    help='absolute path to this library.')
 parser.add_argument('arch',
                     choices=MODEL_DICT.keys(),
                     default='vgg16',

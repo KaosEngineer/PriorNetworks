@@ -10,7 +10,7 @@ from prior_networks import models
 from prior_networks.datasets import image
 
 # TODO Add LeNet for MNIST and MNIST-like stuff
-model_dict = {'vgg11': models.vgg11,
+MODEL_DICT = {'vgg11': models.vgg11,
               'vgg11_bn': models.vgg11_bn,
               'vgg13': models.vgg13,
               'vgg13_bn': models.vgg13_bn,
@@ -33,7 +33,7 @@ model_dict = {'vgg11': models.vgg11,
               'densenet169': models.densenet169,
               'densenet201': models.densenet201}
 
-dataset_dict = {'MNIST': image.MNIST,
+DATASET_DICT = {'MNIST': image.MNIST,
                 'KMNIST': image.KMNIST,
                 'FMNIST': image.FashionMNIST,
                 'EMNIST': image.EMNIST,
@@ -45,7 +45,7 @@ dataset_dict = {'MNIST': image.MNIST,
 
 def save_model(model: torch.nn.Module, n_in: int, n_channels: int,
                num_classes: int, arch: str, small_inputs: bool, path: Union[Path, str]):
-    assert arch in model_dict.keys()
+    assert arch in MODEL_DICT.keys()
     torch.save({'num_classes': num_classes,
                 'n_in': n_in,
                 'n_channels': n_channels,

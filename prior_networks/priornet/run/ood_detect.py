@@ -12,15 +12,15 @@ from prior_networks.assessment.ood_detection import eval_ood_detect
 from prior_networks.evaluation import eval_logits_on_dataset
 from prior_networks.datasets.image import construct_transforms
 from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
-from prior_networks.util_pytorch import model_dict, dataset_dict, select_gpu
+from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
 
 matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
                                              'on in-domain test data')
-parser.add_argument('id_dataset', choices=dataset_dict.keys(),
+parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the in-dimain dataset to evaluate model on.')
-parser.add_argument('ood_dataset', choices=dataset_dict.keys(),
+parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the out-of-domain dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
@@ -56,21 +56,21 @@ def main():
 
     # Load up the model
     ckpt = torch.load('./model/model.tar')
-    model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
+    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])
     model.to(device)
     model.eval()
 
     # Load the in-domain evaluation data
-    id_dataset = dataset_dict[args.id_dataset](root=args.data_path,
+    id_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                transform=construct_transforms(n_in=ckpt['n_in'],
                                                                               mode='eval'),
                                                target_transform=None,
                                                download=True,
                                                split='test')
 
-    ood_dataset = dataset_dict[args.ood_dataset](root=args.data_path,
+    ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                  transform=construct_transforms(n_in=ckpt['n_in'],
                                                                                 mode='eval'),
                                                  target_transform=None,

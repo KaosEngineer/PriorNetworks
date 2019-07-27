@@ -10,7 +10,7 @@ import sys
 import prior_networks.models as models
 from prior_networks.priornet.losses import DirichletKLLoss, DirichletKLLossJoint
 from prior_networks.priornet.training import TrainerWithOODJoint
-from prior_networks.util_pytorch import save_model, TargetTransform, model_dict
+from prior_networks.util_pytorch import save_model, TargetTransform, MODEL_DICT
 import foolbox
 
 sns.set()
@@ -98,7 +98,7 @@ def main(argv=None):
                path='/scratch/test/')
 
     ckpt = torch.load('/scratch/test/model.tar')
-    model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
+    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])
     model.eval()

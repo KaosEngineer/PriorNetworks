@@ -14,13 +14,13 @@ from prior_networks.datasets.image import construct_transforms
 from prior_networks.assessment.calibration import classification_calibration
 from prior_networks.assessment.rejection import eval_rejection_ratio_class
 from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
-from prior_networks.util_pytorch import model_dict, dataset_dict, select_gpu
+from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
 
 matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
                                              'on in-domain test data')
-parser.add_argument('dataset', choices=dataset_dict.keys(),
+parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
@@ -56,14 +56,14 @@ def main():
 
     # Load up the model
     ckpt = torch.load('./model/model.tar')
-    model = model_dict[ckpt['arch']](num_classes=ckpt['num_classes'],
+    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])
     model.to(device)
     model.eval()
 
     # Load the in-domain evaluation data
-    dataset = dataset_dict[args.dataset](root=args.data_path,
+    dataset = DATASET_DICT[args.dataset](root=args.data_path,
                                          transform=construct_transforms(n_in=ckpt['n_in'],
                                                                         mode='eval'),
                                          target_transform=None,
