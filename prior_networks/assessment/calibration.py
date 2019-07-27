@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import jaccard_similarity_score
+from sklearn.metrics import jaccard_score
 import seaborn as sns
 
 sns.set()
@@ -30,7 +30,7 @@ def classification_calibration(labels, probs, save_path, bins=10):
         lprobs = probs[ind]
         lpreds = preds[ind]
         llabels = labels[ind]
-        acc = jaccard_similarity_score(llabels, lpreds)
+        acc = np.mean(np.asarray(llabels == lpreds, dtype=np.float32))
         prob = np.mean(lprobs)
         if np.isnan(acc):
             acc = 0.0

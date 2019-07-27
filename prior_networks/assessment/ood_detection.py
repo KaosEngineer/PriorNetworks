@@ -13,6 +13,7 @@ import seaborn as sns
 sns.set()
 sns.set(font_scale=1.25)
 
+# TODO DECIDE HOW TO COMBINE THIS WITH ADV STUFF
 def eval_ood_detect(domain_labels, in_uncertainties, out_uncertainties, save_path, classes_flipped=None, adversarial=False):
 
     # if adversarial == True:
@@ -23,15 +24,15 @@ def eval_ood_detect(domain_labels, in_uncertainties, out_uncertainties, save_pat
             if key == 'confidence':
                 pos_label = 0
 
-            try:
+           # try:
                 # if adversarial == True:
                 #     function(domain_labels, in_uncertainties[key][0], out_uncertainties[key][0], classes_flipped,
                 #              in_uncertainties[key][1],
                 #              save_path=save_path, pos_label=pos_label, show=show)
-                ood_detect(domain_labels, in_uncertainties[key], out_uncertainties[key], key, mode=mode,
-                           save_path=save_path, pos_label=pos_label)
-            except:
-                pass
+            ood_detect(domain_labels, in_uncertainties[key], out_uncertainties[key], key, mode=mode,
+                       save_path=save_path, pos_label=pos_label)
+            # except:
+            #     pass
 
 
 def ood_detect(domain_labels, in_measure, out_measure, measure_name, save_path, mode, pos_label=1):
