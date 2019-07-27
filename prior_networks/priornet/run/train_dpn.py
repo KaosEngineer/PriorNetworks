@@ -1,22 +1,30 @@
+import context
 import argparse
 import os
 import sys
+import pathlib
+from pathlib import Path
 
 import torch
 from torch.utils import data
 from prior_networks.priornet.losses import DirichletKLLoss, DirichletKLLossJoint
-from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithOODJoint
-from prior_networks.util_pytorch import save_model, TargetTransform
+from prior_networks.util_pytorch import TargetTransform
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
+from prior_networks.models.model_factory import ModelFactory
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
+parser.add_argument('model_dir', type=str,
+                    help='absolute directory path where to save model and associated data.')
+parser.add_argument('data_path', type=str,
+                    help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
-parser.add_argument('ooo_dataset', choices=DATASET_DICT.keys(),
+parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Out-of-domain dataset name.')
 parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
@@ -35,8 +43,6 @@ parser.add_argument('--weight_decay', type=float, default=0.0,
 parser.add_argument('--batch_size', type=int, default=128,
                     help='Batch size for training.')
 parser.add_argument('--model_load_path', type=str, default='./model',
-                    help='Source where to load the model from.')
-parser.add_argument('--data_path', type=str, default='./data',
                     help='Source where to load the model from.')
 parser.add_argument('--reverse_KL', type=bool, default=True,
                     help='Whether to use forward or reverse KL. Default is to ALWAYS use reverse KL.')
@@ -60,12 +66,11 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
+    model_dir = Path(args.model_dir)
     # Load up the model
-    ckpt = torch.load('./model/model.tar')
-    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])  # ,
-    # dropout_rate=args.dropout_rate)
-    model.load_state_dict(ckpt['model_state_dict'])
+    ckpt = torch.load(model_dir / 'model/model.tar')
+    model = ModelFactory.model_from_checkpoint(ckpt)
+
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
@@ -87,15 +92,15 @@ def main():
 
     if args.gamma > 0.0:
         # Load the out-of-domain training dataset
-        ood_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                    transform=construct_transforms(
-                                                        n_in=ckpt['n_in'],
-                                                        mode='ood'),
-                                                    target_transform=TargetTransform(0.0,
-                                                                                     args.gamma,
-                                                                                     ood=True),
-                                                    download=True,
-                                                    split='train')
+        ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+                                                     transform=construct_transforms(
+                                                         n_in=ckpt['n_in'],
+                                                         mode='ood'),
+                                                     target_transform=TargetTransform(0.0,
+                                                                                      args.gamma,
+                                                                                      ood=True),
+                                                     download=True,
+                                                     split='train')
 
         # Combine ID and OOD training datasets into a single dataset for
         # training (necessary for DataParallel training)
@@ -124,7 +129,7 @@ def main():
                                   test_dataset=val_dataset,
                                   optimizer=optim.SGD,
                                   device=device,
-                                  checkpoint_path='./model',
+                                  checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                     'nesterov': True,
@@ -136,13 +141,13 @@ def main():
     # Save final model
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = model.module
-    save_model(model=model,
-               n_in=ckpt['n_in'],
-               n_channels=ckpt['n_channels'],
-               num_classes=ckpt['num_classes'],
-               arch=ckpt['arch'],
-               small_inputs=ckpt['small_inputs'],
-               path='model')
+    ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
+                                  model=model,
+                                  arch=ckpt['arch'],
+                                  n_channels=ckpt['n_channels'],
+                                  num_classes=ckpt['num_classes'],
+                                  small_inputs=ckpt['small_inputs'],
+                                  n_in=ckpt['n_in'])
 
 
 if __name__ == "__main__":
