@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import torch
 from torch.utils import data
@@ -14,6 +15,10 @@ from prior_networks.datasets.image.standardised_datasets import construct_transf
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
+parser.add_argument('model_dir', type=str,
+                    help='absolute directory path where to save model and associated data.')
+parser.add_argument('data_path', type=str,
+                    help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
 parser.add_argument('n_epochs', type=int,
@@ -38,8 +43,6 @@ parser.add_argument('--batch_size', type=int, default=128,
                     help='Batch size for training.')
 parser.add_argument('--model_load_path', type=str, default='./model',
                     help='Source where to load the model from.')
-parser.add_argument('--data_path', type=str, default='./data',
-                    help='Source where to load the model from.')
 parser.add_argument('--reverse_KL', type=bool, default=True,
                     help='Whether to use forward or reverse KL. Default is to ALWAYS use reverse KL.')
 parser.add_argument('--gpu',
@@ -62,8 +65,9 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
+    model_dir = Path(args.model_dir)
     # Load up the model
-    ckpt = torch.load('./model/model.tar')
+    ckpt = torch.load(model_dir / 'model/model.tar')
     model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])

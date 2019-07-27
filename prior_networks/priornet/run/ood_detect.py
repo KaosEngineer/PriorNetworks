@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import numpy as np
+from pathlib import Path
 
 import matplotlib
 import torch
@@ -18,6 +19,10 @@ matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
                                              'on in-domain test data')
+parser.add_argument('model_dir', type=str,
+                    help='absolute directory path where to save model and associated data.')
+parser.add_argument('data_path', type=str,
+                    help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the in-dimain dataset to evaluate model on.')
 parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
@@ -26,8 +31,6 @@ parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
-parser.add_argument('--data_path', type=str, default='./data',
-                    help='Path where data is saved')
 parser.add_argument('--load_path', type=str, default='./',
                     help='Specify path to model which should be loaded')
 parser.add_argument('--gpu', type=int, default=0,
@@ -54,8 +57,10 @@ def main():
     # Check that we are using a sensible GPU device
     device = select_gpu(args.gpu)
 
+    model_dir = Path(args.model_dir)
     # Load up the model
-    ckpt = torch.load('./model/model.tar')
+    ckpt = torch.load(model_dir / 'model/model.tar')
+
     model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
                                      small_inputs=ckpt['small_inputs'])
     model.load_state_dict(ckpt['model_state_dict'])

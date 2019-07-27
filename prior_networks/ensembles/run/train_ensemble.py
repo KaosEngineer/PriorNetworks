@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import torch
 from torch.utils import data
@@ -14,6 +15,10 @@ from prior_networks.datasets.image.standardised_datasets import construct_transf
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
+parser.add_argument('ensemble_dir', type=str,
+                    help='absolute directory path where to save model and associated data.')
+parser.add_argument('data_path', type=str,
+                    help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
 parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
@@ -35,8 +40,6 @@ parser.add_argument('--weight_decay', type=float, default=0.0,
 parser.add_argument('--batch_size', type=int, default=128,
                     help='Batch size for training.')
 parser.add_argument('--model_load_path', type=str, default='./model',
-                    help='Source where to load the model from.')
-parser.add_argument('--data_path', type=str, default='./data',
                     help='Source where to load the model from.')
 parser.add_argument('--reverse_KL', type=bool, default=True,
                     help='Whether to use forward or reverse KL. Default is to ALWAYS use reverse KL.')
@@ -60,89 +63,92 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
-    # Load up the model
-    ckpt = torch.load('./model/model.tar')
-    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])  # ,
-    # dropout_rate=args.dropout_rate)
-    model.load_state_dict(ckpt['model_state_dict'])
+    ensemble_dir = Path(args.ensemble_dir)
+    for model_dir in ensemble_dir.glob('model*'):
+        # Load up the model
+        ckpt = torch.load(model_dir / 'model/model.tar')
 
-    # Load the in-domain training and validation data
-    train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                  transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                                 mode='train',
-                                                                                 augment=args.augment),
-                                                  target_transform=TargetTransform(
-                                                      args.target_concentration,
-                                                      1.0),
-                                                  download=True,
-                                                  split='train')
+        model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
+                                         small_inputs=ckpt['small_inputs'])  # ,
+        # dropout_rate=args.dropout_rate)
+        model.load_state_dict(ckpt['model_state_dict'])
 
-    val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                               mode='eval'),
-                                                target_transform=None,
-                                                download=True,
-                                                split='val')
+        # Load the in-domain training and validation data
+        train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
+                                                      transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                     mode='train',
+                                                                                     augment=args.augment),
+                                                      target_transform=TargetTransform(
+                                                          args.target_concentration,
+                                                          1.0),
+                                                      download=True,
+                                                      split='train')
 
-    if args.gamma > 0.0:
-        # Load the out-of-domain training dataset
-        ood_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                    transform=construct_transforms(
-                                                        n_in=ckpt['n_in'],
-                                                        mode='ood'),
-                                                    target_transform=TargetTransform(0.0,
-                                                                                     args.gamma,
-                                                                                     ood=True),
+        val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
+                                                    transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                   mode='eval'),
+                                                    target_transform=None,
                                                     download=True,
-                                                    split='train')
+                                                    split='val')
 
-        # Combine ID and OOD training datasets into a single dataset for
-        # training (necessary for DataParallel training)
-        train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
+        if args.gamma > 0.0:
+            # Load the out-of-domain training dataset
+            ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+                                                         transform=construct_transforms(
+                                                             n_in=ckpt['n_in'],
+                                                             mode='ood'),
+                                                         target_transform=TargetTransform(0.0,
+                                                                                          args.gamma,
+                                                                                          ood=True),
+                                                         download=True,
+                                                         split='train')
 
-    # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count() - 1
-    device = select_gpu(args.gpu)
-    if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
-        print('Using Multi-GPU training.')
-    model.to(device)
+            # Combine ID and OOD training datasets into a single dataset for
+            # training (necessary for DataParallel training)
+            train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
 
-    # Set up training and test criteria
-    criterion = DirichletKLLossJoint(concentration=args.concentration,
-                                     reverse=args.reverse_KL)
-    test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-                                     concentration=args.concentration,
-                                     reverse=args.reverse_KL)
+        # Check that we are training on a sensible GPU
+        assert args.gpu <= torch.cuda.device_count() - 1
+        device = select_gpu(args.gpu)
+        if args.multi_gpu and torch.cuda.device_count() > 1:
+            model = torch.nn.DataParallel(model)
+            print('Using Multi-GPU training.')
+        model.to(device)
 
-    # Setup model trainer and train model
-    trainer = TrainerWithOODJoint(model=model,
-                                  criterion=criterion,
-                                  test_criterion=test_criterion,
-                                  train_dataset=train_dataset,
-                                  test_dataset=val_dataset,
-                                  optimizer=optim.SGD,
-                                  device=device,
-                                  checkpoint_path='./model',
-                                  scheduler=optim.lr_scheduler.MultiStepLR,
-                                  optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                                    'nesterov': True,
-                                                    'weight_decay': args.weight_decay},
-                                  scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
-                                  batch_size=args.batch_size)
-    trainer.train(args.n_epochs)
+        # Set up training and test criteria
+        criterion = DirichletKLLossJoint(concentration=args.concentration,
+                                         reverse=args.reverse_KL)
+        test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
+                                         concentration=args.concentration,
+                                         reverse=args.reverse_KL)
 
-    # Save final model
-    if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = model.module
-    save_model(model=model,
-               n_in=ckpt['n_in'],
-               n_channels=ckpt['n_channels'],
-               num_classes=ckpt['num_classes'],
-               arch=ckpt['arch'],
-               small_inputs=ckpt['small_inputs'],
-               path='model')
+        # Setup model trainer and train model
+        trainer = TrainerWithOODJoint(model=model,
+                                      criterion=criterion,
+                                      test_criterion=test_criterion,
+                                      train_dataset=train_dataset,
+                                      test_dataset=val_dataset,
+                                      optimizer=optim.SGD,
+                                      device=device,
+                                      checkpoint_path='./model',
+                                      scheduler=optim.lr_scheduler.MultiStepLR,
+                                      optimizer_params={'lr': args.lr, 'momentum': 0.9,
+                                                        'nesterov': True,
+                                                        'weight_decay': args.weight_decay},
+                                      scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
+                                      batch_size=args.batch_size)
+        trainer.train(args.n_epochs)
+
+        # Save final model
+        if args.multi_gpu and torch.cuda.device_count() > 1:
+            model = model.module
+        save_model(model=model,
+                   n_in=ckpt['n_in'],
+                   n_channels=ckpt['n_channels'],
+                   num_classes=ckpt['num_classes'],
+                   arch=ckpt['arch'],
+                   small_inputs=ckpt['small_inputs'],
+                   path='model')
 
 
 if __name__ == "__main__":
