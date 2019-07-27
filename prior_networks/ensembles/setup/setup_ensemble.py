@@ -3,7 +3,7 @@ import os
 import sys
 
 import torch
-from prior_networks.util_pytorch import MODEL_DICT, save_model
+from prior_networks.util_pytorch import MODEL_DICT, save_model, set_random_seeds
 
 parser = argparse.ArgumentParser(description='Setup an ensemble of models using a '
                                              'standard Torchvision architecture on a Torchvision'
@@ -22,7 +22,8 @@ parser.add_argument('arch',
 parser.add_argument('n_in', type=int,
                     help='Choose size of input image. eg: 32".')
 parser.add_argument('num_classes', type=int,
-                    help='Choose size of number of classes.')
+                    help='The number of classes in the data to be used.')
+parser.add_argument('num_models', type=int, help='Number of ensemble members (models).')
 parser.add_argument('--n_channels', type=int, default=3,
                     help='Choose number in image channels. Default 3 for color images.')
 parser.add_argument('--small_inputs', action='store_true',
@@ -49,19 +50,24 @@ def main():
 
     # Link and and create directories
     os.chdir(args.destination_path)
-    os.mkdir('model')
+
     os.symlink(args.data_path, 'data')
     os.symlink(args.library_path, 'prior_networks')
 
-    model = MODEL_DICT[args.arch](pretrained=False, num_classes=args.num_classes)
+    for i in range(args.num_models):
+        model_dir_name = f'model{i}'
+        os.mkdir(model_dir_name)
 
-    save_model(model=model,
-               n_in=args.n_in,
-               n_channels=args.n_channels,
-               num_classes=args.num_classes,
-               arch=args.arch,
-               small_inputs=args.small_inputs,
-               path='model')
+        set_random_seeds(i)
+        model = MODEL_DICT[args.arch](pretrained=False, num_classes=args.num_classes)
+
+        save_model(model=model,
+                   n_in=args.n_in,
+                   n_channels=args.n_channels,
+                   num_classes=args.num_classes,
+                   arch=args.arch,
+                   small_inputs=args.small_inputs,
+                   path=model_dir_name)
 
 
 if __name__ == "__main__":

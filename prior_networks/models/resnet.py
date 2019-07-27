@@ -106,7 +106,7 @@ class ResNet(nn.Module):
         return x
 
 
-def _resnet(arch, block, layers, pretrained, progress, **kwargs):
+def _resnet(arch, block, layers, pretrained: bool, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained:
         print('Loading pre-trained models not supported.')

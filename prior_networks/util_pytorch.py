@@ -5,6 +5,7 @@ from typing import Union
 # import context.py
 import numpy as np
 import torch
+import random
 
 from prior_networks import models
 from prior_networks.datasets import image
@@ -114,6 +115,13 @@ def select_gpu(gpu_id: int):
         device = torch.device("cpu")
 
     return device
+
+
+def set_random_seeds(seed: int) -> None:
+    """Sets random seeds that could be used by PyTorch to a single value given by seed."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 #

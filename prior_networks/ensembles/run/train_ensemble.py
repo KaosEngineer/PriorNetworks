@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network mo
                                              'dataset.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
-parser.add_argument('ooo_dataset', choices=DATASET_DICT.keys(),
+parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Out-of-domain dataset name.')
 parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
