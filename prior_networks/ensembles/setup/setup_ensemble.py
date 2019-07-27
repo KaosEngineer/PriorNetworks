@@ -54,9 +54,6 @@ def main():
 
     os.makedirs(ensemble_dir)
 
-    # Link and and create directories
-    os.chdir(ensemble_dir)
-
     for i in range(args.num_models):
         model_dir = ensemble_dir / f'model{i}'
         os.mkdir(model_dir)
