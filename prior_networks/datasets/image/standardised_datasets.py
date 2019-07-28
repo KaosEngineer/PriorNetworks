@@ -199,7 +199,7 @@ class ImageNet(torchvision.datasets.ImageNet):
 
 class LSUN(torchvision.datasets.LSUN):
 
-    def __init__(self, root, transform, target_transform, download=None, split):
+    def __init__(self, root, transform, target_transform, download, split):
         # TODO Add standard transforms for LSUN
 
         if download is not None:
