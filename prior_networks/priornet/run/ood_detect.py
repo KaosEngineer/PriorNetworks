@@ -61,7 +61,7 @@ def main():
 
     model_dir = Path(args.model_dir)
     # Load up the model
-    ckpt = torch.load(model_dir / 'model/model.tar')
+    ckpt = torch.load(model_dir / 'model/model.tar', map_location=device)
     model = ModelFactory.model_from_checkpoint(ckpt)
 
     model.to(device)
