@@ -2,7 +2,7 @@
 A number of classes that transform the torch vision datasets into a standard format
 usable for uncertainty (e.g. out-of-domain vs. in-domain) experimentation.
 """
-# import context
+import context
 import torchvision
 from torchvision import transforms
 from PIL import Image
@@ -47,7 +47,11 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
     transf_list.extend([transforms.ToTensor(),
                         transforms.Normalize((0.4914, 0.4822, 0.4465),
                                              (0.2023, 0.1994, 0.2010))])
-
+    # transf_list.extend([transforms.ToTensor(),
+    #                     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
+    # (0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261) ???
+    # (0.507, 0.487, 0.441), (0.267, 0.256, 0.276)
+    # (0.499, 0.484, 0.444), (0.258, 0.250, 0.269]) C10+C100
     return transforms.Compose(transf_list)
 
 

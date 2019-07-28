@@ -72,6 +72,7 @@ def main():
     model = ModelFactory.model_from_checkpoint(ckpt)
 
 
+
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(n_in=ckpt['n_in'],
