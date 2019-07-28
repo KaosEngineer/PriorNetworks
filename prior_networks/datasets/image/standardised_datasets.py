@@ -134,14 +134,15 @@ class Omniglot(torchvision.datasets.Omniglot):
 
 
 class CIFAR10(torchvision.datasets.CIFAR10):
+    mean = (0.4914, 0.4822, 0.4465)
+    std = (0.247, 0.243, 0.261)
+
     def __init__(self, root, transform, target_transform, download, split):
         assert split in split_options
         train = False
         if split == 'train':
             train = True
 
-        self.mean = (0.4914, 0.4822, 0.4465)
-        self.std = (0.247, 0.243, 0.261)
 
         # (0.499, 0.484, 0.444), (0.258, 0.250, 0.269]) C10+C100
 
@@ -153,14 +154,14 @@ class CIFAR10(torchvision.datasets.CIFAR10):
 
 
 class CIFAR100(torchvision.datasets.CIFAR100):
+    mean = (0.507, 0.487, 0.441)
+    std = (0.267, 0.256, 0.276)
+
     def __init__(self, root, transform, target_transform, download, split):
         assert split in split_options
         train = False
         if split == 'train':
             train = True
-
-        self.mean = (0.507, 0.487, 0.441)
-        self.std = (0.267, 0.256, 0.276)
 
         super().__init__(root=root,
                          download=download,
