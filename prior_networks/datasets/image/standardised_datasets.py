@@ -4,11 +4,11 @@ usable for uncertainty (e.g. out-of-domain vs. in-domain) experimentation.
 """
 import context
 import torchvision
+import os
 from torchvision import transforms
 from PIL import Image
 import torchvision.datasets as datasets
 
-#
 
 split_options = ['train', 'val', 'test']
 
@@ -30,14 +30,12 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
         elif mode == 'train':
             transf_list.extend([transforms.RandomHorizontalFlip(),
-                                #transforms.RandomRotation(15, resample=Image.BICUBIC),
                                 transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect'),
                                 transforms.RandomCrop(n_in)])
         else:
             transf_list.extend([transforms.RandomHorizontalFlip(),
                                 transforms.RandomVerticalFlip(),
-                                #transforms.RandomRotation(15, resample=Image.BICUBIC),
                                 transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect'),
                                 transforms.RandomCrop(n_in)])
@@ -143,7 +141,6 @@ class CIFAR10(torchvision.datasets.CIFAR10):
         if split == 'train':
             train = True
 
-
         # (0.499, 0.484, 0.444), (0.258, 0.250, 0.269]) C10+C100
 
         super().__init__(root=root,
@@ -193,5 +190,21 @@ class ImageNet(torchvision.datasets.ImageNet):
         super().__init__(root=root,
                          split=split,
                          download=download,
+                         transform=transform,
+                         target_transform=target_transform)
+
+
+class LSUN(torchvision.datasets.LSUN):
+
+    def __init__(self, root, transform, target_transform, download=None, split):
+        # TODO Add standard transforms for LSUN
+
+        if download is not None:
+            print('LSUN must be downloade manually')
+
+        assert split in split_options
+
+        super().__init__(root=os.path.join(root, 'lsun'),
+                         classes=split,
                          transform=transform,
                          target_transform=target_transform)
