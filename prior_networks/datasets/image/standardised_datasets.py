@@ -30,16 +30,16 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
         elif mode == 'train':
             transf_list.extend([transforms.RandomHorizontalFlip(),
-                                transforms.RandomRotation(15, resample=Image.BICUBIC),
+                                #transforms.RandomRotation(15, resample=Image.BICUBIC),
                                 transforms.Resize(n_in, Image.BICUBIC),
-                                transforms.Pad(4, padding_mode='symmetric'),
+                                transforms.Pad(4, padding_mode='reflect'),
                                 transforms.RandomCrop(n_in)])
         else:
             transf_list.extend([transforms.RandomHorizontalFlip(),
                                 transforms.RandomVerticalFlip(),
-                                transforms.RandomRotation(15, resample=Image.BICUBIC),
+                                #transforms.RandomRotation(15, resample=Image.BICUBIC),
                                 transforms.Resize(n_in, Image.BICUBIC),
-                                transforms.Pad(4, padding_mode='symmetric'),
+                                transforms.Pad(4, padding_mode='reflect'),
                                 transforms.RandomCrop(n_in)])
     else:
         transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
