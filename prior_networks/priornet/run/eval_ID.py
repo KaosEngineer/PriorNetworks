@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import torch
 import torch.nn.functional as F
+from pathlib import Path
 
 from prior_networks.assessment.misc_detection import eval_misc_detect
 from prior_networks.evaluation import eval_logits_on_dataset
@@ -15,7 +16,8 @@ from prior_networks.datasets.image import construct_transforms
 from prior_networks.assessment.calibration import classification_calibration
 from prior_networks.assessment.rejection import eval_rejection_ratio_class
 from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
-from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu
+from prior_networks.models.model_factory import ModelFactory
 
 matplotlib.use('agg')
 
@@ -29,8 +31,8 @@ parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
 parser.add_argument('--data_path', type=str, default='./data',
                     help='Path where data is saved')
-parser.add_argument('--load_path', type=str, default='./',
-                    help='Specify path to model which should be loaded')
+parser.add_argument('--model_dir', type=str, default='./',
+                    help='absolute directory path where to save model and associated data.')
 parser.add_argument('--gpu', type=int, default=0,
                     help='Specify which GPU to evaluate on.')
 parser.add_argument('--overwrite', action='store_true',
@@ -56,10 +58,9 @@ def main():
     device = select_gpu(args.gpu)
 
     # Load up the model
-    ckpt = torch.load('./model/model.tar')
-    model = MODEL_DICT[ckpt['arch']](num_classes=ckpt['num_classes'],
-                                     small_inputs=ckpt['small_inputs'])
-    model.load_state_dict(ckpt['model_state_dict'])
+    model_dir = Path(args.model_dir)
+    ckpt = torch.load(model_dir / 'model/model.tar')
+    model = ModelFactory.model_from_checkpoint(ckpt)
     model.to(device)
     model.eval()
 

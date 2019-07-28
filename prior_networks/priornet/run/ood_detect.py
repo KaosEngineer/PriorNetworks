@@ -22,8 +22,7 @@ matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
                                              'on in-domain test data')
-parser.add_argument('model_dir', type=str,
-                    help='absolute directory path where to save model and associated data.')
+
 parser.add_argument('data_path', type=str,
                     help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
@@ -32,10 +31,10 @@ parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the out-of-domain dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
+parser.add_argument('--model_dir', type=str, default='/',
+                    help='absolute directory path where to save model and associated data.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
-parser.add_argument('--load_path', type=str, default='./',
-                    help='Specify path to model which should be loaded')
 parser.add_argument('--gpu', type=int, default=0,
                     help='Specify which GPU to evaluate on.')
 parser.add_argument('--overwrite', action='store_true',
