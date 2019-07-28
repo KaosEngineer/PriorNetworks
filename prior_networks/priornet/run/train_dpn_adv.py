@@ -75,6 +75,8 @@ def main():
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(n_in=ckpt['n_in'],
                                                                                  mode='train',
+                                                                                 mean=DATASET_DICT[args.id_dataset].mean,
+                                                                                 std=DATASET_DICT[args.id_dataset].std,
                                                                                  augment=args.augment),
                                                   target_transform=None,
                                                   download=True,
@@ -82,6 +84,8 @@ def main():
 
     val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                               mean=DATASET_DICT[args.id_dataset].mean,
+                                                                               std=DATASET_DICT[args.id_dataset].std,
                                                                                mode='eval'),
                                                 target_transform=None,
                                                 download=True,

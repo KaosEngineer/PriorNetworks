@@ -77,6 +77,9 @@ def main():
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(n_in=ckpt['n_in'],
                                                                                  mode='train',
+                                                                                 mean=DATASET_DICT[
+                                                                                     args.id_dataset].mean,
+                                                                                 std=DATASET_DICT[args.id_dataset].std,
                                                                                  augment=args.augment),
                                                   target_transform=TargetTransform(
                                                       args.target_concentration,
@@ -86,6 +89,8 @@ def main():
 
     val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                               mean=DATASET_DICT[args.id_dataset].mean,
+                                                                               std=DATASET_DICT[args.id_dataset].std,
                                                                                mode='eval'),
                                                 target_transform=None,
                                                 download=True,
@@ -96,6 +101,8 @@ def main():
         ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                      transform=construct_transforms(
                                                          n_in=ckpt['n_in'],
+                                                         mean=DATASET_DICT[args.id_dataset].mean,
+                                                         std=DATASET_DICT[args.id_dataset].std,
                                                          mode='ood'),
                                                      target_transform=TargetTransform(0.0,
                                                                                       args.gamma,

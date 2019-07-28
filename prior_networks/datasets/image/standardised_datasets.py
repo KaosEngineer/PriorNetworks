@@ -13,7 +13,7 @@ import torchvision.datasets as datasets
 split_options = ['train', 'val', 'test']
 
 
-def construct_transforms(n_in: int, mode: str, augment: bool = False):
+def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment: bool = False, ):
     """
 
     :param n_in:
@@ -45,13 +45,8 @@ def construct_transforms(n_in: int, mode: str, augment: bool = False):
         transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
 
     transf_list.extend([transforms.ToTensor(),
-                        transforms.Normalize((0.4914, 0.4822, 0.4465),
-                                             (0.2023, 0.1994, 0.2010))])
-    # transf_list.extend([transforms.ToTensor(),
-    #                     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))])
-    # (0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261) ???
-    # (0.507, 0.487, 0.441), (0.267, 0.256, 0.276)
-    # (0.499, 0.484, 0.444), (0.258, 0.250, 0.269]) C10+C100
+                        transforms.Normalize(mean, std)])
+
     return transforms.Compose(transf_list)
 
 
@@ -145,6 +140,11 @@ class CIFAR10(torchvision.datasets.CIFAR10):
         if split == 'train':
             train = True
 
+        self.mean = (0.4914, 0.4822, 0.4465)
+        self.std = (0.247, 0.243, 0.261)
+
+        # (0.499, 0.484, 0.444), (0.258, 0.250, 0.269]) C10+C100
+
         super().__init__(root=root,
                          download=download,
                          transform=transform,
@@ -158,6 +158,9 @@ class CIFAR100(torchvision.datasets.CIFAR100):
         train = False
         if split == 'train':
             train = True
+
+        self.mean = (0.507, 0.487, 0.441)
+        self.std = (0.267, 0.256, 0.276)
 
         super().__init__(root=root,
                          download=download,

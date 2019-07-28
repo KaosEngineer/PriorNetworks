@@ -70,6 +70,8 @@ def main():
     # Load the in-domain evaluation data
     id_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                              mean=DATASET_DICT[args.id_dataset].mean,
+                                                                              std=DATASET_DICT[args.id_dataset].std,
                                                                               mode='eval'),
                                                target_transform=None,
                                                download=True,
@@ -77,6 +79,8 @@ def main():
 
     ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                  transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                                mean=DATASET_DICT[args.id_dataset].mean,
+                                                                                std=DATASET_DICT[args.id_dataset].std,
                                                                                 mode='eval'),
                                                  target_transform=None,
                                                  download=True,
