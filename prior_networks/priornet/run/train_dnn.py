@@ -66,6 +66,7 @@ def main():
                                                                               mean=DATASET_DICT[args.dataset].mean,
                                                                               std=DATASET_DICT[args.dataset].std,
                                                                               augment=args.augment),
+                                               target_transform=None,
                                                download=True,
                                                split='train')
 
@@ -74,6 +75,7 @@ def main():
                                                                             mean=DATASET_DICT[args.dataset].mean,
                                                                             std=DATASET_DICT[args.dataset].std,
                                                                             mode='eval'),
+                                             target_transform=None,
                                              download=True,
                                              split='val')
 
