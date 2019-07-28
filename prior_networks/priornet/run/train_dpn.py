@@ -28,7 +28,7 @@ parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
-parser.add_argument('--model_dir', type=str, default='/',
+parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--target_concentration', type=float, default=1e2,
                     help='Target in-domain concentration.')

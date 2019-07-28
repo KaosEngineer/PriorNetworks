@@ -31,7 +31,7 @@ parser.add_argument('ood_dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of the out-of-domain dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
-parser.add_argument('--model_dir', type=str, default='/',
+parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
