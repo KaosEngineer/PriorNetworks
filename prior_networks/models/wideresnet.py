@@ -20,7 +20,7 @@ def conv3x3(in_planes, out_planes, stride=1):
 def conv_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        init.xavier_uniform(m.weight, gain=math.sqrt(2))
+        init.kaiming_normal(m.weight)
         init.constant(m.bias, 0)
     elif classname.find('BatchNorm') != -1:
         init.constant(m.weight, 1)
