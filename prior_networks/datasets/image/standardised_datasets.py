@@ -24,20 +24,23 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
     assert mode in ['train', 'eval', 'ood']
 
     transf_list = []
+    #TODO Make automatic. This is here temporaricly...
+    mean = (0.4914, 0.4823, 0.4465)
+    std = (0.247, 0.243, 0.261)
 
     if augment:
         if mode == 'eval':
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
         elif mode == 'train':
-            transf_list.extend([transforms.RandomHorizontalFlip(),
-                                transforms.Resize(n_in, Image.BICUBIC),
+            transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect'),
+                                transforms.RandomHorizontalFlip(),
                                 transforms.RandomCrop(n_in)])
         else:
-            transf_list.extend([transforms.RandomHorizontalFlip(),
-                                transforms.RandomVerticalFlip(),
-                                transforms.Resize(n_in, Image.BICUBIC),
+            transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect'),
+                                transforms.RandomHorizontalFlip(),
+                                transforms.RandomVerticalFlip(),
                                 transforms.RandomCrop(n_in)])
     else:
         transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
@@ -132,7 +135,7 @@ class Omniglot(torchvision.datasets.Omniglot):
 
 
 class CIFAR10(torchvision.datasets.CIFAR10):
-    mean = (0.4914, 0.4822, 0.4465)
+    mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
 
     def __init__(self, root, transform, target_transform, download, split):
@@ -173,7 +176,7 @@ class SVHN(torchvision.datasets.SVHN):
         if split == 'val':
             split = 'test'
 
-        super().__init__(root=root,
+        super().__init__(root=os.path.join(root, 'svhn'),
                          split=split,
                          download=download,
                          transform=transform,
@@ -187,7 +190,7 @@ class ImageNet(torchvision.datasets.ImageNet):
         if split == 'test':
             split = 'val'
 
-        super().__init__(root=root,
+        super().__init__(root=os.path.join(root, 'imagenet'),
                          split=split,
                          download=download,
                          transform=transform,
