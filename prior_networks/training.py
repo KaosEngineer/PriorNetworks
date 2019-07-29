@@ -97,15 +97,19 @@ class Trainer:
         if load_scheduler_state:
             self.scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
-    def train(self, n_epochs=None, n_iter=None):
+    def train(self, n_epochs=None, n_iter=None, resume=False):
         # Calc num of epochs
+        init_epoch = 0
         if n_epochs is None:
             assert isinstance(n_iter, int)
             n_epochs = math.ceil(n_iter / len(self.trainloader))
         else:
             assert isinstance(n_epochs, int)
 
-        for epoch in range(n_epochs):
+        if resume:
+            init_epoch = math.floor(self.steps/math.ceil(len(self.trainloader)/self.batch_size))
+
+        for epoch in range(init_epoch, n_epochs):
             print(f'Training epoch: {epoch + 1} / {n_epochs}')
             # Train
             start = time.time()

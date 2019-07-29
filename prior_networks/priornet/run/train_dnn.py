@@ -43,7 +43,10 @@ parser.add_argument('--multi_gpu',
                     help='Use multiple GPUs for training.')
 parser.add_argument('--augment',
                     action='store_true',
-                    help='Whether to use horizontal flipping augmentation.')
+                    help='Whether to use augmentation.')
+parser.add_argument('--resume',
+                    action='store_true',
+                    help='Whether to resume training from checkpoint.')
 
 
 def main():
@@ -105,6 +108,8 @@ def main():
                                         'weight_decay': args.weight_decay},
                       scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
                       batch_size=args.batch_size)
+    if args.resume:
+        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True)
     trainer.train(args.n_epochs)
 
     # Save final model

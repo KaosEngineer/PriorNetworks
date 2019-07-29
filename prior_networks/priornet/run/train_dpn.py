@@ -55,7 +55,7 @@ parser.add_argument('--multi_gpu',
                     help='Use multiple GPUs for training.')
 parser.add_argument('--augment',
                     action='store_true',
-                    help='Whether to use horizontal flipping augmentation.')
+                    help='Whether to use augmentation.')
 
 
 def main():
