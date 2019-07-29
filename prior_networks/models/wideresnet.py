@@ -80,9 +80,13 @@ class WideResNet(nn.Module):
 
     def forward(self, x):
         out = self.conv1(x)
+        print(out.size())
         out = self.layer1(out)
+        print(out.size())
         out = self.layer2(out)
+        print(out.size())
         out = self.layer3(out)
+        print(out.size())
         out = F.relu(self.bn1(out))
         out = F.avg_pool2d(out, 8)
         out = out.view(out.size(0), -1)
