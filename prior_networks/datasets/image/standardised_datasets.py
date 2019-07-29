@@ -294,6 +294,9 @@ class TinyImageNet(datasets.VisionDataset):
 
         return sample, target
 
+    def __len__(self):
+        return len(self.samples)
+
 
 def make_dataset_TIM_val(dir, class_to_idx, extensions=None, is_valid_file=None):
     images = []
@@ -322,6 +325,7 @@ def make_dataset_TIM_val(dir, class_to_idx, extensions=None, is_valid_file=None)
                 images.append(item)
     return images
 
+
 def make_dataset_TIM(dir, class_to_idx, extensions=None, is_valid_file=None):
     images = []
     dir = os.path.expanduser(dir)
@@ -340,5 +344,4 @@ def make_dataset_TIM(dir, class_to_idx, extensions=None, is_valid_file=None):
                 if is_valid_file(path):
                     item = (path, class_to_idx[target])
                     images.append(item)
-
     return images
