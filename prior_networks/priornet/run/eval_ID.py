@@ -23,14 +23,14 @@ matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='Evaluates model predictions and uncertainty '
                                              'on in-domain test data')
+parser.add_argument('data_path', type=str,
+                    help='Path where data is saved')
 parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
-parser.add_argument('--data_path', type=str, default='./data',
-                    help='Path where data is saved')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--gpu', type=int, default=0,
