@@ -218,7 +218,7 @@ class TinyImageNet(datasets.VisionDataset):
     mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
 
-    def __init__(self, root, loader, transform, target_transform, split, extensions='.JPEG', download=None):
+    def __init__(self, root, transform, target_transform, split, extensions='.JPEG', loader=default_loader, download=None):
 
         if download is not None:
             print('TinyImageNet must be downloaded manually')
