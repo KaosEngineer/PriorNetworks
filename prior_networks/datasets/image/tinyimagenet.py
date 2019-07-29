@@ -1,4 +1,4 @@
-from torchvision.datasets import VisionDataset
+
 import argparse, os, os.path, glob, random, sys, json
 from collections import defaultdict
 from lxml import objectify
@@ -13,10 +13,7 @@ import numpy as np
 Code ported form  https://github.com/hendrycks/outlier-exposure/blob/master/TinyImageNet/Tiny_ImageNet_dataset/make_tiny_imagenet.py
 """
 
-class TingImageNet(VisionDataset):
 
-    def __init__(self):
-        pass
 
 
 
