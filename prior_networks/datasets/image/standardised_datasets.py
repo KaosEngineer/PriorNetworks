@@ -214,11 +214,13 @@ class LSUN(torchvision.datasets.LSUN):
                          target_transform=target_transform)
 
 
+IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp', '.JPEG')
+
 class TinyImageNet(datasets.VisionDataset):
     mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
 
-    def __init__(self, root, transform, target_transform, split, extensions=('.JPEG'), loader=default_loader,
+    def __init__(self, root, transform, target_transform, split, extensions=IMG_EXTENSIONS, loader=default_loader,
                  download=None):
 
         if download is not None:
