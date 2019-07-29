@@ -18,6 +18,7 @@ DATASET_DICT = {'MNIST': image.MNIST,
                 'SVHN': image.SVHN,
                 'CIFAR10': image.CIFAR10,
                 'CIFAR100': image.CIFAR100,
+                'LSUN': image.LSUN,
                 'ImageNet': image.ImageNet}
 
 
