@@ -235,7 +235,7 @@ class TinyImageNet(datasets.VisionDataset):
         self.target_transform = target_transform
         classes, class_to_idx = self._find_classes(self.root)
         if split == 'train':
-            samples = make_dataset(os.path.join(self.root, 'train'),
+            samples = make_dataset(os.path.join(self.root, 'train/images'),
                                    class_to_idx,
                                    extensions)
         else:
@@ -244,8 +244,7 @@ class TinyImageNet(datasets.VisionDataset):
                                            extensions)
         if len(samples) == 0:
             raise (RuntimeError("Found 0 files in subfolders of: " + self.root + "\n"
-                                                                                 "Supported extensions are: " + ",".join(
-                extensions)))
+                                 "Supported extensions are: " + ",".join(extensions)))
 
         self.loader = loader
         self.extensions = extensions
@@ -319,25 +318,3 @@ def make_dataset_TIM_val(dir, class_to_idx, extensions=None, is_valid_file=None)
             if is_valid_file(path):
                 item = (path, class_to_idx[target])
                 images.append(item)
-
-
-def make_dataset(dir, class_to_idx, extensions=None, is_valid_file=None):
-    images = []
-    dir = os.path.expanduser(dir)
-    if not ((extensions is None) ^ (is_valid_file is None)):
-        raise ValueError("Both extensions and is_valid_file cannot be None or not None at the same time")
-    if extensions is not None:
-        def is_valid_file(x):
-            return has_file_allowed_extension(x, extensions)
-    for target in sorted(class_to_idx.keys()):
-        d = os.path.join(dir, target + '/images')
-        if not os.path.isdir(d):
-            continue
-        for root, _, fnames in sorted(os.walk(d)):
-            for fname in sorted(fnames):
-                path = os.path.join(root, fname)
-                if is_valid_file(path):
-                    item = (path, class_to_idx[target])
-                    images.append(item)
-
-    return images
