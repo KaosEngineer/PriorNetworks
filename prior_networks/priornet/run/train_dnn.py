@@ -110,7 +110,7 @@ def main():
                       batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True)
-    trainer.train(args.n_epochs)
+    trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model
     if args.multi_gpu and torch.cuda.device_count() > 1:
