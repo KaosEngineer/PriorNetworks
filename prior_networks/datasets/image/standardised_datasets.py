@@ -315,6 +315,7 @@ def make_dataset_TIM_val(dir, class_to_idx, extensions=None, is_valid_file=None)
         for fname in sorted(fnames):
             target = fileclass_dict[fname]
             path = os.path.join(root, fname)
+            print(fname)
             if is_valid_file(path):
                 item = (path, class_to_idx[target])
                 images.append(item)
