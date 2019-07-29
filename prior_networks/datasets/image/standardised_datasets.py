@@ -218,7 +218,8 @@ class TinyImageNet(datasets.VisionDataset):
     mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
 
-    def __init__(self, root, transform, target_transform, split, extensions='.JPEG', loader=default_loader, download=None):
+    def __init__(self, root, transform, target_transform, split, extensions='.JPEG', loader=default_loader,
+                 download=None):
 
         if download is not None:
             print('TinyImageNet must be downloaded manually')
@@ -243,7 +244,8 @@ class TinyImageNet(datasets.VisionDataset):
                                            extensions)
         if len(samples) == 0:
             raise (RuntimeError("Found 0 files in subfolders of: " + self.root + "\n"
-                                 "Supported extensions are: " + ",".join(extensions)))
+                                                                                 "Supported extensions are: " + ",".join(
+                extensions)))
 
         self.loader = loader
         self.extensions = extensions
@@ -328,7 +330,7 @@ def make_dataset(dir, class_to_idx, extensions=None, is_valid_file=None):
         def is_valid_file(x):
             return has_file_allowed_extension(x, extensions)
     for target in sorted(class_to_idx.keys()):
-        d = os.path.join(dir, target / 'images')
+        d = os.path.join(dir, target + '/images')
         if not os.path.isdir(d):
             continue
         for root, _, fnames in sorted(os.walk(d)):
