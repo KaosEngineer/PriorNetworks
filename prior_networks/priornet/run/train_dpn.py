@@ -4,6 +4,7 @@ import os
 import sys
 import pathlib
 from pathlib import Path
+import math
 
 import torch
 from torch.utils import data
@@ -115,7 +116,20 @@ def main():
 
         # Combine ID and OOD training datasets into a single dataset for
         # training (necessary for DataParallel training)
-        train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
+        if len(train_dataset) == len(ood_dataset):
+            train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
+        elif len(train_dataset) < len(ood_dataset):
+            ratio = float(len(ood_dataset))/float(len(train_dataset))
+            assert ratio.is_integer()
+            dataset_list = [train_dataset, ]*int(ratio)
+            dataset_list.append(ood_dataset)
+            train_dataset = data.ConcatDataset(dataset_list)
+        elif len(train_dataset) > len(ood_dataset):
+            ratio = float(len(train_dataset))/float(len(ood_dataset))
+            assert ratio.is_integer()
+            dataset_list = [ood_dataset, ]*int(ratio)
+            dataset_list.append(train_dataset)
+            train_dataset = data.ConcatDataset(dataset_list)
 
     # Check that we are training on a sensible GPU
     assert args.gpu <= torch.cuda.device_count() - 1
