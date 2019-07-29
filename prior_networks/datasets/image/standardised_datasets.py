@@ -305,7 +305,7 @@ def make_dataset_TIM_val(dir, class_to_idx, extensions=None, is_valid_file=None)
             return has_file_allowed_extension(x, extensions)
 
     with open(os.path.join(dir, 'val_annotations.txt')) as f:
-        fileclass_dict = []
+        fileclass_dict = {}
         for line in f.readlines():
             line = line.split()
             fileclass_dict[line[0]] = line[1]
