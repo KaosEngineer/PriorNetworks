@@ -107,8 +107,7 @@ class Trainer:
             assert isinstance(n_epochs, int)
 
         if resume:
-            init_epoch = math.floor(self.steps/math.ceil(len(self.trainloader)/self.batch_size))
-            print(init_epoch, self.steps, len(self.trainloader), self.batch_size)
+            init_epoch = math.floor(self.steps / len(self.trainloader))
 
         for epoch in range(init_epoch, n_epochs):
             print(f'Training epoch: {epoch + 1} / {n_epochs}')
