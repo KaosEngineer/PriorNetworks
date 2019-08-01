@@ -15,16 +15,19 @@ import torchvision.datasets as datasets
 split_options = ['train', 'val', 'test']
 
 
-def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment: bool = False, ):
+def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment: bool = False, rotation: bool = False,
+                         jitter: float = 0.0):
     """
 
     :param n_in:
     :param mode:
     :param augment:
+    :param rotation:
+    :param jitter:
     :return:
     """
     assert mode in ['train', 'eval', 'ood']
-
+    assert not jitter < 0.0
     transf_list = []
     # TODO Make automatic. This is here temporaricly...
     mean = (0.4914, 0.4823, 0.4465)
@@ -35,12 +38,18 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
         elif mode == 'train':
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
-                                transforms.Pad(4, padding_mode='reflect'),
+                                transforms.Pad(4, padding_mode='reflect')])
+            if rotation:
+                transf_list.append(transforms.RandomRotation(degrees=15, resample=Image.BICUBIC))
+            transf_list.extend([torchvision.transforms.ColorJitter(jitter, jitter, jitter, jitter),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.RandomCrop(n_in)])
         else:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
-                                transforms.Pad(4, padding_mode='reflect'),
+                                transforms.Pad(4, padding_mode='reflect')])
+            if rotation:
+                transf_list.append(transforms.RandomRotation(degrees=15, resample=Image.BICUBIC))
+            transf_list.extend([torchvision.transforms.ColorJitter(jitter, jitter, jitter, jitter),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.RandomVerticalFlip(),
                                 transforms.RandomCrop(n_in)])
@@ -216,6 +225,7 @@ class LSUN(torchvision.datasets.LSUN):
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp', '.JPEG')
 
+
 class TinyImageNet(datasets.VisionDataset):
     mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
@@ -238,15 +248,16 @@ class TinyImageNet(datasets.VisionDataset):
         classes, class_to_idx = self._find_classes(self.root)
         if split == 'train':
             samples = make_dataset_TIM(os.path.join(self.root, 'train'),
-                                   class_to_idx,
-                                   extensions)
+                                       class_to_idx,
+                                       extensions)
         else:
             samples = make_dataset_TIM_val(os.path.join(self.root, 'val'),
                                            class_to_idx,
                                            extensions)
         if len(samples) == 0:
             raise (RuntimeError("Found 0 files in subfolders of: " + self.root + "\n"
-                                 "Supported extensions are: " + ",".join(extensions)))
+                                                                                 "Supported extensions are: " + ",".join(
+                extensions)))
 
         self.loader = loader
         self.extensions = extensions
@@ -335,7 +346,7 @@ def make_dataset_TIM(dir, class_to_idx, extensions=None, is_valid_file=None):
         def is_valid_file(x):
             return has_file_allowed_extension(x, extensions)
     for target in sorted(class_to_idx.keys()):
-        d = os.path.join(dir, target+'/images')
+        d = os.path.join(dir, target + '/images')
         if not os.path.isdir(d):
             continue
         for root, _, fnames in sorted(os.walk(d)):

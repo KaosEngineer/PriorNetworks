@@ -57,6 +57,12 @@ parser.add_argument('--multi_gpu',
 parser.add_argument('--augment',
                     action='store_true',
                     help='Whether to use augmentation.')
+parser.add_argument('--rotate',
+                    action='store_true',
+                    help='Whether to use rotation augmentation')
+parser.add_argument('--jitter', type=float, default=0.0,
+                    help='Specify how much random color, '
+                         'hue, saturation and contrast jitter to apply')
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
@@ -75,8 +81,6 @@ def main():
     ckpt = torch.load(model_dir / 'model/model.tar')
     model = ModelFactory.model_from_checkpoint(ckpt)
 
-
-
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(n_in=ckpt['n_in'],
@@ -84,7 +88,9 @@ def main():
                                                                                  mean=DATASET_DICT[
                                                                                      args.id_dataset].mean,
                                                                                  std=DATASET_DICT[args.id_dataset].std,
-                                                                                 augment=args.augment),
+                                                                                 augment=args.augment,
+                                                                                 rotation=args.rotate,
+                                                                                 jitter=args.jitter),
                                                   target_transform=TargetTransform(
                                                       args.target_concentration,
                                                       1.0),
@@ -95,7 +101,9 @@ def main():
                                                 transform=construct_transforms(n_in=ckpt['n_in'],
                                                                                mean=DATASET_DICT[args.id_dataset].mean,
                                                                                std=DATASET_DICT[args.id_dataset].std,
-                                                                               mode='eval'),
+                                                                               mode='eval',
+                                                                               rotation=args.rotate,
+                                                                               jitter=args.jitter),
                                                 target_transform=None,
                                                 download=True,
                                                 split='val')
@@ -119,15 +127,15 @@ def main():
         if len(train_dataset) == len(ood_dataset):
             train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
         elif len(train_dataset) < len(ood_dataset):
-            ratio = float(len(ood_dataset))/float(len(train_dataset))
+            ratio = float(len(ood_dataset)) / float(len(train_dataset))
             assert ratio.is_integer()
-            dataset_list = [train_dataset, ]*int(ratio)
+            dataset_list = [train_dataset, ] * int(ratio)
             dataset_list.append(ood_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
         elif len(train_dataset) > len(ood_dataset):
-            ratio = float(len(train_dataset))/float(len(ood_dataset))
+            ratio = float(len(train_dataset)) / float(len(ood_dataset))
             assert ratio.is_integer()
-            dataset_list = [ood_dataset, ]*int(ratio)
+            dataset_list = [ood_dataset, ] * int(ratio)
             dataset_list.append(train_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
 

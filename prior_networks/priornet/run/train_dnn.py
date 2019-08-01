@@ -44,9 +44,16 @@ parser.add_argument('--multi_gpu',
 parser.add_argument('--augment',
                     action='store_true',
                     help='Whether to use augmentation.')
+parser.add_argument('--rotate',
+                    action='store_true',
+                    help='Whether to use rotation augmentation')
+parser.add_argument('--jitter', type=float, default=0.0,
+                    help='Specify how much random color, '
+                         'hue, saturation and contrast jitter to apply')
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
+
 
 
 def main():
@@ -68,7 +75,9 @@ def main():
                                                                               mode='train',
                                                                               mean=DATASET_DICT[args.dataset].mean,
                                                                               std=DATASET_DICT[args.dataset].std,
-                                                                              augment=args.augment),
+                                                                              augment=args.augment,
+                                                                              rotation=args.rotate,
+                                                                              jitter=args.jitter),
                                                target_transform=None,
                                                download=True,
                                                split='train')

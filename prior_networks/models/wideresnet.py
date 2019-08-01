@@ -99,6 +99,24 @@ def wide_resnet28_10(pretrained=None, progress=None, small_inputs=None, **kwargs
     """
     return WideResNet(**kwargs, depth=28, widen_factor=10)
 
+def wide_resnet28_12(pretrained=None, progress=None, small_inputs=None, **kwargs):
+    """Constructs a Wide ResNet-28-10 model.
+    Args:
+        pretrained (bool): Empty variable for common interface
+        progress (bool): Empty variable for common interface
+        small_inputs: Unused
+    """
+    return WideResNet(**kwargs, depth=28, widen_factor=12)
+
+def wide_resnet40_2(pretrained=None, progress=None, small_inputs=None, **kwargs):
+    """Constructs a Wide ResNet-28-10 model.
+    Args:
+        pretrained (bool): Empty variable for common interface
+        progress (bool): Empty variable for common interface
+        small_inputs: Unused
+    """
+    return WideResNet(**kwargs, depth=40, widen_factor=2)
+
     # class WideResNet28x10:
     #     base = WideResNet
     #     args = list()

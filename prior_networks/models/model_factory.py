@@ -22,6 +22,7 @@ class ModelFactory(object):
                   'wide_resnet50_2': prior_networks.models.wide_resnet50_2,
                   'wide_resnet101_2': prior_networks.models.wide_resnet101_2,
                   'wide_resnet28_10': prior_networks.models.wide_resnet28_10,
+                  'wide_resnet28_12': prior_networks.models.wide_resnet28_12,
                   'densenet121': prior_networks.models.densenet121,
                   'densenet161': prior_networks.models.densenet161,
                   'densenet169': prior_networks.models.densenet169,
