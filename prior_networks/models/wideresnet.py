@@ -10,7 +10,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 import math
 
-__all__ = ['wide_resnet28_10']
+__all__ = ['wide_resnet28_10', 'wide_resnet28_12']
 
 
 def conv3x3(in_planes, out_planes, stride=1):
