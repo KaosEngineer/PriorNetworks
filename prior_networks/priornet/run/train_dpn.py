@@ -76,10 +76,20 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
+
     model_dir = Path(args.model_dir)
     # Load up the model
-    ckpt = torch.load(model_dir / 'model/model.tar')
+
+    # Check that we are training on a sensible GPU
+    assert args.gpu <= torch.cuda.device_count() - 1
+    device = select_gpu(args.gpu)
+
+    ckpt = torch.load(model_dir / 'model/model.tar', map_location=args.device)
     model = ModelFactory.model_from_checkpoint(ckpt)
+    if args.multi_gpu and torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
+        print('Using Multi-GPU training.')
+    model.to(device)
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
@@ -139,13 +149,6 @@ def main():
             dataset_list.append(train_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
 
-    # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count() - 1
-    device = select_gpu(args.gpu)
-    if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
-        print('Using Multi-GPU training.')
-    model.to(device)
 
     # Set up training and test criteria
     criterion = DirichletKLLossJoint(concentration=args.concentration,
