@@ -70,7 +70,7 @@ def main():
     assert args.gpu <= torch.cuda.device_count() - 1
     device = select_gpu(args.gpu)
 
-    ckpt = torch.load(model_dir / 'model/model.tar', map_location=args.device)
+    ckpt = torch.load(model_dir / 'model/model.tar', map_location=device)
     model = ModelFactory.model_from_checkpoint(ckpt)
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
