@@ -85,8 +85,8 @@ class Trainer:
             'test_loss': self.test_loss
         }, os.path.join(self.checkpoint_path, checkpoint_name))
 
-    def load_checkpoint(self, checkpoint_path, load_opt_state=False, load_scheduler_state=False):
-        checkpoint = torch.load(checkpoint_path)
+    def load_checkpoint(self, checkpoint_path, load_opt_state=False, load_scheduler_state=False, map_location=None):
+        checkpoint = torch.load(checkpoint_path, map_location=map_location)
         self.steps = checkpoint['steps']
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.train_loss = checkpoint['train_loss']
