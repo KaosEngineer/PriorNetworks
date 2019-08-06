@@ -80,7 +80,6 @@ def main(argv=None):
     labels, probs = get_ensemble_predictions(model_dirs, args.source_dir, args.n_models)
 
     mean_probs = np.mean(probs, axis=1)
-    labels = labels[:, 0]
 
     accuracy = np.mean(np.asarray(labels == np.argmax(mean_probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
