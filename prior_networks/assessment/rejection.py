@@ -20,10 +20,10 @@ def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
         if key == 'confidence':
             rev = True
 
-        try:
-            reject_class(labels, probs, uncertainties[key], key, save_path=save_path, rev=rev)
-        except:
-            pass
+        #try:
+        reject_class(labels, probs, uncertainties[key], key, save_path=save_path, rev=rev)
+        #except:
+        #    pass
 
 
 def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev: bool, show=True):
