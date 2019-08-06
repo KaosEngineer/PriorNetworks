@@ -93,7 +93,7 @@ def main(argv=None):
         np.savetxt(os.path.join(args.output_path, key + '.txt'), uncertainties[key])
 
     # Assess Misclassification Detection
-    eval_misc_detect(labels, probs, uncertainties, save_path=args.output_path, misc_positive=True)
+    eval_misc_detect(labels, mean_probs, uncertainties, save_path=args.output_path, misc_positive=True)
 
     # Assess Calibration
     classification_calibration(labels=labels, probs=mean_probs, save_path=args.output_path)
