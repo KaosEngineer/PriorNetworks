@@ -20,9 +20,9 @@ def eval_rejection_ratio_class(labels, probs, uncertainties, save_path):
         if key == 'confidence':
             rev = True
 
-        #try:
+        # try:
         reject_class(labels, probs, uncertainties[key], key, save_path=save_path, rev=rev)
-        #except:
+        # except:
         #    pass
 
 
@@ -59,7 +59,9 @@ def reject_class(labels, probs, measure, measure_name: str, save_path: str, rev:
     orc[0:orc_rejection.shape[0]] = orc_rejection
     auc_orc = 1.0 - auc(percentages / 100.0, orc / 100.0)
 
-    print(orc.shape, random_rejection.shape,errors[::-1].shape)
+    random_rejection = np.squeeze(random_rejection)
+    orc = np.squeeze(orc)
+    errors = np.squeeze(errors)
     if show:
         plt.plot(percentages, orc, lw=2)
         plt.fill_between(percentages, orc, random_rejection, alpha=0.5)

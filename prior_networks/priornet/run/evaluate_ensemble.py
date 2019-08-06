@@ -96,7 +96,6 @@ def main(argv=None):
     eval_misc_detect(labels, mean_probs, uncertainties, save_path=args.output_path, misc_positive=True)
 
     # Assess Calibration
-    print(labels.shape, mean_probs.shape)
     classification_calibration(labels=labels, probs=mean_probs, save_path=args.output_path)
 
     # Assess Rejection Performance
