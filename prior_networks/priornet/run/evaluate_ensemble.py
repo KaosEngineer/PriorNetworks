@@ -70,7 +70,7 @@ def main(argv=None):
     if os.path.isdir(args.output_path) and not args.overwrite:
         print(f'Directory {args.output_path}, exists. Exiting...')
         sys.exit()
-    elif os.path.isdir(args.output_dir) and args.overwrite:
+    elif os.path.isdir(args.output_path) and args.overwrite:
         os.remove(args.output_path + '/*')
     else:
         os.makedirs(args.output_path)
@@ -81,12 +81,12 @@ def main(argv=None):
 
     mean_probs = np.mean(probs, axis=1)
 
+    # Get dictionary of uncertainties.
+    uncertainties = ensemble_uncertainties(probs, epsilon=1e-10)
+
     accuracy = np.mean(np.asarray(labels == np.argmax(mean_probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
         f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} % \n')
-
-    # Get dictionary of uncertainties.
-    uncertainties = ensemble_uncertainties(probs, epsilon=1e-10)
 
     # Save uncertainties
     for key in uncertainties.keys():
