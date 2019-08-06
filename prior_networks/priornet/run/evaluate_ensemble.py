@@ -20,9 +20,9 @@ commandLineParser.add_argument('models_parent_dir', type=str,
                                help='which orignal data is saved should be loaded')
 commandLineParser.add_argument('model_name', type=str,
                                help='which orignal data is saved should be loaded')
-commandLineParser.add_argument('source_dir', type=str,
+commandLineParser.add_argument('source_path', type=str,
                                help='which orignal data is saved should be loaded')
-commandLineParser.add_argument('output_dir', type=str,
+commandLineParser.add_argument('output_path', type=str,
                                help='which orignal data is saved should be loaded')
 commandLineParser.add_argument('--n_models', type=int, default=10,
                                help='which orignal data is saved should be loaded')
@@ -67,17 +67,17 @@ def main(argv=None):
     with open('CMDs/evaluate_ensemble.txt', 'a') as f:
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
-    if os.path.isdir(args.output_dir) and not args.overwrite:
-        print(f'Directory {args.output_dir}, exists. Exiting...')
+    if os.path.isdir(args.output_path) and not args.overwrite:
+        print(f'Directory {args.output_path}, exists. Exiting...')
         sys.exit()
     elif os.path.isdir(args.output_dir) and args.overwrite:
-        os.remove(args.output_dir + '/*')
+        os.remove(args.output_path + '/*')
     else:
-        os.makedirs(args.output_dir)
+        os.makedirs(args.output_path)
 
     model_dirs = [os.path.join(args.models_parent_dir,
                                args.model_name + "{}".format(int(i))) for i in range(0, args.n_models)]
-    labels, probs = get_ensemble_predictions(model_dirs, args.source_dir, args.n_models)
+    labels, probs = get_ensemble_predictions(model_dirs, args.source_path, args.n_models)
 
     mean_probs = np.mean(probs, axis=1)
 
