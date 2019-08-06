@@ -93,16 +93,7 @@ def set_random_seeds(seed: int) -> None:
 
 
 #
-# # def KL_divergence(probs1, probs2, epsilon=1e-10):
-# #     return np.sum(probs1*(np.log(probs1+epsilon)-np.log(probs2+epsilon)), axis=1)
-#
-# # def expected_pairwise_KL_divergence(probs):
-# #     KL = 0.0
-# #     for i in range(probs.shape[2]):
-# #         for j in range(probs.shape[2]):
-# #             KL += KL_divergence(probs[:,:,i], probs[:,:,j])
-# #     return KL
-#
+
 #
 # def test_accuracy(predict_func, dataset, batch_size=100):
 #     n_correct = 0  # Track the number of correct classifications
@@ -147,19 +138,6 @@ def set_random_seeds(seed: int) -> None:
 #                       np.linalg.norm(coord - corners[1], axis=1),
 #                       np.linalg.norm(coord - corners[2], axis=1)), axis=1)
 #     return barom
-#
-#
-# def ensemble_mutual_information(probs):
-#     """Calculate mutual information of ensemble predictions"""
-#     mean_probs = np.mean(probs, axis=2)
-#
-#     entropy_mean = categorical_entropy(mean_probs)
-#
-#     entropies = categorical_entropy(probs)
-#     mean_entropies = np.mean(entropies, axis=1)
-#
-#     mutual_info = entropy_mean - mean_entropies
-#     return mutual_info
 
 
 class TargetTransform:
