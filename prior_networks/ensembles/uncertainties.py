@@ -7,8 +7,8 @@ def kl_divergence(probs1, probs2, epsilon=1e-10):
 
 def expected_pairwise_kl_divergence(probs, epsilon=1e-10):
     kl = 0.0
-    for i in range(probs.shape[2]):
-        for j in range(probs.shape[2]):
+    for i in range(probs.shape[1]):
+        for j in range(probs.shape[1]):
             kl += kl_divergence(probs[:, i, :], probs[:, j, :], epsilon)
     return kl
 
