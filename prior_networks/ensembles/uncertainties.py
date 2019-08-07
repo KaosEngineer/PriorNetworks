@@ -1,5 +1,6 @@
 import numpy as np
 
+""" Numpy Implementation of Uncertainty Measures """
 
 def kl_divergence(probs1, probs2, epsilon=1e-10):
     return np.sum(probs1 * (np.log(probs1 + epsilon) - np.log(probs2 + epsilon)), axis=1)
@@ -48,3 +49,6 @@ def ensemble_uncertainties(probs, epsilon=1e-10):
                    'EPKL': epkl}
 
     return uncertainty
+
+""" Pytorch Implementation of Uncertainty Measures """
+#TODO Pytorch Implementation of Uncertainty Measures

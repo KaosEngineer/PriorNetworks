@@ -169,7 +169,7 @@ def main():
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                     'nesterov': True,
                                                     'weight_decay': args.weight_decay},
-                                  scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
+                                  scheduler_params={'milestones': [30, 60, 80], 'gamma': 0.2},
                                   batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
