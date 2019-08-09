@@ -91,7 +91,7 @@ def main():
     accuracy = np.mean(np.asarray(labels == np.argmax(probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
         f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} % \n')
-        f.write(f'NLL: {np.round(nll, 2)} % \n')
+        f.write(f'NLL: {np.round(nll, 2)} \n')
 
     # Get dictionary of uncertainties.
     uncertainties = dirichlet_prior_network_uncertainty(logits)
