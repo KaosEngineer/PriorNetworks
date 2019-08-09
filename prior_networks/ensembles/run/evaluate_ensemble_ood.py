@@ -45,11 +45,11 @@ def main(argv=None):
                                args.model_name + "{}".format(int(i))) for i in range(0, args.n_models)]
 
     in_labels, in_probs = get_ensemble_predictions(model_dirs,
-                                                   args.source_dir,
+                                                   args.source_path,
                                                    args.n_models,
                                                    prefix='in_')
     out_labels, out_probs = get_ensemble_predictions(model_dirs,
-                                                     args.source_dir,
+                                                     args.source_path,
                                                      args.n_models,
                                                      prefix='out_')
 
