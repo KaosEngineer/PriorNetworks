@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.functional as F
 
@@ -71,3 +72,5 @@ class Ensemble(object):
         with torch.no_grad():
             probs = F.softmax(self(eval_points), dim=1).cpu().numpy()
         return probs
+
+
