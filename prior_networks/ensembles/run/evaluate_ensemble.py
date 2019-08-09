@@ -48,12 +48,15 @@ def main(argv=None):
 
     mean_probs = np.mean(probs, axis=1)
 
+    nll = -np.mean(np.log(mean_probs[np.arange(mean_probs.shape[0]), np.squeeze(labels)] + 1e-10))
+
     # Get dictionary of uncertainties.
     uncertainties = ensemble_uncertainties(probs, epsilon=1e-10)
 
     accuracy = np.mean(np.asarray(labels == np.argmax(mean_probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
         f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} % \n')
+        f.write(f'NLL: {np.round(nll, 2)} % \n')
 
     # Save uncertainties
     for key in uncertainties.keys():
