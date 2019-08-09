@@ -47,11 +47,11 @@ def main(argv=None):
     in_labels, in_probs = get_ensemble_predictions(model_dirs,
                                                    args.source_path,
                                                    args.n_models,
-                                                   prefix='in_')
+                                                   prefix='id_')
     out_labels, out_probs = get_ensemble_predictions(model_dirs,
                                                      args.source_path,
                                                      args.n_models,
-                                                     prefix='out_')
+                                                     prefix='ood_')
 
     id_uncertainties = ensemble_uncertainties(in_probs, epsilon=1e-10)
     ood_uncertainties = ensemble_uncertainties(out_probs, epsilon=1e-10)
