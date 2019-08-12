@@ -13,79 +13,71 @@ class NormalWishartPriorNet(nn.Module):
     """Normal Wishart Prior Net is a wrapper around a regular model that returns logits. It then allows for computations
     of various Prior Network related statistics."""
 
-    def __init__(self, model):
+    def __init__(self, n_in, n_out):
         super().__init__()
-        self.model = model
+
+        self.n_in = n_in
+        self.n_out = n_out
+
+        self.pmean = nn.Linear(in_features=n_in, out_features=n_out)
+        self.log_prec = nn.Linear(in_features=n_in, out_features=n_out)
+        self.log_mean_belief = nn.Linear(in_features=n_in, out_features=1)
+        self.log_prec_belief = nn.Linear(in_features=n_in, out_features=1)
 
     def forward(self, x):
-        return self.model(x)
+        pmean = self.pmean(x)
+        log_prec = self.log_prec(x)
+        log_mean_belief = self.log_mean_belief(x)
+        log_prec_belief = self.log_prec_belief(x)
 
-    def alphas(self, x):
-        return torch.exp(self.forward(x))
+        return pmean, log_prec, log_mean_belief, log_prec_belief
 
     def mutual_information(self, x):
-        alphas = self.alphas(x)
-        alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-        probs = alphas / alpha0
-
-        expected_entropy = self.expected_entropy_from_alphas(alphas, alpha0)
-        entropy_of_exp = categorical_entropy_torch(probs)
-        mutual_info = entropy_of_exp - expected_entropy
-        return mutual_info
+        pass
 
     def entropy_of_expected(self, x):
-        probs = F.softmax(self.model(x), dim=1)
-        entropy_of_exp = categorical_entropy_torch(probs)
-        return entropy_of_exp
+        pass
 
     def expected_entropy(self, x):
-        alphas = self.alphas(x)
-        return self.expected_entropy_from_alphas(alphas)
+        pass
 
     def diffenrential_entropy(self, x):
-        alphas = self.alphas(x)
-        alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-
-        return torch.sum(
-            torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
-            dim=1) - torch.lgamma(alpha0)
+        pass
 
     def epkl(self, x):
-        alphas = self.alphas(x)
-        alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-        return alphas.size()[1] / alpha0
+        pass
 
-    @staticmethod
-    def expected_entropy_from_alphas(alphas, alpha0=None):
-        if alpha0 is None:
-            alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-        expected_entropy = -torch.sum(
-            (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
-            dim=1)
-        return expected_entropy
+    # @staticmethod
+    # def expected_entropy_from_alphas(alphas, alpha0=None):
+    #     if alpha0 is None:
+    #         alpha0 = torch.sum(alphas, dim=1, keepdim=True)
+    #     expected_entropy = -torch.sum(
+    #         (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
+    #         dim=1)
+    #     return expected_entropy
 
-    @staticmethod
-    def uncertainty_metrics(logits):
-        """Calculates mutual info, entropy of expected, and expected entropy, EPKL and Differential Entropy uncertainty metrics for
-        the data x."""
-        alphas = torch.exp(logits)
-        alpha0 = torch.sum(alphas, dim=1, keepdim=True)
-        probs = alphas / alpha0
-
-        epkl = (alphas.size()[1] - 1.0) / alphas
-
-        dentropy = torch.sum(
-            torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
-            dim=1) - torch.lgamma(alpha0)
-
-        conf = torch.max(probs, dim=1)
-
-        expected_entropy = -torch.sum(
-            (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
-            dim=1)
-        entropy_of_exp = categorical_entropy_torch(probs)
-        mutual_info = entropy_of_exp - expected_entropy
-        return conf, entropy_of_exp, expected_entropy, mutual_info, epkl, dentropy
+    # @staticmethod
+    # def uncertainty_metrics(logits):
+    #     """Calculates mutual info, entropy of expected, and expected entropy, EPKL and Differential Entropy uncertainty metrics for
+    #     the data x."""
+    #     alphas = torch.exp(logits)
+    #     alpha0 = torch.sum(alphas, dim=1, keepdim=True)
+    #     probs = alphas / alpha0
+    #
+    #     epkl = (alphas.size()[1] - 1.0) / alphas
+    #
+    #     dentropy = torch.sum(
+    #         torch.lgamma(alphas) - (alphas - 1) * (torch.digamma(alphas) - torch.digamma(alpha0)),
+    #         dim=1) - torch.lgamma(alpha0)
+    #
+    #     conf = torch.max(probs, dim=1)
+    #
+    #     expected_entropy = -torch.sum(
+    #         (alphas / alpha0) * (torch.digamma(alphas + 1) - torch.digamma(alpha0 + 1)),
+    #         dim=1)
+    #     entropy_of_exp = categorical_entropy_torch(probs)
+    #     mutual_info = entropy_of_exp - expected_entropy
+    #     return conf, entropy_of_exp, expected_entropy, mutual_info, epkl, dentropy
 
 
 def normal_wishart_prior_network_uncertainty(p_mean, p_precision, mean_belief, precision_belief, epsilon=1e-10):

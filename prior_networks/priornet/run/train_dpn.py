@@ -29,6 +29,8 @@ parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
+parser.add_argument('lr_decay', dype=float, help='LR decay multiplies')
+parser.add_argument('--lrc', action='append', help='LR decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--target_concentration', type=float, default=1e2,
@@ -169,7 +171,7 @@ def main():
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                     'nesterov': True,
                                                     'weight_decay': args.weight_decay},
-                                  scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
+                                  scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
                                   batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
