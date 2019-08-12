@@ -260,8 +260,8 @@ parser.add_argument('--wnid_file', type=argparse.FileType('r'))
 parser.add_argument('--num_train', type=int, default=500)
 parser.add_argument('--num_val', type=int, default=50)
 parser.add_argument('--image_size', type=int, default=64)
-parser.add_argument('--source_dir', type='str')
-parser.add_argument('--out_dir', type='str')
+parser.add_argument('--source_dir')
+parser.add_argument('--out_dir')
 args = parser.parse_args()
 
 if __name__ == '__main__':
