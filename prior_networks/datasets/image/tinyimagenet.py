@@ -145,22 +145,20 @@ def write_data_in_synset_folders(part_data, part, out_dir, image_size):
             out_img_filename = '%s_%d.JPEG' % (wnid, i)
             full_out_img_filename = os.path.join(image_dir, out_img_filename)
             try:
-                img = imread(img_filename[:58 + 9] + '/' + img_filename[58:], pilmode='RGB')
+                try:
+                    img = imread(img_filename[:58 + 9] + '/' + img_filename[58:], pilmode='RGB')
+                except:
+                    img = imread(img_filename, pilmode='RGB')
+
+                    img_resized, bbox_resized = resize_image(img, image_size, bbox)
+
+                    imsave(full_out_img_filename, img_resized)
+                    boxes_file.write('%s\t%d\t%d\t%d\t%d\n' % (out_img_filename,
+                                                               bbox_resized[0], bbox_resized[1], bbox_resized[2],
+                                                               bbox_resized[3]))
             except:
-                img = imread(img_filename, pilmode='RGB')
+                print(f"Cannot read image {img_filename}.")
 
-            img_resized, bbox_resized = resize_image(img, image_size, bbox)
-
-            # if img_resized.mode != "RGB": img_resized = img_resized.convert(mode="RGB")
-            # if img_resized.shape != (64,64,3):
-            #  if img_resized.shape == (64,64):
-            #    img_resized = np.array([img_resized, img_resized, img_resized]).transpose((1, 2, 0))
-            #  elif img_resized.shape == (64,64,4):
-            #    print(img_resized)
-            imsave(full_out_img_filename, img_resized)
-            boxes_file.write('%s\t%d\t%d\t%d\t%d\n' % (out_img_filename,
-                                                       bbox_resized[0], bbox_resized[1], bbox_resized[2],
-                                                       bbox_resized[3]))
         boxes_file.close()
 
 
