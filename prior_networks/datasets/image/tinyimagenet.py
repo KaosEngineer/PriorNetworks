@@ -145,20 +145,16 @@ def write_data_in_synset_folders(part_data, part, out_dir, image_size):
             out_img_filename = '%s_%d.JPEG' % (wnid, i)
             full_out_img_filename = os.path.join(image_dir, out_img_filename)
             try:
-                try:
-                    img = imread(img_filename[:58 + 9] + '/' + img_filename[58:], pilmode='RGB')
-                except:
-                    img = imread(img_filename, pilmode='RGB')
-
-                    img_resized, bbox_resized = resize_image(img, image_size, bbox)
-
-                    imsave(full_out_img_filename, img_resized)
-                    boxes_file.write('%s\t%d\t%d\t%d\t%d\n' % (out_img_filename,
-                                                               bbox_resized[0], bbox_resized[1], bbox_resized[2],
-                                                               bbox_resized[3]))
+                img = imread(img_filename[:58 + 9] + '/' + img_filename[58:], pilmode='RGB')
             except:
-                with open('errors.txt', 'a') as f:
-                    f.write(img_filename+'\n')
+                img = imread(img_filename, pilmode='RGB')
+
+                img_resized, bbox_resized = resize_image(img, image_size, bbox)
+
+                imsave(full_out_img_filename, img_resized)
+                boxes_file.write('%s\t%d\t%d\t%d\t%d\n' % (out_img_filename,
+                                                           bbox_resized[0], bbox_resized[1], bbox_resized[2],
+                                                           bbox_resized[3]))
 
         boxes_file.close()
 
@@ -237,7 +233,6 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
             img_filename, bbox, _ = parse_xml_file(bbox_file)
             img_filename = os.path.join(train_image_dir, img_filename)
             dataset['val'][wnid].append((img_filename, bbox))
-        #break
 
     # # All the validation XML files are all mixed up in one folder, so we need to
     # # iterate over all of them. Since this takes forever, guard it behind a flag.
