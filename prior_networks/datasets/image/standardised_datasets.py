@@ -35,7 +35,8 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
 
     if augment:
         if mode == 'eval':
-            transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
+            transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
+                                transforms.CenterCrop(n_in)])
         elif mode == 'train':
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect')])
