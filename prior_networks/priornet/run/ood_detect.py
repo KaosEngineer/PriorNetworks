@@ -85,7 +85,7 @@ def main():
                                                  target_transform=None,
                                                  download=True,
                                                  split='test')
-
+    print(len(id_dataset), len(ood_dataset))
     # for i in range(len(ood_dataset)):
     #     img, _ = ood_dataset[i]
     #     print(img.shape)
