@@ -1,4 +1,3 @@
-
 import argparse, os, os.path, glob, random, sys, json
 from collections import defaultdict
 from lxml import objectify
@@ -14,13 +13,13 @@ Code ported form  https://github.com/hendrycks/outlier-exposure/blob/master/Tiny
 """
 
 
+#train_anns_path = '/share/data/vision-greg/ImageNetbbox/clsloc/train'
+#train_image_dir = '/share/data/vision-greg/ImageNet_flat/clsloc/images/train'
+# val_anns_path = '/share/data/vision-greg/ImageNetbbox/clsloc/val'
+# val_image_dir = '/share/data/vision-greg/ImageNet_flat/clsloc/images/val'
 
 
 
-train_anns_path = '/share/data/vision-greg/ImageNetbbox/clsloc/train'
-train_image_dir = '/share/data/vision-greg/ImageNet_flat/clsloc/images/train'
-val_anns_path = '/share/data/vision-greg/ImageNetbbox/clsloc/val'
-val_image_dir = '/share/data/vision-greg/ImageNet_flat/clsloc/images/val'
 
 
 def get_synset_stats():
@@ -200,7 +199,7 @@ def write_data_in_one_folder(part_data, part, out_dir, image_size):
     annotations_file.close()
 
 
-def make_tiny_imagenet(wnids, num_train, num_val, out_dir, image_size=50, test=False):
+def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_size=50, test=False):
     if os.path.isdir(out_dir):
         print('Output directory already exists')
         return
@@ -208,8 +207,10 @@ def make_tiny_imagenet(wnids, num_train, num_val, out_dir, image_size=50, test=F
     # dataset['train']['n123'][0] = (filename, (xmin, ymin, xmax, xmax))
     # gives one example of an image and bbox for synset n123 of the training subset
     dataset = defaultdict(lambda: defaultdict(list))
+    train_anns_path = os.path.join(source_dir, 'Annotations')
+    train_image_dir = os.path.join(source_dir, 'train')
     for i, wnid in enumerate(wnids):
-        print('Choosing train and val images for synset %d / %d' % (i + 1, len(wnids)))
+        print('Choosing train and val  images for synset %d / %d' % (i + 1, len(wnids)))
 
         # TinyImagenet train and val images come from ILSVRC-2012 train images
         train_synset_dir = os.path.join(train_anns_path, wnid)
@@ -230,45 +231,47 @@ def make_tiny_imagenet(wnids, num_train, num_val, out_dir, image_size=50, test=F
             img_filename = os.path.join(train_image_dir, img_filename)
             dataset['val'][wnid].append((img_filename, bbox))
 
-    # All the validation XML files are all mixed up in one folder, so we need to
-    # iterate over all of them. Since this takes forever, guard it behind a flag.
-    # The name field of the validation XML files gives the synset of that image.
-    if test:
-        val_xml_files = os.listdir(val_anns_path)
-        for i, val_xml_file in enumerate(val_xml_files):
-            if i % 200 == 0:
-                print('Processed %d / %d val xml files so far' % (i, len(val_xml_files)))
-            val_xml_file = os.path.join(val_anns_path, val_xml_file)
-            img_filename, bbox, wnid = parse_xml_file(val_xml_file)
-            if wnid in wnids:
-                img_filename = os.path.join(val_image_dir, img_filename)
-                dataset['test'][wnid].append((img_filename, bbox))
+    # # All the validation XML files are all mixed up in one folder, so we need to
+    # # iterate over all of them. Since this takes forever, guard it behind a flag.
+    # # The name field of the validation XML files gives the synset of that image.
+    # if test:
+    #     val_xml_files = os.listdir(val_anns_path)
+    #     for i, val_xml_file in enumerate(val_xml_files):
+    #         if i % 200 == 0:
+    #             print('Processed %d / %d val xml files so far' % (i, len(val_xml_files)))
+    #         val_xml_file = os.path.join(val_anns_path, val_xml_file)
+    #         img_filename, bbox, wnid = parse_xml_file(val_xml_file)
+    #         if wnid in wnids:
+    #             img_filename = os.path.join(val_image_dir, img_filename)
+    #             dataset['test'][wnid].append((img_filename, bbox))
 
     # Now that we have selected the images for the dataset, we need to actually
     # create it on disk
     os.mkdir(out_dir)
     write_data_in_synset_folders(dataset['train'], 'train', out_dir, image_size)
-    write_data_in_one_folder(dataset['val'], 'val', out_dir, image_size)
-    write_data_in_one_folder(dataset['test'], 'test', out_dir, image_size)
+    write_data_in_synset_folders(dataset['val'], 'val', out_dir, image_size)
+    #write_data_in_one_folder(dataset['test'], 'test', out_dir, image_size)
 
 
 parser = argparse.ArgumentParser()
+
 parser.add_argument('--wnid_file', type=argparse.FileType('r'))
 parser.add_argument('--num_train', type=int, default=500)
 parser.add_argument('--num_val', type=int, default=50)
 parser.add_argument('--image_size', type=int, default=64)
-parser.add_argument('--out_dir')
+parser.add_argument('--source_dir', type='str')
+parser.add_argument('--out_dir', type='str')
 args = parser.parse_args()
 
 if __name__ == '__main__':
     wnids = [line.strip() for line in args.wnid_file]
     print(len(wnids))
-    # wnids = ['n02108089', 'n09428293', 'n02113799']
-    make_tiny_imagenet(wnids, args.num_train, args.num_val, args.out_dir,
-                       image_size=args.image_size, test=True)
+
+    make_tiny_imagenet(wnids, args.source_dir, args.num_train, args.num_val, args.out_dir,
+                       image_size=args.image_size, test=False)
     sys.exit(0)
 
-    train_synsets = os.listdir(train_anns_path)
-
-    get_synset_stats()
-    sys.exit(0)
+    # train_synsets = os.listdir(train_anns_path)
+    #
+    # get_synset_stats()
+    # sys.exit(0)

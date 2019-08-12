@@ -15,7 +15,12 @@ import torchvision.datasets as datasets
 split_options = ['train', 'val', 'test']
 
 
-def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment: bool = False, rotation: bool = False,
+def construct_transforms(n_in: int,
+                         mode: str,
+                         mean: tuple,
+                         std: tuple,
+                         augment: bool = False,
+                         rotation: bool = False,
                          jitter: float = 0.0):
     """
 
@@ -41,16 +46,24 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect')])
             if rotation:
-                transf_list.append(transforms.RandomRotation(degrees=15, resample=Image.BICUBIC))
-            transf_list.extend([torchvision.transforms.ColorJitter(jitter, jitter, jitter, jitter),
+                transf_list.append(transforms.RandomRotation(degrees=15,
+                                                             resample=Image.BICUBIC))
+            transf_list.extend([torchvision.transforms.ColorJitter(jitter,
+                                                                   jitter,
+                                                                   jitter,
+                                                                   jitter),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.RandomCrop(n_in)])
         else:
             transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
                                 transforms.Pad(4, padding_mode='reflect')])
             if rotation:
-                transf_list.append(transforms.RandomRotation(degrees=15, resample=Image.BICUBIC))
-            transf_list.extend([torchvision.transforms.ColorJitter(jitter, jitter, jitter, jitter),
+                transf_list.append(transforms.RandomRotation(degrees=15,
+                                                             resample=Image.BICUBIC))
+            transf_list.extend([torchvision.transforms.ColorJitter(jitter,
+                                                                   jitter,
+                                                                   jitter,
+                                                                   jitter),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.RandomVerticalFlip(),
                                 transforms.RandomCrop(n_in)])
@@ -225,14 +238,17 @@ class LSUN(torchvision.datasets.LSUN):
                          target_transform=target_transform)
 
 
-IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp', '.JPEG')
+IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
+                  '.pgm', '.tif', '.tiff', '.webp', '.JPEG')
 
 
 class TinyImageNet(datasets.VisionDataset):
     mean = (0.4914, 0.4823, 0.4465)
     std = (0.247, 0.243, 0.261)
 
-    def __init__(self, root, transform, target_transform, split, extensions=IMG_EXTENSIONS, loader=default_loader,
+    def __init__(self, root, transform, target_transform, split,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
                  download=None):
 
         if download is not None:
