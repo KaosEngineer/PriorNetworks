@@ -6,7 +6,7 @@ import os, sys
 
 import torch
 from torch.utils import data
-from prior_networks.priornet.losses import DirichletKLLoss, PriorNetMixedLoss
+from prior_networks.priornet.dpn_losses import DirichletKLLoss, PriorNetMixedLoss
 from prior_networks.util_pytorch import MODEL_DICT, DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithAdv
 from prior_networks.util_pytorch import save_model, TargetTransform

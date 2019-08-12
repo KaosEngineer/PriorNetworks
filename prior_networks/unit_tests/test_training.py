@@ -10,7 +10,7 @@ from torch.utils.data import TensorDataset
 
 from prior_networks.training import Trainer
 from prior_networks.priornet.training import TrainerWithOOD
-from prior_networks.priornet.losses import PriorNetMixedLoss, \
+from prior_networks.priornet.dpn_losses import PriorNetMixedLoss, \
     DirichletKLLoss
 
 

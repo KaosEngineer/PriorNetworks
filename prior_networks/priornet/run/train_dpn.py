@@ -8,7 +8,7 @@ import math
 
 import torch
 from torch.utils import data
-from prior_networks.priornet.losses import DirichletKLLoss, DirichletKLLossJoint
+from prior_networks.priornet.dpn_losses import DirichletKLLoss, DirichletKLLossJoint
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithOODJoint
 from prior_networks.util_pytorch import TargetTransform
@@ -169,7 +169,7 @@ def main():
                                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                     'nesterov': True,
                                                     'weight_decay': args.weight_decay},
-                                  scheduler_params={'milestones': [30, 60, 80], 'gamma': 0.2},
+                                  scheduler_params={'milestones': [60, 120, 160], 'gamma': 0.2},
                                   batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
