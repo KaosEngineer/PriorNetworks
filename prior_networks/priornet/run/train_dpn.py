@@ -78,6 +78,7 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
+    print(args.lrc)
 
     model_dir = Path(args.model_dir)
     # Load up the model
