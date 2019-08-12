@@ -127,7 +127,7 @@ def main():
                              optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                                'nesterov': True,
                                                'weight_decay': args.weight_decay},
-                             scheduler_params={'milestones': [25, 40]},
+                             scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
                              batch_size=args.batch_size)
     trainer.train(args.n_epochs)
 
