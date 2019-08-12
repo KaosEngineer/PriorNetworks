@@ -2,11 +2,12 @@ import argparse, os, os.path, glob, random, sys, json
 from collections import defaultdict
 from lxml import objectify
 
-from imageio import imread, imsave, imresize
+from scipy.misc import imresize
+from imageio import imread, imsave
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import numpy as np
-
+from PIL import Image
 
 """
 Code ported form  https://github.com/hendrycks/outlier-exposure/blob/master/TinyImageNet/Tiny_ImageNet_dataset/make_tiny_imagenet.py
@@ -61,7 +62,6 @@ def parse_xml_file(filename):
     name = str(ann.object.name)
     return img_filename, bbox, name
 
-
 def resize_image(img, size, bbox=None, crop=True, show=False):
     """
     Resize an image and its bounding box to a square.
@@ -109,7 +109,9 @@ def resize_image(img, size, bbox=None, crop=True, show=False):
         ratios = [w_ratio, h_ratio, w_ratio, h_ratio]
         bbox_resized = [int(1 + r * (x - 1)) for x, r in zip(bbox_resized, ratios)]
         bbox_resized = np.clip(bbox_resized, 0, size - 1)
-    img_resized = imresize(img_resized, (size, size))
+
+    img_resized = np.array(Image.fromarray(img_resized).resize((size, size)))
+    #img_resized = imresize(img_resized, (size, size))
 
     if show:
         plt.subplot(1, 2, 1)
