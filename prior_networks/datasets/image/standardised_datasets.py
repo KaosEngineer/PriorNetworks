@@ -55,7 +55,8 @@ def construct_transforms(n_in: int, mode: str, mean: tuple, std: tuple, augment:
                                 transforms.RandomVerticalFlip(),
                                 transforms.RandomCrop(n_in)])
     else:
-        transf_list.extend([transforms.Resize(n_in, Image.BICUBIC)])
+        transf_list.extend([transforms.Resize(n_in, Image.BICUBIC),
+                            transforms.CenterCrop(n_in)])
 
     transf_list.extend([transforms.ToTensor(),
                         transforms.Normalize(mean, std)])
