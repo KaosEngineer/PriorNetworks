@@ -29,7 +29,7 @@ parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
-parser.add_argument('--lr_decay', dype=float, default=0.2, help='LR decay multiplies')
+parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', help='LR decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
