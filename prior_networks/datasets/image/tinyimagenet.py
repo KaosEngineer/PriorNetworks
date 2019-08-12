@@ -157,7 +157,8 @@ def write_data_in_synset_folders(part_data, part, out_dir, image_size):
                                                                bbox_resized[0], bbox_resized[1], bbox_resized[2],
                                                                bbox_resized[3]))
             except:
-                print(f"Cannot read image {img_filename}.")
+                with open('errors.txt', 'a') as f:
+                    f.write(img_filename+'\n')
 
         boxes_file.close()
 
