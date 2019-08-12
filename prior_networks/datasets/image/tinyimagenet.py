@@ -230,7 +230,7 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
             img_filename, bbox, _ = parse_xml_file(bbox_file)
             img_filename = os.path.join(train_image_dir, img_filename)
             dataset['val'][wnid].append((img_filename, bbox))
-        break
+        #break
 
     # # All the validation XML files are all mixed up in one folder, so we need to
     # # iterate over all of them. Since this takes forever, guard it behind a flag.
