@@ -222,6 +222,7 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
         for j, k in zip(orig_train_bbox_files_jpeg, orig_train_bbox_files_xml):
             if os.path.exists(k) and os.path.exists(j):
                 orig_train_bbox_files.append(k)
+        orig_train_bbox_files = set(orig_train_bbox_files)
 
         train_bbox_files = random.sample(orig_train_bbox_files, min(num_train, len(orig_train_bbox_files)))
         orig_train_bbox_files -= set(train_bbox_files)
