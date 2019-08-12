@@ -208,12 +208,13 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
     # gives one example of an image and bbox for synset n123 of the training subset
     dataset = defaultdict(lambda: defaultdict(list))
     train_anns_path = os.path.join(source_dir, 'Annotation')
-    train_image_dir = os.path.join(source_dir, 'train')
+    train_image_path = os.path.join(source_dir, 'train')
     for i, wnid in enumerate(wnids):
         print('Choosing train and val  images for synset %d / %d' % (i + 1, len(wnids)))
 
         # TinyImagenet train and val images come from ILSVRC-2012 train images
         train_synset_dir = os.path.join(train_anns_path, wnid)
+        train_image_dir = os.path.join(train_image_path, wnid)
         orig_train_bbox_files = os.listdir(train_synset_dir)
         orig_train_bbox_files = {os.path.join(train_synset_dir, x) for x in orig_train_bbox_files}
 
