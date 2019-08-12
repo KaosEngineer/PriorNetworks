@@ -86,6 +86,8 @@ def main():
                                                  download=True,
                                                  split='test')
 
+    print(ood_dataset.data.shape)
+
     # Evaluate the model
     id_logits, id_labels = eval_logits_on_dataset(model=model,
                                                   dataset=id_dataset,
