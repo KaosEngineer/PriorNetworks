@@ -2,7 +2,6 @@ import argparse, os, os.path, glob, random, sys, json
 from collections import defaultdict
 from lxml import objectify
 
-from scipy.misc import imresize
 from imageio import imread, imsave
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
