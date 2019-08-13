@@ -211,14 +211,8 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
         train_synset_dir = os.path.join(train_anns_path, wnid)
         train_image_dir = os.path.join(train_image_path, wnid)
         orig_train_bbox_files = os.listdir(train_synset_dir)
-        orig_train_bbox_files_xml = {os.path.join(train_synset_dir, x) for x in orig_train_bbox_files}
-        orig_train_bbox_files_jpeg = {os.path.join(train_image_dir, x.split('.')[0]+'.JPEG') for x in orig_train_bbox_files}
-
-        orig_train_bbox_files = []
-        for j, k in zip(orig_train_bbox_files_jpeg, orig_train_bbox_files_xml):
-            if os.path.exists(k) and os.path.exists(j):
-                orig_train_bbox_files.append(k)
-        orig_train_bbox_files = set(orig_train_bbox_files)
+        orig_train_bbox_files = {os.path.join(train_synset_dir, x) for x in orig_train_bbox_files if
+                                 os.path.exists(os.path.join(train_image_dir, x.split('.')[0]+'.JPEG'))}
 
         train_bbox_files = random.sample(orig_train_bbox_files, min(num_train, len(orig_train_bbox_files)))
         orig_train_bbox_files -= set(train_bbox_files)
@@ -251,7 +245,7 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
     # Now that we have selected the images for the dataset, we need to actually
     # create it on disk
     os.mkdir(out_dir)
-    write_data_in_synset_folders(dataset['train'], 'train', out_dir, image_size)
+    #write_data_in_synset_folders(dataset['train'], 'train', out_dir, image_size)
     write_data_in_synset_folders(dataset['val'], 'val', out_dir, image_size)
     #write_data_in_one_folder(dataset['test'], 'test', out_dir, image_size)
 
