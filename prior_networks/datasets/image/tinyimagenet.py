@@ -270,8 +270,3 @@ if __name__ == '__main__':
     make_tiny_imagenet(wnids, args.source_dir, args.num_train, args.num_val, args.out_dir,
                        image_size=args.image_size, test=False)
     sys.exit(0)
-
-    # train_synsets = os.listdir(train_anns_path)
-    #
-    # get_synset_stats()
-    # sys.exit(0)
