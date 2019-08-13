@@ -374,3 +374,159 @@ def make_dataset_TIM(dir, class_to_idx, extensions=None, is_valid_file=None):
                     item = (path, class_to_idx[target])
                     images.append(item)
     return images
+
+
+class TinyImageNetConverse(datasets.VisionDataset):
+    mean = (0.4914, 0.4823, 0.4465)
+    std = (0.247, 0.243, 0.261)
+
+    def __init__(self, root, transform, target_transform, split, subset=None,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
+                 download=None):
+
+        if download is not None:
+            print('TinyImageNet must be downloaded manually')
+
+        root = os.path.join(root, 'tiny-imagenet-ood')
+
+        assert split in split_options
+        if split == 'test':
+            split = 'val'
+
+        super(TinyImageNetConverse, self).__init__(root)
+        self.transform = transform
+        self.target_transform = target_transform
+        classes, class_to_idx = self._find_classes(self.root, subset)
+        if split == 'train':
+            samples = make_dataset_TIM(os.path.join(self.root, 'train'),
+                                       class_to_idx,
+                                       extensions)
+        else:
+            samples = make_dataset_TIM(os.path.join(self.root, 'val'),
+                                           class_to_idx,
+                                           extensions)
+        if len(samples) == 0:
+            raise (RuntimeError("Found 0 files in subfolders of: " + self.root + "\n"
+                                                                                 "Supported extensions are: " + ",".join(
+                extensions)))
+
+        self.loader = loader
+        self.extensions = extensions
+
+        self.classes = classes
+        self.class_to_idx = class_to_idx
+        self.samples = samples
+        self.targets = [s[1] for s in samples]
+
+    def _find_classes(self, dir, subset):
+        """
+        Finds the class folders in a dataset.
+
+        Args:
+            dir (string): Root directory path.
+
+        Returns:
+            tuple: (classes, class_to_idx) where classes are relative to (dir), and class_to_idx is a dictionary.
+
+        Ensures:
+            No class is a subdirectory of another.
+        """
+
+        if subset in [0, 1, 2, 3]:
+            with open(os.path.join(dir, f'wnids_{subset}.txt')) as f:
+                classes = [line[:-1] for line in f.readlines()]
+        else:
+            with open(os.path.join(dir, f'wnids.txt')) as f:
+                classes = [line[:-1] for line in f.readlines()]
+        classes.sort()
+        class_to_idx = {classes[i]: i for i in range(len(classes))}
+        return classes, class_to_idx
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (sample, target) where target is class_index of the target class.
+        """
+        path, target = self.samples[index]
+        sample = self.loader(path)
+        if self.transform is not None:
+            sample = self.transform(sample)
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return sample, target
+
+    def __len__(self):
+        return len(self.samples)
+
+
+class TinyImageNetConverseS1(TinyImageNetConverse):
+
+    def __init__(self, root, transform, target_transform, split,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
+                 download=None):
+
+        super().__init__(root=root,
+                         transform=transform,
+                         target_transform=target_transform,
+                         split=split,
+                         subset=0,
+                         extensions=extensions,
+                         loader=loader,
+                         download=download)
+
+
+class TinyImageNetConverseS2(TinyImageNetConverse):
+
+    def __init__(self, root, transform, target_transform, split,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
+                 download=None):
+
+        super().__init__(root=root,
+                         transform=transform,
+                         target_transform=target_transform,
+                         split=split,
+                         subset=1,
+                         extensions=extensions,
+                         loader=loader,
+                         download=download)
+
+
+class TinyImageNetConverseS3(TinyImageNetConverse):
+
+    def __init__(self, root, transform, target_transform, split,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
+                 download=None):
+
+        super().__init__(root=root,
+                         transform=transform,
+                         target_transform=target_transform,
+                         split=split,
+                         subset=2,
+                         extensions=extensions,
+                         loader=loader,
+                         download=download)
+
+
+class TinyImageNetConverseS4(TinyImageNetConverse):
+
+    def __init__(self, root, transform, target_transform, split,
+                 extensions=IMG_EXTENSIONS,
+                 loader=default_loader,
+                 download=None):
+
+        super().__init__(root=root,
+                         transform=transform,
+                         target_transform=target_transform,
+                         split=split,
+                         subset=3,
+                         extensions=extensions,
+                         loader=loader,
+                         download=download)
