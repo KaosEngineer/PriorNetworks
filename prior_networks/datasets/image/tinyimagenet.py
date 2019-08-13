@@ -214,9 +214,11 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
         orig_train_bbox_files = {os.path.join(train_synset_dir, x) for x in orig_train_bbox_files if
                                  os.path.exists(os.path.join(train_image_dir, x.split('.')[0]+'.JPEG'))}
 
+        print(f'train_bbox_files length: {len(train_bbox_files)}')
         train_bbox_files = random.sample(orig_train_bbox_files, min(num_train, len(orig_train_bbox_files)))
         orig_train_bbox_files -= set(train_bbox_files)
         val_bbox_files = random.sample(orig_train_bbox_files, min(num_val, len(orig_train_bbox_files)))
+
 
         for bbox_file in train_bbox_files:
             img_filename, bbox, _ = parse_xml_file(bbox_file)
@@ -244,8 +246,8 @@ def make_tiny_imagenet(wnids, source_dir, num_train, num_val, out_dir, image_siz
 
     # Now that we have selected the images for the dataset, we need to actually
     # create it on disk
-    print(dataset['val'].keys())
-    
+    print(f"Number of VAL synsets: {len(dataset['val'].keys()))}")
+
     os.mkdir(out_dir)
     #write_data_in_synset_folders(dataset['train'], 'train', out_dir, image_size)
     write_data_in_synset_folders(dataset['val'], 'val', out_dir, image_size)
