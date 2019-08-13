@@ -21,10 +21,10 @@ DATASET_DICT = {'MNIST': image.MNIST,
                 'LSUN': image.LSUN,
                 'TIM': image.TinyImageNet,
                 'TIM-OOD': image.TinyImageNetConverse,
-                'TIM-OOD-S1': image.TinyImageNetConverse,
-                'TIM-OOD-S2': image.TinyImageNetConverse,
-                'TIM-OOD-S3': image.TinyImageNetConverse,
-                'TIM-OOD-S4': image.TinyImageNetConverse,
+                'TIM-OOD-S1': image.TinyImageNetConverseS1,
+                'TIM-OOD-S2': image.TinyImageNetConverseS2,
+                'TIM-OOD-S3': image.TinyImageNetConverseS3,
+                'TIM-OOD-S4': image.TinyImageNetConverseS4,
                 'ImageNet': image.ImageNet}
 
 
