@@ -5,7 +5,6 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import jaccard_score
 import seaborn as sns
 
 sns.set()
