@@ -113,11 +113,11 @@ class Trainer:
             print(f'Training epoch: {epoch + 1} / {n_epochs}')
             # Train
             start = time.time()
-            self.scheduler.step()
             self._train_single_epoch()
             self._save_checkpoint()
             # Test
             self.test(time=time.time() - start)
+            self.scheduler.step()
         return
 
     def _train_single_epoch(self):
