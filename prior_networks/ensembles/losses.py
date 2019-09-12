@@ -16,10 +16,13 @@ class EnDLoss:
         :param teacher_logits:
         :return:
         """
+
+
+        #TODO: Should I multiply by temp**2 ?
         teacher_probs = F.softmax(teacher_logits / self.temp, dim=2)
         teacher_probs_mean = torch.mean(teacher_probs, dim=1)
 
-        cost = - teacher_probs_mean * F.log_softmax(logits / self.temp, dim=1)
+        cost = - teacher_probs_mean * F.log_softmax(logits / self.temp, dim=1) * (self.temp**2)
 
         assert torch.all(torch.isfinite(cost)).item()
 
@@ -40,14 +43,14 @@ class DirichletEnDDLoss(object):
         alphas = torch.exp(logits)
         precision = torch.sum(alphas, dim=1)
 
-        teacher_probs = F.softmax(teacher_logits, dim=1)
+        teacher_probs = F.softmax(teacher_logits, dim=2)
         # Smooth for num. stability:
         probs_mean = 1 / (teacher_probs.size()[1])
         # Subtract mean, scale down, add mean back)
         teacher_probs = self.tp_scaling * (teacher_probs - probs_mean) + probs_mean
 
         assert torch.all(teacher_probs != 0).item()
-        log_teacher_probs_geo_mean = torch.mean(torch.log(teacher_probs), dim=2)
+        log_teacher_probs_geo_mean = torch.mean(F.log_softmax(teacher_logits), dim=1)
 
         # Define the cost in two parts (dependent on targets and independent of targets)
         target_independent_term = torch.sum(torch.lgamma(alphas + self.smooth_val),
