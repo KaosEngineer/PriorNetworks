@@ -35,6 +35,8 @@ parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--gpu', type=int, default=0,
                     help='Specify which GPU to evaluate on.')
+parser.add_argument('--train', action='store_true',
+                    help='Whether to evaluate on the training data instead of test data')
 parser.add_argument('--overwrite', action='store_true',
                     help='Whether to overwrite a previous run of this script')
 
@@ -65,14 +67,24 @@ def main():
     model.eval()
 
     # Load the in-domain evaluation data
-    dataset = DATASET_DICT[args.dataset](root=args.data_path,
-                                         transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                        mean=DATASET_DICT[args.dataset].mean,
-                                                                        std=DATASET_DICT[args.dataset].std,
-                                                                        mode='eval'),
-                                         target_transform=None,
-                                         download=True,
-                                         split='test')
+    if args.train:
+        dataset = DATASET_DICT[args.dataset](root=args.data_path,
+                                             transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                            mean=DATASET_DICT[args.dataset].mean,
+                                                                            std=DATASET_DICT[args.dataset].std,
+                                                                            mode='train'),
+                                             target_transform=None,
+                                             download=True,
+                                             split='train')
+    else:
+        dataset = DATASET_DICT[args.dataset](root=args.data_path,
+                                             transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                            mean=DATASET_DICT[args.dataset].mean,
+                                                                            std=DATASET_DICT[args.dataset].std,
+                                                                            mode='eval'),
+                                             target_transform=None,
+                                             download=True,
+                                             split='test')
 
     # Evaluate the model
     logits, labels = eval_logits_on_dataset(model=model,
