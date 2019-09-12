@@ -26,8 +26,8 @@ parser.add_argument('ensemble_path', type=str,
                     help='Path to where ensemble is stored.')
 parser.add_argument('model_dir', type=str,
                     help='Name of model. Ex: DNN.')
-parser.add_argument('folder', type=str,
-                    help='Folder where model outputs are stored.')
+# parser.add_argument('folder', type=str,
+#                     help='Folder where model outputs are stored.')
 parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
@@ -107,7 +107,7 @@ def main():
                                     ensemble_path=args.ensemble_path,
                                     model_dirs=args.model_dir,
                                     n_models=args.n_models,
-                                    folder=args.folder)
+                                    folder='train')
 
     val_dataset_class = DATASET_DICT[args.dataset]
     val_dataset_parameters = {'root': args.data_path,
@@ -123,7 +123,7 @@ def main():
                                   ensemble_path=args.ensemble_path,
                                   model_dirs=args.model_dirs,
                                   n_models=args.n_models,
-                                  folder=args.folder)
+                                  folder='eval')
 
     print(train_dataset[234798])
     print(val_dataset[234])
