@@ -78,6 +78,40 @@ class TrainerEnD(Trainer):
                     self._save_checkpoint(save_at_steps=True)
         return
 
+    def test(self, time):
+        """
+        Single evaluation on the entire provided test dataset.
+        Return accuracy, mean test loss, and an array of predicted probabilities
+        """
+        test_loss = 0.
+        n_correct = 0  # Track the number of correct classifications
+
+        # Set model in eval mode
+        self.model.eval()
+        with torch.no_grad():
+            for i, data in enumerate(self.testloader, 0):
+                # Get inputs
+                inputs, labels, logits = data
+                if self.device is not None:
+                    inputs, labels, logits = map(lambda x: x.to(self.device),
+                                         (inputs, labels, logits))
+                outputs = self.model(inputs)
+                test_loss += self.test_criterion(outputs, labels).item()
+                probs = F.softmax(outputs, dim=1)
+                n_correct += torch.sum(torch.argmax(probs, dim=1) == labels).item()
+
+        test_loss = test_loss / len(self.testloader)
+        accuracy = n_correct / len(self.testloader.dataset)
+
+        print(f"Test Loss: {np.round(test_loss, 3)}; "
+              f"Test Accuracy: {np.round(100.0*accuracy, 1)}%; "
+              f"Time Per Epoch: {np.round(time/60.0,1)} min")
+
+        # Log statistics
+        self.test_loss.append(test_loss)
+        self.test_accuracy.append(accuracy)
+        self.test_eval_steps.append(self.steps)
+        return
 
 class TrainerEnDD(Trainer):
     def __init__(self, model, criterion,
