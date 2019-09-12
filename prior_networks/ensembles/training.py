@@ -17,7 +17,7 @@ class TrainerEnD(Trainer):
                  train_dataset,
                  test_dataset,
                  optimizer,
-                 temperature,
+                 #temperature,
                  scheduler=None,
                  optimizer_params: Dict[str, Any] = None,
                  scheduler_params: Dict[str, Any] = None,
@@ -37,7 +37,7 @@ class TrainerEnD(Trainer):
                          pin_memory=pin_memory,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
-        self.temp = temperature
+        #self.temp = temperature
 
     def _train_single_epoch(self):
         # Set model in train mode
@@ -56,7 +56,7 @@ class TrainerEnD(Trainer):
             self.optimizer.zero_grad()
 
             outputs = self.model(inputs)
-            loss = self.criterion((outputs), (labels, None))
+            loss = self.criterion(outputs, logits)
 
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()

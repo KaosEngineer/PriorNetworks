@@ -8,12 +8,13 @@ from pathlib import Path
 import torch
 from torch.utils import data
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
-from prior_networks.training import Trainer
+from prior_networks.ensembles.training import TrainerEnD
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
 from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
+from prior_networks.ensembles.losses import EnDLoss
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
@@ -125,41 +126,42 @@ def main():
                                   n_models=args.n_models,
                                   folder='eval')
 
-    print(train_dataset[234798])
+    print(train_dataset[23478])
     print(val_dataset[234])
 
-    # # Set up training and test criteria
-    # criterion = torch.nn.CrossEntropyLoss()
-    #
-    # # Setup model trainer and train model
-    # trainer = Trainer(model=model,
-    #                   criterion=criterion,
-    #                   test_criterion=criterion,
-    #                   train_dataset=train_dataset,
-    #                   test_dataset=val_dataset,
-    #                   optimizer=optim.SGD,
-    #                   device=device,
-    #                   checkpoint_path=model_dir / 'model',
-    #                   scheduler=optim.lr_scheduler.MultiStepLR,
-    #                   optimizer_params={'lr': args.lr, 'momentum': 0.9,
-    #                                     'nesterov': True,
-    #                                     'weight_decay': args.weight_decay},
-    #                   scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
-    #                   batch_size=args.batch_size)
-    # if args.resume:
-    #     trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
-    # trainer.train(args.n_epochs, resume=args.resume)
-    #
-    # # Save final model
-    # if args.multi_gpu and torch.cuda.device_count() > 1:
-    #     model = model.module
-    # ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
-    #                               model=model,
-    #                               arch=ckpt['arch'],
-    #                               n_channels=ckpt['n_channels'],
-    #                               num_classes=ckpt['num_classes'],
-    #                               small_inputs=ckpt['small_inputs'],
-    #                               n_in=ckpt['n_in'])
+    # Set up training and test criteria
+    test_criterion = torch.nn.CrossEntropyLoss()
+    train_criterion = EnDLoss(temp=args.temperature)
+
+    # Setup model trainer and train model
+    trainer = TrainerEnD(model=model,
+                         criterion=train_criterion,
+                         test_criterion=test_criterion,
+                         train_dataset=train_dataset,
+                         test_dataset=val_dataset,
+                         optimizer=optim.SGD,
+                         device=device,
+                         checkpoint_path=model_dir / 'model',
+                         scheduler=optim.lr_scheduler.MultiStepLR,
+                         optimizer_params={'lr': args.lr, 'momentum': 0.9,
+                                           'nesterov': True,
+                                           'weight_decay': args.weight_decay},
+                         scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
+                         batch_size=args.batch_size)
+    if args.resume:
+        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
+    trainer.train(args.n_epochs, resume=args.resume)
+
+    # Save final model
+    if args.multi_gpu and torch.cuda.device_count() > 1:
+        model = model.module
+    ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
+                                  model=model,
+                                  arch=ckpt['arch'],
+                                  n_channels=ckpt['n_channels'],
+                                  num_classes=ckpt['num_classes'],
+                                  small_inputs=ckpt['small_inputs'],
+                                  n_in=ckpt['n_in'])
 
 
 if __name__ == "__main__":
