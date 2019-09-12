@@ -17,7 +17,7 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
         labels.append(np.loadtxt(label_path, dtype=np.int32))
         logits.append(np.loadtxt(logit_path, dtype=np.float32))
 
-    labels = np.stack(labels, axis=1)[:,0]
+    labels = np.stack(labels, axis=1)
     logits = np.stack(logits, axis=1)
 
     return labels, logits
