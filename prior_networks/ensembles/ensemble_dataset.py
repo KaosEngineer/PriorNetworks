@@ -19,7 +19,6 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
 
     labels = np.max(np.stack(labels, axis=1), axis=1)
     logits = np.stack(logits, axis=1)
-    print(labels.shape, np.max(labels), np.min(labels))
     return labels, logits
 
 
