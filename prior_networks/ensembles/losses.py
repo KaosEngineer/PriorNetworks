@@ -39,18 +39,18 @@ class DirichletEnDDLoss(object):
     def __call__(self, *args):
         return self.forward(*args)
 
-    def forward(self, logits, teacher_logits):
-        alphas = torch.exp(logits)
+    def forward(self, logits, teacher_logits, temp=1.0):
+        alphas = torch.exp(logits/temp)
         precision = torch.sum(alphas, dim=1)
 
-        teacher_probs = F.softmax(teacher_logits, dim=2)
+        teacher_probs = F.softmax(teacher_logits/temp, dim=2)
         # Smooth for num. stability:
-        probs_mean = 1 / (teacher_probs.size()[1])
+        probs_mean = 1 / (teacher_probs.size()[2])
         # Subtract mean, scale down, add mean back)
         teacher_probs = self.tp_scaling * (teacher_probs - probs_mean) + probs_mean
 
         assert torch.all(teacher_probs != 0).item()
-        log_teacher_probs_geo_mean = torch.mean(F.log_softmax(teacher_logits), dim=1)
+        log_teacher_probs_geo_mean = torch.mean(torch.log(teacher_probs), dim=1)
 
         # Define the cost in two parts (dependent on targets and independent of targets)
         target_independent_term = torch.sum(torch.lgamma(alphas + self.smooth_val),

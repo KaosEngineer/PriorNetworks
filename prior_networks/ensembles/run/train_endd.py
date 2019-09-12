@@ -14,7 +14,7 @@ from prior_networks.datasets.image.standardised_datasets import construct_transf
 from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
-from prior_networks.ensembles.losses import EnDLoss
+from prior_networks.ensembles.losses import DirichletEnDDLoss
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
@@ -72,7 +72,7 @@ def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
         os.mkdir('CMDs')
-    with open('CMDs/step_train_end.cmd', 'a') as f:
+    with open('CMDs/step_train_endd.cmd', 'a') as f:
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
@@ -128,7 +128,7 @@ def main():
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
-    train_criterion = EnDLoss(temp=args.temperature)
+    train_criterion = DirichletEnDDLoss()
 
     # Setup model trainer and train model
     trainer = TrainerEnD(model=model,
