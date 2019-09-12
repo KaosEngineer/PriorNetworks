@@ -19,7 +19,7 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
 
     labels = np.stack(labels, axis=1)
     logits = np.stack(logits, axis=1)
-
+    print(labels)
     return labels, logits
 
 
