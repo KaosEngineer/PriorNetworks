@@ -1,7 +1,7 @@
 import context
 import sys, os
 import numpy as np
-
+from torch.utils.data import Dataset
 
 def get_ensemble_logits(ensemble_path, model, n_models, folder):
     model_dirs = [os.path.join(ensemble_path,
@@ -23,7 +23,7 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
     return labels, logits
 
 
-class EnsembleDataset(object):
+class EnsembleDataset(Dataset):
     def __init__(self, dataset, dataset_parameters, ensemble_path, model_dirs, n_models, folder):
         # Initialize and Process the dataset we are wrapping
         self.dataset = dataset(**dataset_parameters)
