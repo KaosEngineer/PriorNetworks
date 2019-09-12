@@ -24,7 +24,7 @@ parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
 parser.add_argument('ensemble_path', type=str,
                     help='Path to where ensemble is stored.')
-parser.add_argument('model_dir', type=str,
+parser.add_argument('model', type=str,
                     help='Name of model. Ex: DNN.')
 # parser.add_argument('folder', type=str,
 #                     help='Folder where model outputs are stored.')
@@ -105,7 +105,7 @@ def main():
     train_dataset = EnsembleDataset(dataset=train_dataset_class,
                                     dataset_parameters=train_dataset_parameters,
                                     ensemble_path=args.ensemble_path,
-                                    model_dirs=args.model_dir,
+                                    model_dirs=args.model,
                                     n_models=args.n_models,
                                     folder='train')
 
@@ -121,7 +121,7 @@ def main():
     val_dataset = EnsembleDataset(dataset=val_dataset_class,
                                   dataset_parameters=val_dataset_parameters,
                                   ensemble_path=args.ensemble_path,
-                                  model_dirs=args.model_dirs,
+                                  model_dirs=args.model,
                                   n_models=args.n_models,
                                   folder='eval')
 
