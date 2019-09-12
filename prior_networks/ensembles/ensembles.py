@@ -5,10 +5,13 @@ import numpy as np
 
 def get_ensemble_predictions(model_dirs, experiment_path, n_models, prefix=None):
     """
-    Get the target labels and model predictions from a txt file from all the models pointed to by list model_dirs.
+    Get the target labels and model predictions from a txt file from all the
+    models pointed to by list model_dirs.
     :param model_dirs: list of paths to model directories
-    :param rel_labels_filepath: path to where the labels/predictions file is located within each model directory
-    :return: ndarray of target labels and ndarray predictions of each model with shape [num_examples, num_models]
+    :param rel_labels_filepath: path to where the labels/predictions
+           file is located within each model directory
+    :return: ndarray of target labels and ndarray predictions of each
+             model with shape [num_examples, num_models]
     """
     if prefix is not None:
         labels_files = map(lambda model_dir: os.path.join(model_dir,
