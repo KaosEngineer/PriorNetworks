@@ -32,7 +32,7 @@ class EnDLoss:
 class DirichletEnDDLoss(object):
     """Standard Negative Log-likelihood of the ensemble predictions"""
 
-    def __init__(self, smoothing=0., teacher_prob_smoothing=1e-7, temp=1.0):
+    def __init__(self, smoothing=1e-8, teacher_prob_smoothing=1e-3, temp=1.0):
         self.smooth_val = smoothing
         self.tp_scaling = 1 - teacher_prob_smoothing
         self.temp = temp
