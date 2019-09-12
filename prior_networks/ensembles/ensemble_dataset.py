@@ -19,7 +19,7 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
 
     labels = np.stack(labels, axis=1)
     logits = np.stack(logits, axis=1)
-    print(labels.shape)
+    print(labels.shape, np.max(labels), np.min(labels))
     return labels, logits
 
 
@@ -33,7 +33,7 @@ class EnsembleDataset(object):
 
     def __getitem__(self, index):
         img, target = self.dataset[index]
-        print(target.shape, self.labels.shape)
+        #print(target.shape, self.labels.shape)
         assert target == self.labels[index]
 
         return img, target, self.logits[index]
