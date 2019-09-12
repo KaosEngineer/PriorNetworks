@@ -14,12 +14,12 @@ def get_ensemble_logits(ensemble_path, model, n_models, folder):
 
     logits, labels = [], []
     for logit_path, label_path in zip(logit_files, label_files):
-        labels.append(np.loadtxt(label_path, dtype=np.int32))
+        labels.append(np.asarray(np.loadtxt(label_path, dtype=np.float32), dtype=np.int32))
         logits.append(np.loadtxt(logit_path, dtype=np.float32))
 
     labels = np.stack(labels, axis=1)
     logits = np.stack(logits, axis=1)
-    print(labels)
+    print(labels.shape)
     return labels, logits
 
 
