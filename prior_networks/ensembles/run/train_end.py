@@ -22,10 +22,17 @@ parser.add_argument('data_path', type=str,
                     help='absolute path to training data.')
 parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='In-domain dataset name.')
+parser.add_argument('ensemble_path', type=str,
+                    help='Path to where ensemble is stored.')
+parser.add_argument('model_dir', type=str,
+                    help='Name of model. Ex: DNN.')
+parser.add_argument('folder', type=str,
+                    help='Folder where model outputs are stored.')
 parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
+parser.add_argument('--n_models', type=int, default=10, help='Number of models from ensemble to use.')
 parser.add_argument('--temperature', type=float, default=1.0, help='Temperature used for distillation')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
@@ -98,7 +105,7 @@ def main():
     train_dataset = EnsembleDataset(dataset=train_dataset_class,
                                     dataset_parameters=train_dataset_parameters,
                                     ensemble_path=args.ensemble_path,
-                                    model_dirs=args.model_dirs,
+                                    model_dirs=args.model_dir,
                                     n_models=args.n_models,
                                     folder=args.folder)
 
