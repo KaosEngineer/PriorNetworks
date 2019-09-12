@@ -32,15 +32,16 @@ class EnDLoss:
 class DirichletEnDDLoss(object):
     """Standard Negative Log-likelihood of the ensemble predictions"""
 
-    def __init__(self, smoothing=0., teacher_prob_smoothing=1e-7):
+    def __init__(self, smoothing=0., teacher_prob_smoothing=1e-7, temp=1.0):
         self.smooth_val = smoothing
         self.tp_scaling = 1 - teacher_prob_smoothing
+        self.temp = temp
 
     def __call__(self, *args):
         return self.forward(*args)
 
     def forward(self, logits, teacher_logits, temp=1.0):
-        alphas = torch.exp(logits/temp)
+        alphas = torch.exp(logits/self.temp)
         precision = torch.sum(alphas, dim=1)
 
         teacher_probs = F.softmax(teacher_logits/temp, dim=2)

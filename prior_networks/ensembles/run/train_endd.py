@@ -128,7 +128,7 @@ def main():
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
-    train_criterion = DirichletEnDDLoss()
+    train_criterion = DirichletEnDDLoss(temp=args.temperature)
 
     # Setup model trainer and train model
     trainer = TrainerEnD(model=model,
