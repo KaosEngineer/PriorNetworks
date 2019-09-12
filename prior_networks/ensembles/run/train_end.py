@@ -126,8 +126,8 @@ def main():
                                   n_models=args.n_models,
                                   folder='eval')
 
-    print(train_dataset[23478])
-    print(val_dataset[234])
+    img, lab, log = train_dataset[23478]
+    print(log.shape)
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
