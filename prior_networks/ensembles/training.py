@@ -13,6 +13,7 @@ from torch.distributions.normal import Normal
 
 
 class MultiStepTempScheduler(object):
+    #TODO Define as proper scheduler object and define save/load state functions.
     def __init__(self, temp, milestones, gamma=0.1, last_epoch=-1):
         self.milestones = Counter(milestones)
         self.gamma = gamma
