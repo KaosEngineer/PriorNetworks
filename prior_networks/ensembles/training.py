@@ -12,32 +12,79 @@ from torch.distributions.categorical import Categorical
 from torch.distributions.normal import Normal
 
 
-class MultiStepTempScheduler(object):
-    #TODO Define as proper scheduler object and define save/load state functions.
-    def __init__(self, temp, milestones, gamma=0.1, last_epoch=-1):
-        self.milestones = Counter(milestones)
-        self.gamma = gamma
-
+class _TempScheduler(object):
+    def __init__(self, init_temp, last_epoch=-1):
         if last_epoch == -1:
             last_epoch = 0
 
-        self.base_temp = temp - 1.0
+        self.temp = init_temp
         self.step(last_epoch)
-
-
-    def update_temp(self):
-        if self.last_epoch not in self.milestones:
-            return self.base_temp
-        return self.base_temp * (self.gamma ** (self.milestones[self.last_epoch]))
-
-    def get_temp(self):
-        return self.base_temp + 1.0
 
     def step(self, epoch=None):
         if epoch is None:
             epoch = self.last_epoch + 1
         self.last_epoch = epoch
-        self.base_temp = self.update_temp()
+        self.temp = self.update_temp()
+
+    def state_dict(self):
+        """Returns the state of the scheduler as a :class:`dict`.
+
+        It contains an entry for every variable in self.__dict__
+        """
+        return {key: value for key, value in self.__dict__.items()}
+
+    def load_state_dict(self, state_dict):
+        """Loads the schedulers state.
+
+        Arguments:
+            state_dict (dict): scheduler state. Should be an object returned
+                from a call to :meth:`state_dict`.
+        """
+        self.__dict__.update(state_dict)
+
+    def get_temp(self):
+        raise NotImplementedError
+
+    def update_temp(self):
+        raise NotImplementedError
+
+
+class MultiStepTempScheduler(_TempScheduler):
+    def __init__(self, init_temp, milestones, gamma=0.1, last_epoch=-1):
+        self.milestones = Counter(milestones)
+        self.gamma = gamma
+        super(MultiStepTempScheduler, self).__init__(init_temp, last_epoch)
+        self.temp = init_temp - 1.0
+
+    def update_temp(self):
+        if self.last_epoch not in self.milestones:
+            return self.temp
+        return self.temp * (self.gamma ** (self.milestones[self.last_epoch]))
+
+    def get_temp(self):
+        return self.temp + 1.0
+
+
+class LRTempScheduler(_TempScheduler):
+    def __init__(self, init_temp, decay_epoch, decay_length, last_epoch=-1):
+        assert decay_length > 0
+        assert decay_epoch > 0
+        self.decay_epoch = decay_epoch
+        self.decay_length = decay_length
+        self.init_temp = init_temp
+        super(LRTempScheduler, self).__init__(init_temp, last_epoch)
+
+    def update_temp(self):
+        if self.last_epoch <= self.decay_epoch:
+            return self.temp
+        elif self.last_epoch >= self.decay_epoch + self.decay_length:
+            return 1.0
+        else:
+            slope = (self.init_temp - 1.0) / self.decay_length
+            return self.init_temp - slope * (self.last_epoch - self.decay_epoch)
+
+    def get_temp(self):
+        return self.temp
 
 
 class TrainerDistillation(Trainer):
