@@ -56,4 +56,4 @@ class DirichletEnDDLoss(object):
         cost = target_dependent_term + target_independent_term
         assert torch.all(torch.isfinite(cost)).item()
 
-        return torch.mean(cost)  # * (temp**2)
+        return torch.mean(cost)   * (temp**2)

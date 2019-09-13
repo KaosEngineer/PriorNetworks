@@ -77,7 +77,7 @@ def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
         os.mkdir('CMDs')
-    with open('CMDs/step_train_endd.cmd', 'a') as f:
+    with open('CMDs/step_train_distillation.cmd', 'a') as f:
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
