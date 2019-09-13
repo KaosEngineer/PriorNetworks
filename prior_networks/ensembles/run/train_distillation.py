@@ -37,6 +37,8 @@ parser.add_argument('--n_models', type=int, default=10, help='Number of models f
 parser.add_argument('--temperature', type=float, default=1.0, help='Temperature used for distillation')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
+parser.add_argument('--t_decay', type=float, default=0.2, help='Temperature annealing decay multiplies')
+parser.add_argument('--trc', action='append', type=int, help='Temperature decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--dropout_rate', type=float, default=0.0,
