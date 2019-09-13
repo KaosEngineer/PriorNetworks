@@ -1,5 +1,5 @@
 from typing import Dict, Any
-import sys
+import sys, os
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -116,6 +116,41 @@ class TrainerDistillation(Trainer):
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
         self.temp_scheduler = temp_scheduler(**temp_scheduler_params)
+
+    def _save_checkpoint(self, save_at_steps=False):
+        if save_at_steps:
+            checkpoint_name = 'checkpoint-' + str(self.steps) + '.tar'
+        else:
+            checkpoint_name = 'checkpoint.tar'
+
+        torch.save({
+            'steps': self.steps,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'lr_scheduler_state_dict': self.scheduler.state_dict(),
+            'temp_scheduler_state_dict': self.temp_scheduler.state_dict(),
+            'train_loss': self.train_loss,
+            'test_loss': self.test_loss
+        }, os.path.join(self.checkpoint_path, checkpoint_name))
+
+    def load_checkpoint(self,
+                        checkpoint_path,
+                        load_opt_state=False,
+                        load_scheduler_state=False,
+                        load_tscheduler_state=False,
+                        map_location=None):
+        checkpoint = torch.load(checkpoint_path, map_location=map_location)
+        self.steps = checkpoint['steps']
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.train_loss = checkpoint['train_loss']
+        self.test_loss = checkpoint['test_loss']
+
+        if load_opt_state:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if load_scheduler_state:
+            self.scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
+        if load_tscheduler_state:
+            self.temp_scheduler.load_state_dict(checkpoint['temp_scheduler_state_dict'])
 
     def train(self, n_epochs=None, n_iter=None, resume=False):
         # Calc num of epochs
