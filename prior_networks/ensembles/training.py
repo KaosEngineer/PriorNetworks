@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 from collections import Counter
+import math
+import time
 
 from prior_networks.training import Trainer, calc_accuracy_torch
 from torch.distributions.categorical import Categorical
@@ -19,7 +21,7 @@ class MultiStepTempScheduler(object):
             last_epoch = 0
 
         self.step(last_epoch)
-        self.base_temp = temp - 1
+        self.base_temp = temp - 1.0
 
     def update_temp(self):
         if self.last_epoch not in self.milestones:
@@ -27,14 +29,13 @@ class MultiStepTempScheduler(object):
         return self.base_temp * (self.gamma ** (self.milestones[self.last_epoch]))
 
     def get_temp(self):
-        return self.temp + 1.0
+        return self.base_temp + 1.0
 
     def step(self, epoch=None):
         if epoch is None:
             epoch = self.last_epoch + 1
         self.last_epoch = epoch
-        self.temp = self.update_temp()
-
+        self.base_temp = self.update_temp()
 
 
 class TrainerDistillation(Trainer):
@@ -67,6 +68,30 @@ class TrainerDistillation(Trainer):
 
         self.temp_scheduler = temp_scheduler(**temp_scheduler_params)
 
+    def train(self, n_epochs=None, n_iter=None, resume=False):
+        # Calc num of epochs
+        init_epoch = 0
+        if n_epochs is None:
+            assert isinstance(n_iter, int)
+            n_epochs = math.ceil(n_iter / len(self.trainloader))
+        else:
+            assert isinstance(n_epochs, int)
+
+        if resume:
+            init_epoch = math.floor(self.steps / len(self.trainloader))
+
+        for epoch in range(init_epoch, n_epochs):
+            print(f'Training epoch: {epoch + 1} / {n_epochs}')
+            # Train
+            start = time.time()
+            self._train_single_epoch()
+            self._save_checkpoint()
+            # Test
+            self.test(time=time.time() - start)
+            self.scheduler.step()
+            self.temp_scheduler.step()
+        return
+
     def _train_single_epoch(self):
         # Set model in train mode
         self.model.train()
@@ -84,7 +109,8 @@ class TrainerDistillation(Trainer):
             self.optimizer.zero_grad()
 
             outputs = self.model(inputs)
-            loss = self.criterion(outputs, logits)
+            temp = self.temp_scheduler.get_temp()
+            loss = self.criterion(outputs, logits, temp)
 
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()
@@ -140,5 +166,3 @@ class TrainerDistillation(Trainer):
         self.test_accuracy.append(accuracy)
         self.test_eval_steps.append(self.steps)
         return
-
-
