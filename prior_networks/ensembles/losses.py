@@ -62,4 +62,4 @@ class DirichletEnDDLoss(object):
         assert torch.all(torch.isfinite(log_teacher_probs_geo_mean)).item()
         assert torch.all(torch.isfinite(cost)).item()
 
-        return torch.mean(cost) * (temp**2)
+        return torch.mean(cost) #* (temp**2)
