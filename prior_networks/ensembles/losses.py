@@ -3,13 +3,13 @@ from torch.nn import functional as F
 
 
 class EnDLoss:
-    def __init__(self, temp=1.0):
-        self.temp = temp  # Distillation temperature (scaling of logits to emphasise differences within ensemble)
+    def __init__(self):
+        pass
 
     def __call__(self, *args):
         return self.forward(*args)
 
-    def forward(self, logits, teacher_logits):
+    def forward(self, logits, teacher_logits, temp):
         """
 
         :param logits:
@@ -19,10 +19,10 @@ class EnDLoss:
 
 
         #TODO: Should I multiply by temp**2 ?
-        teacher_probs = F.softmax(teacher_logits / self.temp, dim=2)
+        teacher_probs = F.softmax(teacher_logits / temp, dim=2)
         teacher_probs_mean = torch.mean(teacher_probs, dim=1)
 
-        cost = - teacher_probs_mean * F.log_softmax(logits / self.temp, dim=1) * (self.temp**2)
+        cost = - teacher_probs_mean * F.log_softmax(logits / temp, dim=1) * (temp**2)
 
         assert torch.all(torch.isfinite(cost)).item()
 
@@ -32,16 +32,15 @@ class EnDLoss:
 class DirichletEnDDLoss(object):
     """Standard Negative Log-likelihood of the ensemble predictions"""
 
-    def __init__(self, smoothing=1e-8, teacher_prob_smoothing=1e-3, temp=1.0):
+    def __init__(self, smoothing=1e-8, teacher_prob_smoothing=1e-3):
         self.smooth_val = smoothing
         self.tp_scaling = 1 - teacher_prob_smoothing
-        self.temp = temp
 
     def __call__(self, *args):
         return self.forward(*args)
 
     def forward(self, logits, teacher_logits, temp=1.0):
-        alphas = torch.exp(logits/self.temp)
+        alphas = torch.exp(logits/temp)
         precision = torch.sum(alphas, dim=1)
 
         teacher_probs = F.softmax(teacher_logits/temp, dim=2)
@@ -63,4 +62,4 @@ class DirichletEnDDLoss(object):
         assert torch.all(torch.isfinite(log_teacher_probs_geo_mean)).item()
         assert torch.all(torch.isfinite(cost)).item()
 
-        return torch.mean(cost)
+        return torch.mean(cost) * (temp**2)

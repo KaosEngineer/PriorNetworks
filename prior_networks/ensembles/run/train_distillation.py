@@ -6,15 +6,15 @@ import pathlib
 from pathlib import Path
 
 import torch
-from torch.utils import data
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
-from prior_networks.ensembles.training import TrainerEnD
+from prior_networks.ensembles.training import TrainerDistillation
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
 from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
-from prior_networks.ensembles.losses import DirichletEnDDLoss
+from prior_networks.ensembles.losses import DirichletEnDDLoss, EnDLoss
+from prior_networks.ensembles.training import MultiStepTempScheduler
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
@@ -128,23 +128,32 @@ def main():
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
-    train_criterion = DirichletEnDDLoss(temp=args.temperature)
+    if args.EnDD:
+        train_criterion = DirichletEnDDLoss()
+    else:
+        train_criterion = EnDLoss()
 
     # Setup model trainer and train model
-    trainer = TrainerEnD(model=model,
-                         criterion=train_criterion,
-                         test_criterion=test_criterion,
-                         train_dataset=train_dataset,
-                         test_dataset=val_dataset,
-                         optimizer=optim.SGD,
-                         device=device,
-                         checkpoint_path=model_dir / 'model',
-                         scheduler=optim.lr_scheduler.MultiStepLR,
-                         optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                           'nesterov': True,
-                                           'weight_decay': args.weight_decay},
-                         scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
-                         batch_size=args.batch_size)
+    trainer = TrainerDistillation(model=model,
+                                  criterion=train_criterion,
+                                  test_criterion=test_criterion,
+                                  train_dataset=train_dataset,
+                                  test_dataset=val_dataset,
+                                  optimizer=optim.SGD,
+                                  device=device,
+                                  checkpoint_path=model_dir / 'model',
+                                  scheduler=optim.lr_scheduler.MultiStepLR,
+                                  temp_scheduler=MultiStepTempScheduler,
+                                  optimizer_params={'lr': args.lr,
+                                                    'momentum': 0.9,
+                                                    'nesterov': True,
+                                                    'weight_decay': args.weight_decay},
+                                  scheduler_params={'milestones': args.lrc,
+                                                    'gamma': args.lr_decay},
+                                  temp_scheduler_params={'temp': args.temperature,
+                                                         'milestones': args.trc,
+                                                         'gamma': args.t_decay},
+                                  batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
     trainer.train(args.n_epochs, resume=args.resume)
