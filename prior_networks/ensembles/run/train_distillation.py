@@ -69,6 +69,9 @@ parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
 
+parser.add_argument('--endd',
+                    action='store_true',
+                    help='Whether to do Ensemble Distribution Distillation.')
 
 def main():
     args = parser.parse_args()
@@ -130,7 +133,7 @@ def main():
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
-    if args.EnDD:
+    if args.endd:
         train_criterion = DirichletEnDDLoss()
     else:
         train_criterion = EnDLoss()
