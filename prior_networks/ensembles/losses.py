@@ -10,14 +10,6 @@ class EnDLoss:
         return self.forward(*args)
 
     def forward(self, logits, teacher_logits, temp):
-        """
-
-        :param logits:
-        :param teacher_logits:
-        :return:
-        """
-        print(temp)
-
         #TODO: Should I multiply by temp**2 ?
         teacher_probs = F.softmax(teacher_logits / temp, dim=2)
         teacher_probs_mean = torch.mean(teacher_probs, dim=1)
@@ -40,7 +32,6 @@ class DirichletEnDDLoss(object):
         return self.forward(*args)
 
     def forward(self, logits, teacher_logits, temp=1.0):
-        print(temp)
         alphas = torch.exp(logits/temp)
         precision = torch.sum(alphas, dim=1)
 
