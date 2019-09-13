@@ -21,8 +21,9 @@ class MultiStepTempScheduler(object):
         if last_epoch == -1:
             last_epoch = 0
 
-        self.step(last_epoch)
         self.base_temp = temp - 1.0
+        self.step(last_epoch)
+
 
     def update_temp(self):
         if self.last_epoch not in self.milestones:
