@@ -37,6 +37,8 @@ parser.add_argument('--gpu', type=int, default=0,
                     help='Specify which GPU to evaluate on.')
 parser.add_argument('--train', action='store_true',
                     help='Whether to evaluate on the training data instead of test data')
+parser.add_argument('--ood', action='store_true',
+                    help='Whether to evaluate on OOD data with mismatched classes - only saves outputs.')
 parser.add_argument('--overwrite', action='store_true',
                     help='Whether to overwrite a previous run of this script')
 
@@ -93,23 +95,26 @@ def main():
                                             device=device)
     labels, probs, logits = labels.numpy(), F.softmax(logits, dim=1).numpy(), logits.numpy()
 
-    nll = -np.mean(np.log(probs[np.arange(probs.shape[0]), np.squeeze(labels)] + 1e-10))
-
     # Save model outputs
     np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels)
     np.savetxt(os.path.join(args.output_path, 'probs.txt'), probs)
     np.savetxt(os.path.join(args.output_path, 'logits.txt'), logits)
-
-    accuracy = np.mean(np.asarray(labels == np.argmax(probs, axis=1), dtype=np.float32))
-    with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
-        f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} \n')
-        f.write(f'NLL: {np.round(nll, 3)} \n')
 
     # Get dictionary of uncertainties.
     uncertainties = dirichlet_prior_network_uncertainty(logits)
     # Save uncertainties
     for key in uncertainties.keys():
         np.savetxt(os.path.join(args.output_path, key + '.txt'), uncertainties[key])
+
+    if args.ood:
+        sys.exit()
+
+    nll = -np.mean(np.log(probs[np.arange(probs.shape[0]), np.squeeze(labels)] + 1e-10))
+
+    accuracy = np.mean(np.asarray(labels == np.argmax(probs, axis=1), dtype=np.float32))
+    with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
+        f.write(f'Classification Error: {np.round(100 * (1.0 - accuracy), 1)} \n')
+        f.write(f'NLL: {np.round(nll, 3)} \n')
 
     # TODO: Have different results files? Or maybedifferent folders
     # Assess Misclassification Detection
