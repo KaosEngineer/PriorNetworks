@@ -155,7 +155,7 @@ def main():
                                                     'weight_decay': args.weight_decay},
                                   scheduler_params={'milestones': args.lrc,
                                                     'gamma': args.lr_decay},
-                                  temp_scheduler_params={'temp': args.temperature,
+                                  temp_scheduler_params={'init_temp': args.temperature,
                                                          'milestones': args.trc,
                                                          'gamma': args.t_decay},
                                   batch_size=args.batch_size)
