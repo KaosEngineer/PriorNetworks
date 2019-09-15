@@ -6,6 +6,7 @@ import pathlib
 from pathlib import Path
 
 import torch
+from torch.utils import data
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.ensembles.training import TrainerDistillation
 from torch import optim
@@ -72,6 +73,13 @@ parser.add_argument('--resume',
 parser.add_argument('--endd',
                     action='store_true',
                     help='Whether to do Ensemble Distribution Distillation.')
+parser.add_argument('--ood',
+                    action='store_true',
+                    help='Whether to use auxilliary "OOD" data on which ensemble is diverse.')
+parser.add_argument('--ood_dataset', choices=DATASET_DICT.keys(), default='TIM',
+                    help='OOD dataset name.')
+parser.add_argument('--ood_folder', type=float, default=None,
+                    help='OOD dataset name.')
 
 def main():
     args = parser.parse_args()
@@ -130,6 +138,26 @@ def main():
                                   model_dirs=args.model,
                                   n_models=args.n_models,
                                   folder='eval')
+
+    if args.ood:
+        assert args.ood_folder is not None
+        ood_dataset_class = DATASET_DICT[args.ood_dataset]
+        ood_dataset_parameters = {'root': args.data_path,
+                                  'transform': construct_transforms(n_in=ckpt['n_in'],
+                                                                    mean=DATASET_DICT[args.dataset].mean,
+                                                                    std=DATASET_DICT[args.dataset].std,
+                                                                    mode='train'),
+                                  'target_transform': None,
+                                  'download': True,
+                                  'split': 'train'}
+        ood_dataset = EnsembleDataset(dataset=ood_dataset_class,
+                                      dataset_parameters=ood_dataset_parameters,
+                                      ensemble_path=args.ensemble_path,
+                                      model_dirs=args.model,
+                                      n_models=args.n_models,
+                                      folder=args.ood_folder)
+
+        train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
 
     # Set up training and test criteria
     test_criterion = torch.nn.CrossEntropyLoss()
