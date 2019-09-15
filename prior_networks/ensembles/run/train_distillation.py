@@ -15,7 +15,7 @@ from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
 from prior_networks.ensembles.losses import DirichletEnDDLoss, EnDLoss
-from prior_networks.ensembles.training import MultiStepTempScheduler
+from prior_networks.ensembles.training import LRTempScheduler
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
@@ -34,12 +34,12 @@ parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
+parser.add_argument('temperature', type=float, help='Temperature used for distillation,')
+parser.add_argument('tdecay_epoch', type=int,  help='When to begin annealing temperature.')
+parser.add_argument('tdecay_length', type=int, help='How slowly to aneal temperature.')
 parser.add_argument('--n_models', type=int, default=10, help='Number of models from ensemble to use.')
-parser.add_argument('--temperature', type=float, default=1.0, help='Temperature used for distillation')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
-parser.add_argument('--t_decay', type=float, default=0.2, help='Temperature annealing decay multiplies')
-parser.add_argument('--trc', action='append', type=int, help='Temperature decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--dropout_rate', type=float, default=0.0,
@@ -69,7 +69,6 @@ parser.add_argument('--jitter', type=float, default=0.0,
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
-
 parser.add_argument('--endd',
                     action='store_true',
                     help='Whether to do Ensemble Distribution Distillation.')
@@ -176,7 +175,7 @@ def main():
                                   device=device,
                                   checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
-                                  temp_scheduler=MultiStepTempScheduler,
+                                  temp_scheduler=LRTempScheduler,
                                   optimizer_params={'lr': args.lr,
                                                     'momentum': 0.9,
                                                     'nesterov': True,
@@ -184,8 +183,8 @@ def main():
                                   scheduler_params={'milestones': args.lrc,
                                                     'gamma': args.lr_decay},
                                   temp_scheduler_params={'init_temp': args.temperature,
-                                                         'milestones': args.trc,
-                                                         'gamma': args.t_decay},
+                                                         'decay_epoch': args.tdecay_epoch,
+                                                         'decay_length': args.tdecay_length},
                                   batch_size=args.batch_size)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, True, map_location=device)
