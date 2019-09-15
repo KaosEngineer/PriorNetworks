@@ -78,7 +78,7 @@ parser.add_argument('--ood',
                     help='Whether to use auxilliary "OOD" data on which ensemble is diverse.')
 parser.add_argument('--ood_dataset', choices=DATASET_DICT.keys(), default='TIM',
                     help='OOD dataset name.')
-parser.add_argument('--ood_folder', type=float, default=None,
+parser.add_argument('--ood_folder', type=str, default=None,
                     help='OOD dataset name.')
 
 def main():
