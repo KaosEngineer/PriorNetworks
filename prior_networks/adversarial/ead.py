@@ -1,18 +1,22 @@
-from foolbox.batch_attacks import CarliniWagnerL2Attack
+from foolbox.batch_attacks import EADAttack
 import numpy as np
 
+class AdaptiveEADAttack(EADAttack):
+    """Gradient based attack which uses an elastic-net regularization [1].
+    This implementation is based on the attacks description [1] and its
+    reference implementation [2].
 
-class AdaptiveCarliniWagnerL2Attack(CarliniWagnerL2Attack):
-    """The Adaptive L2 version of the Carlini & Wagner attack.
-    This attack is described in [1]_. This implementation
-    is based on the reference implementation by Carlini [2]_.
-    For bounds ≠ (0, 1), it differs from [2]_ because we
-    normalize the squared L2 loss with the bounds.
     References
     ----------
-    .. [1] Nicholas Carlini, David Wagner: "Towards Evaluating the
-           Robustness of Neural Networks", https://arxiv.org/abs/1608.04644
-    .. [2] https://github.com/carlini/nn_robust_attacks
+    .. [1] Pin-Yu Chen (*), Yash Sharma (*), Huan Zhang, Jinfeng Yi,
+           Cho-Jui Hsieh, "EAD: Elastic-Net Attacks to Deep Neural
+           Networks via Adversarial Examples",
+           https://arxiv.org/abs/1709.04114
+
+    .. [2] Pin-Yu Chen (*), Yash Sharma (*), Huan Zhang, Jinfeng Yi,
+           Cho-Jui Hsieh, "Reference Implementation of 'EAD: Elastic-Net
+           Attacks to Deep Neural Networks via Adversarial Examples'",
+           https://github.com/ysharma1126/EAD_Attack/blob/master/en_attack.py
     """
 
     @classmethod

@@ -1,0 +1,104 @@
+#! /usr/bin/env python
+import context
+import argparse
+import os
+import sys
+import numpy as np
+
+import torch
+from pathlib import Path
+
+import foolbox
+from foolbox.models import PyTorchModel
+from foolbox.batch_attacks import CarliniWagnerL2Attack, EADAttack
+
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu
+from prior_networks.models.model_factory import ModelFactory
+from prior_networks.datasets.image import construct_transforms
+from prior_networks.adversarial import AdaptiveCarliniWagnerL2Attack, AdaptiveEADAttack
+
+parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
+                                             'standard Torchvision architecture on a Torchvision '
+                                             'dataset.')
+parser.add_argument('data_path', type=str,
+                    help='Path where data is saved')
+parser.add_argument('dataset', choices=DATASET_DICT.keys(),
+                    help='Specify name of dataset to evaluate model on.')
+parser.add_argument('output_path', type=str,
+                    help='Path of directory for saving model outputs.')
+parser.add_argument('--batch_size', type=int, default=256,
+                    help='Batch size for processing')
+parser.add_argument('--model_dir', type=str, default='./',
+                    help='absolute directory path where to save model and associated data.')
+parser.add_argument('--gpu', type=int, default=0,
+                    help='Specify which GPU to evaluate on.')
+parser.add_argument('--overwrite', action='store_true',
+                    help='Whether to overwrite a previous run of this script')
+
+
+def main():
+    args = parser.parse_args()
+    if not os.path.isdir('CMDs'):
+        os.mkdir('CMDs')
+    with open('CMDs/construct_adversarial_attack.cmd', 'a') as f:
+        f.write(' '.join(sys.argv) + '\n')
+        f.write('--------------------------------\n')
+    if os.path.isdir(args.output_path) and not args.overwrite:
+        print(f'Directory {args.output_path} exists. Exiting...')
+        sys.exit()
+    elif os.path.isdir(args.output_path) and args.overwrite:
+        os.remove(args.output_path + '/*')
+    else:
+        os.makedirs(args.output_path)
+
+    # Check that we are using a sensible GPU
+    device = select_gpu(args.gpu)
+
+    # Load up the model
+    model_dir = Path(args.model_dir)
+    ckpt = torch.load(model_dir / 'model/model.tar', map_location=device)
+    model = ModelFactory.model_from_checkpoint(ckpt)
+    model.to(device)
+    model.eval()
+
+    # Wrap model with a Foolbox wrapper.
+    fmodel = PyTorchModel(model, bound=(0, 1), num_classes=ckpt['num_classes'])
+
+    # Load the evaluation data
+    if args.train:
+        dataset = DATASET_DICT[args.dataset](root=args.data_path,
+                                             transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                            mean=DATASET_DICT[args.dataset].mean,
+                                                                            std=DATASET_DICT[args.dataset].std,
+                                                                            mode='train'),
+                                             target_transform=None,
+                                             download=True,
+                                             split='train')
+    else:
+        dataset = DATASET_DICT[args.dataset](root=args.data_path,
+                                             transform=construct_transforms(n_in=ckpt['n_in'],
+                                                                            mean=DATASET_DICT[args.dataset].mean,
+                                                                            std=DATASET_DICT[args.dataset].std,
+                                                                            mode='eval'),
+                                             target_transform=None,
+                                             download=True,
+                                             split='test')
+
+    # Construct adversarial attack
+    attack = CarliniWagnerL2Attack(model=fmodel)
+
+    n_batches = len(dataset) / args.batch_size
+    adversarial_images = []
+    for i in range(n_batches):
+        imgs, labels = dataset[i*args.batch_size:(i+1)*args.batch_size]
+
+        adv = attack(input=imgs, labels=labels, unpack=True)
+        #adversarial_images.append(adv)
+
+    print(adv.shape)
+
+    #adversarial_images = np.stack(adversarial_images, axis=0)
+    #print(adversarial_images.shape)
+
+if __name__ == "__main__":
+    main()
