@@ -109,10 +109,9 @@ def main():
 
     n_batches = int(len(dataset) / args.batch_size)
     adversarial_images = []
-    print(len(dataset.data[0]))
     for i, data in enumerate(loader):
         images, labels = data
-        adv = attack(input=images, labels=labels, unpack=True)
+        adv = attack(inputs=images, labels=labels, unpack=True)
         #adversarial_images.append(adv)
 
         print(adv.shape)
