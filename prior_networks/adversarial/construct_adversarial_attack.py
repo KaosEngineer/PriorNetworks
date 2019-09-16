@@ -112,9 +112,9 @@ def main():
     for i, data in enumerate(loader):
         images, labels = data
         images = images.numpy()
-        print(images[0])
         labels = labels.numpy()
-        adv = attack(inputs=images.numpy(), labels=labels.numpy(), unpack=True)
+        
+        adv = attack(inputs=images, labels=labels, unpack=True)
         #adversarial_images.append(adv)
 
         print(adv.shape)
