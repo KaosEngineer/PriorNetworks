@@ -111,6 +111,7 @@ def main():
     adversarial_images = []
     for i, data in enumerate(loader):
         images, labels = data
+        print(images.dtype)
         adv = attack(inputs=images, labels=labels, unpack=True)
         #adversarial_images.append(adv)
 
