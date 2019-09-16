@@ -104,7 +104,7 @@ def main():
     else:
         raise NotImplementedError
 
-    n_batches = len(dataset) / args.batch_size
+    n_batches = int(len(dataset) / args.batch_size)
     adversarial_images = []
     for i in range(n_batches):
         imgs, labels = dataset[i*args.batch_size:(i+1)*args.batch_size]
