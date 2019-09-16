@@ -69,7 +69,7 @@ def main():
     model.eval()
 
     # Wrap model with a Foolbox wrapper.
-    fmodel = PyTorchModel(model, bounds=(0,1), num_classes=ckpt['num_classes'])
+    fmodel = PyTorchModel(model, bounds=(-1,1), num_classes=ckpt['num_classes'])
 
     # Load the evaluation data
     if args.train:
@@ -113,7 +113,7 @@ def main():
         images, labels = data
         images = images.numpy()
         labels = labels.numpy()
-        
+
         adv = attack(inputs=images, labels=labels, unpack=True)
         #adversarial_images.append(adv)
 
