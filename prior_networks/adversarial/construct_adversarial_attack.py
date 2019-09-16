@@ -7,10 +7,11 @@ import numpy as np
 
 import torch
 from pathlib import Path
-
+from torch.utils.data import DataLoader
 import foolbox
 from foolbox.models import PyTorchModel
 from foolbox.batch_attacks import CarliniWagnerL2Attack, EADAttack
+
 
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.models.model_factory import ModelFactory
@@ -90,6 +91,8 @@ def main():
                                              download=True,
                                              split='test')
 
+    loader = DataLoader(dataset, batch_size=args.batch_size, num_workers=1)
+
     # Construct adversarial attack
     if args.attack == 'CWL2':
         if args.adaptive:
@@ -107,9 +110,9 @@ def main():
     n_batches = int(len(dataset) / args.batch_size)
     adversarial_images = []
     print(len(dataset.data[0]))
-    for i in range(n_batches):
-
-        adv = attack(input=images[i*args.batch_size:(i+1)*args.batch_size], labels=labels[i*args.batch_size:(i+1)*args.batch_size], unpack=True)
+    for i, data in enumerate(loader):
+        images, labels = data
+        adv = attack(input=images, labels=labels, unpack=True)
         #adversarial_images.append(adv)
 
         print(adv.shape)
