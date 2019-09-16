@@ -26,14 +26,20 @@ parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
+parser.add_argument('attack', choices=['CWL2', 'EAD'],
+                    help='Specify name of dataset to evaluate model on.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--gpu', type=int, default=0,
                     help='Specify which GPU to evaluate on.')
+parser.add_argument('--train', action='store_true',
+                    help='Whether to evaluate on the training data instead of test data')
 parser.add_argument('--overwrite', action='store_true',
                     help='Whether to overwrite a previous run of this script')
+parser.add_argument('--adaptive', action='store_true',
+                    help='Whether to use adaptive version of adversarial attack')
 
 
 def main():
@@ -85,7 +91,18 @@ def main():
                                              split='test')
 
     # Construct adversarial attack
-    attack = CarliniWagnerL2Attack(model=fmodel)
+    if args.attack == 'CWL2':
+        if args.adaptive:
+            attack = AdaptiveCarliniWagnerL2Attack(model=fmodel)
+        else:
+            attack = CarliniWagnerL2Attack(model=fmodel)
+    elif args.attack == 'EAD':
+        if args.adaptive:
+            attack = AdaptiveEADAttack(model=fmodel)
+        else:
+            attack = EADAttack(model=fmodel)
+    else:
+        raise NotImplementedError
 
     n_batches = len(dataset) / args.batch_size
     adversarial_images = []
