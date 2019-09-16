@@ -34,10 +34,11 @@ parser.add_argument('n_epochs', type=int,
                     help='How many epochs to train for.')
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
-parser.add_argument('temperature', type=float, help='Temperature used for distillation,')
+parser.add_argument('temperature', type=float, help='Initial Temperature used for distillation,')
 parser.add_argument('tdecay_epoch', type=int,  help='When to begin annealing temperature.')
 parser.add_argument('tdecay_length', type=int, help='How slowly to aneal temperature.')
 parser.add_argument('--n_models', type=int, default=10, help='Number of models from ensemble to use.')
+parser.add_argument('--min_temperature', type=float, help='Minimum Temperature used for distillation,')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',

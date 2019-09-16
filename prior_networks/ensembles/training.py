@@ -67,21 +67,22 @@ class MultiStepTempScheduler(_TempScheduler):
 
 
 class LRTempScheduler(_TempScheduler):
-    def __init__(self, init_temp, decay_epoch, decay_length, last_epoch=-1):
+    def __init__(self, init_temp, decay_epoch, decay_length, min_temp = 1.0, last_epoch=-1):
         assert decay_length > 0
         assert decay_epoch > 0
         self.decay_epoch = decay_epoch
         self.decay_length = decay_length
         self.init_temp = init_temp
+        self.min_temp = min_temp
         super(LRTempScheduler, self).__init__(init_temp, last_epoch)
 
     def update_temp(self):
         if self.last_epoch <= self.decay_epoch:
             return self.temp
         elif self.last_epoch >= self.decay_epoch + self.decay_length:
-            return 1.0
+            return self.min_temp
         else:
-            slope = (self.init_temp - 1.0) / self.decay_length
+            slope = (self.init_temp - self.min_temp) / self.decay_length
             return self.init_temp - slope * (self.last_epoch - self.decay_epoch)
 
     def get_temp(self):

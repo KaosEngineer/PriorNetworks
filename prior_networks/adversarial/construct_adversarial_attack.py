@@ -26,7 +26,7 @@ parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
-parser.add_argument('attack', choices=['CWL2', 'EAD'],
+parser.add_argument('attack', choices=['FGSM', 'CWL2', 'EAD'],
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
