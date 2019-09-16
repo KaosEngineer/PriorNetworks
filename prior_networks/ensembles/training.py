@@ -7,6 +7,7 @@ from collections import Counter
 import math
 import time
 
+from torch.nn.utils import clip_grad_norm_
 from prior_networks.training import Trainer, calc_accuracy_torch
 from torch.distributions.categorical import Categorical
 from torch.distributions.normal import Normal
@@ -103,6 +104,7 @@ class TrainerDistillation(Trainer):
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
+                 clip_gradients=False,
                  num_workers=4,
                  pin_memory=False,
                  checkpoint_path='./',
@@ -113,6 +115,7 @@ class TrainerDistillation(Trainer):
                          batch_size=batch_size, device=device, log_interval=log_interval,
                          test_criterion=test_criterion, num_workers=num_workers,
                          pin_memory=pin_memory,
+                         clip_gradients=clip_gradients,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
         self.temp_scheduler = temp_scheduler(**temp_scheduler_params)
@@ -198,6 +201,8 @@ class TrainerDistillation(Trainer):
 
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()
+            if self.clip_gradients:
+                clip_grad_norm_(self.model.parameters(), 10.0)
             self.optimizer.step()
 
             # Update the number of steps

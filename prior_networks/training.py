@@ -6,6 +6,7 @@ from typing import Dict, Any
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.nn.utils import clip_grad_norm_
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
@@ -21,6 +22,7 @@ class Trainer:
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
+                 clip_gradients=False,
                  num_workers=4,
                  pin_memory=False,
                  checkpoint_path='./',
@@ -38,6 +40,7 @@ class Trainer:
         self.checkpoint_path = checkpoint_path
         self.checkpoint_steps = checkpoint_steps
         self.batch_size = batch_size
+        self.clip_gradients = clip_gradients
         if test_criterion is not None:
             self.test_criterion = test_criterion
         else:
@@ -140,6 +143,8 @@ class Trainer:
             loss = self.criterion(outputs, labels)
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()
+            if self.clip_gradients:
+                clip_grad_norm_(self.model.parameters(), 10.0)
             self.optimizer.step()
 
             # Update the number of steps
