@@ -68,7 +68,7 @@ def main():
     model.eval()
 
     # Wrap model with a Foolbox wrapper.
-    fmodel = PyTorchModel(model, num_classes=ckpt['num_classes'])
+    fmodel = PyTorchModel(model, bounds=(0,1), num_classes=ckpt['num_classes'])
 
     # Load the evaluation data
     if args.train:
