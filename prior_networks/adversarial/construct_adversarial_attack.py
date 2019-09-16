@@ -106,12 +106,14 @@ def main():
             attack = EADAttack(model=fmodel)
     else:
         raise NotImplementedError
-    
+
     n_batches = int(len(dataset) / args.batch_size)
     adversarial_images = []
     for i, data in enumerate(loader):
         images, labels = data
-        print(images.dtype, images.shape)
+        images = images.numpy()
+        print(images[0])
+        labels = labels.numpy()
         adv = attack(inputs=images.numpy(), labels=labels.numpy(), unpack=True)
         #adversarial_images.append(adv)
 
