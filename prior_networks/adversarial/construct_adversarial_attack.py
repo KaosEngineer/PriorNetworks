@@ -69,14 +69,15 @@ def main():
     model.eval()
 
     # Wrap model with a Foolbox wrapper.
-    fmodel = PyTorchModel(model, bounds=(-1,1), num_classes=ckpt['num_classes'])
+    mean = np.array([0.4914, 0.4823, 0.4465]).reshape((3, 1, 1))
+    std = np.array([0.247, 0.243, 0.261]).reshape((3, 1, 1))
+
+    fmodel = PyTorchModel(model, bounds=(0,1), num_classes=ckpt['num_classes'], preprocessing=(mean, std))
 
     # Load the evaluation data
     if args.train:
         dataset = DATASET_DICT[args.dataset](root=args.data_path,
                                              transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                            mean=DATASET_DICT[args.dataset].mean,
-                                                                            std=DATASET_DICT[args.dataset].std,
                                                                             mode='train'),
                                              target_transform=None,
                                              download=True,
@@ -84,8 +85,6 @@ def main():
     else:
         dataset = DATASET_DICT[args.dataset](root=args.data_path,
                                              transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                            mean=DATASET_DICT[args.dataset].mean,
-                                                                            std=DATASET_DICT[args.dataset].std,
                                                                             mode='eval'),
                                              target_transform=None,
                                              download=True,

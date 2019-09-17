@@ -17,8 +17,8 @@ split_options = ['train', 'val', 'test']
 
 def construct_transforms(n_in: int,
                          mode: str,
-                         mean: tuple,
-                         std: tuple,
+                         mean: tuple = (0.0, 0.0, 0.0),
+                         std: tuple = (1.0, 1.0, 1.0),
                          augment: bool = False,
                          rotation: bool = False,
                          jitter: float = 0.0):
@@ -35,8 +35,8 @@ def construct_transforms(n_in: int,
     assert not jitter < 0.0
     transf_list = []
     # TODO Make automatic. This is here temporaricly...
-    mean = (0.4914, 0.4823, 0.4465)
-    std = (0.247, 0.243, 0.261)
+    #mean = (0.4914, 0.4823, 0.4465)
+    #std = (0.247, 0.243, 0.261)
 
     if augment:
         if mode == 'eval':
@@ -180,8 +180,8 @@ class CIFAR10(torchvision.datasets.CIFAR10):
 
 
 class CIFAR100(torchvision.datasets.CIFAR100):
-    mean = (0.507, 0.487, 0.441)
-    std = (0.267, 0.256, 0.276)
+    mean = (0.4914, 0.4823, 0.4465)
+    std = (0.247, 0.243, 0.261)
 
     def __init__(self, root, transform, target_transform, download, split):
         assert split in split_options
