@@ -108,19 +108,23 @@ def main():
 
     n_batches = int(len(dataset) / args.batch_size)
     adversarial_images = []
+    real_labels = []
     for i, data in enumerate(loader):
         images, labels = data
         images = images.numpy()
         labels = labels.numpy()
 
         adv = attack(inputs=images, labels=labels, unpack=True)
-        #adversarial_images.append(adv)
+        adversarial_images.append(adv)
+        real_labels.append(labels)
+        break
 
-        print(adv.shape)
-        sys.exit()
-
-    #adversarial_images = np.stack(adversarial_images, axis=0)
-    #print(adversarial_images.shape)
-
+    adversarial_images = np.stack(adversarial_images, axis=0)
+    print(np.max(adversarial_images), np.min(adversarial_images))
+    print(adversarial_images.shape)
+    labels = np.stack(labels, axis=0)
+    np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
+    np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
+    
 if __name__ == "__main__":
     main()
