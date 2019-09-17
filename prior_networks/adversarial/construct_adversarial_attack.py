@@ -120,7 +120,7 @@ def main():
             adv = attack(inputs=images, labels=labels, epislons=1, max_epsilon=16.0/255.0, unpack=True)
         else:
             adv = attack(inputs=images, labels=labels, unpack=True)
-        adversarial_images.append(adv)
+        adversarial_images.append(np.clip(adv, 0.0, 1.0))
         real_labels.append(labels)
 
     adversarial_images = np.concatenate(adversarial_images, axis=0)
