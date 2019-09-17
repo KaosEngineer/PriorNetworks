@@ -38,7 +38,7 @@ parser.add_argument('temperature', type=float, help='Initial Temperature used fo
 parser.add_argument('tdecay_epoch', type=int,  help='When to begin annealing temperature.')
 parser.add_argument('tdecay_length', type=int, help='How slowly to aneal temperature.')
 parser.add_argument('--n_models', type=int, default=10, help='Number of models from ensemble to use.')
-parser.add_argument('--min_temperature', type=float, help='Minimum Temperature used for distillation,')
+parser.add_argument('--min_temperature', type=float, default=1.0, help='Minimum Temperature used for distillation,')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
@@ -182,6 +182,7 @@ def main():
                                   scheduler_params={'milestones': args.lrc,
                                                     'gamma': args.lr_decay},
                                   temp_scheduler_params={'init_temp': args.temperature,
+                                                         'min_temp': args.min_temperature,
                                                          'decay_epoch': args.tdecay_epoch,
                                                          'decay_length': args.tdecay_length},
                                   batch_size=args.batch_size)

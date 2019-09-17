@@ -67,7 +67,7 @@ class MultiStepTempScheduler(_TempScheduler):
 
 
 class LRTempScheduler(_TempScheduler):
-    def __init__(self, init_temp, decay_epoch, decay_length, min_temp = 1.0, last_epoch=-1):
+    def __init__(self, init_temp, decay_epoch, decay_length, min_temp=1.0, last_epoch=-1):
         assert decay_length > 0
         assert decay_epoch > 0
         self.decay_epoch = decay_epoch
