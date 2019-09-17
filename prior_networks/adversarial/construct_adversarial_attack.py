@@ -124,10 +124,10 @@ def main():
         real_labels.append(labels)
         break
 
-    adversarial_images = np.stack(adversarial_images, axis=0)
-    print(np.max(adversarial_images), np.min(adversarial_images))
-    print(adversarial_images.shape)
+    adversarial_images = np.concatenate(adversarial_images, axis=0)
     labels = np.stack(labels, axis=0)
+    print(np.max(adversarial_images), np.min(adversarial_images), adversarial_images.shape)
+    print(labels.shape)
     np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
     np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
 
