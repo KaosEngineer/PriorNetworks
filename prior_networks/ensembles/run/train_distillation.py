@@ -191,7 +191,7 @@ def main():
     trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model
-    if args.multi_gpu and torch.cuda.device_count() > 1:
+    if len(args.gpu) > 1 and torch.cuda.device_count() > 1:
         model = model.module
     ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
                                   model=model,
