@@ -10,7 +10,7 @@ from pathlib import Path
 from torch.utils.data import DataLoader
 import foolbox
 from foolbox.models import PyTorchModel
-from foolbox.batch_attacks import CarliniWagnerL2Attack, EADAttack
+from foolbox.batch_attacks import CarliniWagnerL2Attack, EADAttack, GradientSignAttack
 
 
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
@@ -103,6 +103,8 @@ def main():
             attack = AdaptiveEADAttack(model=fmodel)
         else:
             attack = EADAttack(model=fmodel)
+    elif args.attack == 'FGSM':
+        attack = GradientSignAttack(model=fmodel)
     else:
         raise NotImplementedError
 
@@ -114,7 +116,10 @@ def main():
         images = images.numpy()
         labels = labels.numpy()
 
-        adv = attack(inputs=images, labels=labels, unpack=True)
+        if attack == 'FGSM':
+            adv = attack(inputs=images, labels=labels, epislons=1, max_epsilon=16.0/255.0, unpack=True)
+        else:
+            adv = attack(inputs=images, labels=labels, unpack=True)
         adversarial_images.append(adv)
         real_labels.append(labels)
         break
@@ -125,6 +130,6 @@ def main():
     labels = np.stack(labels, axis=0)
     np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
     np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
-    
+
 if __name__ == "__main__":
     main()
