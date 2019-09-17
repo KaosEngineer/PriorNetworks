@@ -90,7 +90,7 @@ def main():
     model_dir = Path(args.model_dir)
 
     # Check that we are training on a sensible GPU
-    assert map(args.gpu) <= torch.cuda.device_count() - 1
+    assert max(args.gpu) <= torch.cuda.device_count() - 1
 
     device = select_gpu(args.gpu)
     # Load up the model
