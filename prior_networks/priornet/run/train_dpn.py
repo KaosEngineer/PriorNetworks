@@ -49,10 +49,8 @@ parser.add_argument('--model_load_path', type=str, default='./model',
                     help='Source where to load the model from.')
 parser.add_argument('--reverse_KL', type=bool, default=True,
                     help='Whether to use forward or reverse KL. Default is to ALWAYS use reverse KL.')
-parser.add_argument('--gpu',
-                    type=int,
-                    default=0,
-                    help='Specify which GPU to to run on.')
+parser.add_argument('--gpu', type=int, action='append',
+                    help='Specify which GPUs to to run on.')
 parser.add_argument('--multi_gpu',
                     action='store_true',
                     help='Use multiple GPUs for training.')
@@ -83,14 +81,17 @@ def main():
     # Load up the model
 
     # Check that we are training on a sensible GPU
-    assert args.gpu <= torch.cuda.device_count() - 1
+    assert max(args.gpu) <= torch.cuda.device_count() - 1
+
     device = select_gpu(args.gpu)
+    # Load up the model
     ckpt = torch.load(model_dir / 'model/model.tar', map_location=device)
     model = ModelFactory.model_from_checkpoint(ckpt)
-    if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
+    if len(args.gpu) > 1 and torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model, device_ids=args.gpu)
         print('Using Multi-GPU training.')
     model.to(device)
+
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
@@ -179,7 +180,7 @@ def main():
     trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model
-    if args.multi_gpu and torch.cuda.device_count() > 1:
+    if len(args.gpu) > 1 and torch.cuda.device_count() > 1:
         model = model.module
     ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
                                   model=model,
