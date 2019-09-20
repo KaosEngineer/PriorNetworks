@@ -78,7 +78,8 @@ parser.add_argument('--ood_dataset', choices=DATASET_DICT.keys(), default='TIM',
                     help='OOD dataset name.')
 parser.add_argument('--ood_folder', type=str, default=None,
                     help='OOD dataset name.')
-
+parser.add_argument('--clip_gradients', action='store_true',
+                    help='Whether to clip the gradient norm to 10.0')
 def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
@@ -174,6 +175,7 @@ def main():
                                   device=device,
                                   checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
+                                  clip_gradients=args.clip_gradients,
                                   temp_scheduler=LRTempScheduler,
                                   optimizer_params={'lr': args.lr,
                                                     'momentum': 0.9,
