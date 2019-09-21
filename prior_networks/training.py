@@ -22,7 +22,7 @@ class Trainer:
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
-                 clip_gradients=False,
+                 clip_norm=10.0,
                  num_workers=4,
                  pin_memory=False,
                  checkpoint_path='./',
@@ -40,7 +40,7 @@ class Trainer:
         self.checkpoint_path = checkpoint_path
         self.checkpoint_steps = checkpoint_steps
         self.batch_size = batch_size
-        self.clip_gradients = clip_gradients
+        self.clip_norm = clip_norm
         if test_criterion is not None:
             self.test_criterion = test_criterion
         else:
@@ -143,8 +143,7 @@ class Trainer:
             loss = self.criterion(outputs, labels)
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
             loss.backward()
-            if self.clip_gradients:
-                clip_grad_norm_(self.model.parameters(), 10.0)
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             self.optimizer.step()
 
             # Update the number of steps

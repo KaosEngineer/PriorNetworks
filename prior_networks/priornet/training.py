@@ -4,6 +4,7 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.nn.utils import clip_grad_norm_
 
 from prior_networks.training import Trainer, calc_accuracy_torch
 from torch.distributions.categorical import Categorical
@@ -22,6 +23,7 @@ class TrainerWithOOD(Trainer):
                  log_interval: int = 100,
                  test_criterion=None,
                  num_workers=4,
+                 clip_norm: float = 10.0,
                  pin_memory=False,
                  checkpoint_path='./',
                  checkpoint_steps=0):
@@ -30,7 +32,7 @@ class TrainerWithOOD(Trainer):
                          optimizer_params=optimizer_params, scheduler_params=scheduler_params,
                          batch_size=batch_size, device=device, log_interval=log_interval,
                          test_criterion=test_criterion, num_workers=num_workers,
-                         pin_memory=pin_memory,
+                         pin_memory=pin_memory, clip_norm=clip_norm,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
         assert len(train_dataset) == len(ood_dataset)
@@ -60,6 +62,7 @@ class TrainerWithOOD(Trainer):
             id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
             loss = self.criterion((id_outputs, ood_outputs), (labels, None))
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
             self.optimizer.step()
 
@@ -87,20 +90,21 @@ class TrainerWithOODJoint(Trainer):
                  scheduler=None,
                  optimizer_params: Dict[str, Any] = None,
                  scheduler_params: Dict[str, Any] = None,
-                 batch_size=50,
+                 batch_size: int = 50,
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
-                 pin_memory=False,
-                 num_workers=4,
+                 pin_memory: bool = False,
+                 clip_norm: float = 10.0,
+                 num_workers: int = 4,
                  checkpoint_path='./',
-                 checkpoint_steps=0):
+                 checkpoint_steps: int = 0):
         super().__init__(model=model, criterion=criterion, train_dataset=train_dataset,
                          test_dataset=test_dataset, optimizer=optimizer, scheduler=scheduler,
                          optimizer_params=optimizer_params, scheduler_params=scheduler_params,
                          batch_size=batch_size, device=device, log_interval=log_interval,
                          test_criterion=test_criterion, num_workers=num_workers,
-                         pin_memory=pin_memory,
+                         pin_memory=pin_memory, clip_norm=clip_norm,
                          checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
 
     def _train_single_epoch(self):
@@ -123,6 +127,7 @@ class TrainerWithOODJoint(Trainer):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, *labels)
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
@@ -183,8 +188,8 @@ class TrainerWithOODJoint(Trainer):
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
-              f"Test Accuracy: {np.round(100.0*accuracy, 1)}%; "
-              f"Time Per Epoch: {np.round(time/60.0,1)} min")
+              f"Test Accuracy: {np.round(100.0 * accuracy, 1)}%; "
+              f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         # Log statistics
         self.test_loss.append(test_loss)
@@ -209,6 +214,7 @@ class TrainerWithAdv(Trainer):
                  device=None,
                  log_interval: int = 100,
                  test_criterion=None,
+                 clip_norm=10.0,
                  pin_memory=False,
                  num_workers=4,
                  checkpoint_path='./',
@@ -224,6 +230,7 @@ class TrainerWithAdv(Trainer):
                          batch_size=batch_size,
                          device=device,
                          log_interval=log_interval,
+                         clip_norm=clip_norm,
                          test_criterion=test_criterion,
                          num_workers=num_workers,
                          pin_memory=pin_memory,
@@ -301,6 +308,7 @@ class TrainerWithAdv(Trainer):
             logits, adv_logits = torch.chunk(logits, 2, dim=1)
             loss = self.criterion([logits, adv_logits], [labels, labels])
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
 
             # zero the parameter gradients
