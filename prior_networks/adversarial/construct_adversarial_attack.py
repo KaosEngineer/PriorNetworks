@@ -124,7 +124,7 @@ def main():
     # np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
     # np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
 
-    adversarial_images = np.stack([adversarial.perturbed() for adversarial in adversarials], axis=0)
+    adversarial_images = np.stack([adversarial.perturbed for adversarial in adversarials], axis=0)
     print(np.max(adversarial_images), np.min(adversarial_images), adversarial_images.shape)
 
 
