@@ -197,6 +197,7 @@ class TrainerDistillation(Trainer):
             self.optimizer.zero_grad()
 
             outputs = self.model(inputs)
+            precision = torch.mean(torch.sum(torch.exp(outputs), dim=1))
             temp = self.temp_scheduler.get_temp()
             loss = self.criterion(outputs, logits, temp)
 
@@ -211,14 +212,18 @@ class TrainerDistillation(Trainer):
             # log statistics
             if self.steps % self.log_interval == 0:
                 probs = F.softmax(outputs, dim=1)
-                self.train_accuracy.append(
-                    calc_accuracy_torch(probs, labels, self.device).item())
+                accuracy = calc_accuracy_torch(probs, labels, self.device).item()
+                self.train_accuracy.append(accuracy)
                 self.train_loss.append(loss.item())
                 self.train_eval_steps.append(self.steps)
 
             if self.checkpoint_steps > 0:
                 if self.steps % self.checkpoint_steps == 0:
                     self._save_checkpoint(save_at_steps=True)
+        with open(self.checkpoint_path / 'LOG.txt', 'a') as f:
+            f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
+                    f"Train Error: {np.round(100.0 * (1.0-accuracy), 1)}; "
+                    f"Train Mean Precision: {np.round(precision.item(), 1)} ")
         return
 
     def test(self, time):
@@ -239,6 +244,10 @@ class TrainerDistillation(Trainer):
                     inputs, labels, logits = map(lambda x: x.to(self.device),
                                                  (inputs, labels, logits))
                 outputs = self.model(inputs)
+                temp = self.temp_scheduler.get_temp()
+                loss = self.criterion(outputs, logits, temp).item()
+                precision = torch.mean(torch.sum(torch.exp(outputs), dim=1)).item()
+
                 test_loss += self.test_criterion(outputs, labels).item()
                 probs = F.softmax(outputs, dim=1)
                 n_correct += torch.sum(torch.argmax(probs, dim=1) == labels).item()
@@ -247,8 +256,16 @@ class TrainerDistillation(Trainer):
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
-              f"Test Accuracy: {np.round(100.0 * accuracy, 1)}%; "
-              f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
+              f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}%; "
+              f"Time Per Epoch: {np.round(time / 60.0, 1)} min; "
+              f"Test Mean Precision: {np.round(precision, 1)}; "
+              f"Criterion Loss: {np.round(loss, 1)}")
+
+        with open(self.checkpoint_path/'LOG.txt', 'a') as f:
+            f.write(f"Test Loss: {np.round(test_loss, 3)}; "
+                    f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}; "
+                    f"Test Mean Precision: {np.round(precision, 1)}; "
+                    f"Criterion Loss: {np.round(loss, 1)}\n")
 
         # Log statistics
         self.test_loss.append(test_loss)
