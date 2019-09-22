@@ -12,7 +12,6 @@ import foolbox
 from foolbox.models import PyTorchModel
 from foolbox.batch_attacks import CarliniWagnerL2Attack, EADAttack, GradientSignAttack
 
-
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.models.model_factory import ModelFactory
 from prior_networks.datasets.image import construct_transforms
@@ -27,7 +26,7 @@ parser.add_argument('dataset', choices=DATASET_DICT.keys(),
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('output_path', type=str,
                     help='Path of directory for saving model outputs.')
-parser.add_argument('attack', choices=['FGSM', 'CWL2', 'EAD'],
+parser.add_argument('attack', choices=['CWL2', 'EAD'],
                     help='Specify name of dataset to evaluate model on.')
 parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
@@ -72,7 +71,7 @@ def main():
     mean = np.array([0.4914, 0.4823, 0.4465]).reshape((3, 1, 1))
     std = np.array([0.247, 0.243, 0.261]).reshape((3, 1, 1))
 
-    fmodel = PyTorchModel(model, bounds=(0,1), num_classes=ckpt['num_classes'], preprocessing=(mean, std))
+    fmodel = PyTorchModel(model, bounds=(0, 1), num_classes=ckpt['num_classes'], preprocessing=(mean, std))
 
     # Load the evaluation data
     if args.train:
@@ -103,32 +102,31 @@ def main():
             attack = AdaptiveEADAttack(model=fmodel)
         else:
             attack = EADAttack(model=fmodel)
-    elif args.attack == 'FGSM':
-        attack = GradientSignAttack(model=fmodel)
     else:
         raise NotImplementedError
 
-    n_batches = int(len(dataset) / args.batch_size)
-    adversarial_images = []
-    real_labels = []
+    adversarials = []
     for i, data in enumerate(loader):
         images, labels = data
         images = images.numpy()
         labels = labels.numpy()
+        adversarials.extend(attack(inputs=images, labels=labels, unpack=False))
 
-        if attack == 'FGSM':
-            adv = attack(inputs=images, labels=labels, epislons=1, max_epsilon=16.0/255.0, unpack=True)
-        else:
-            adv = attack(inputs=images, labels=labels, unpack=True)
-        adversarial_images.append(np.clip(adv, 0.0, 1.0))
-        real_labels.append(labels)
+        if i > 2:
+            break
 
-    adversarial_images = np.concatenate(adversarial_images, axis=0)
-    labels = np.stack(labels, axis=0)
+    # adversarial_images.extend([adv.perturbed() for adv in adversarials])
+    # real_labels.extend([adv.original_class() for adv in adversarials])
+    # adv_labels.extend([adv.adversarial_class() for adv in adversarials])
+    # logits.extend([adv.output() for adv in adversarials])
+    # perturbation.extend([adv.output() for adv in adversarials])
+    # labels = np.stack(labels, axis=0)
+    # np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
+    # np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
+
+    adversarial_images = np.stack([adversarial.pertubed() for adversarial in adversarials], axis=0)
     print(np.max(adversarial_images), np.min(adversarial_images), adversarial_images.shape)
-    print(labels.shape)
-    #np.savetxt(os.path.join(args.output_path, 'adv_images.txt'), adversarial_images)
-    #np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
+
 
 if __name__ == "__main__":
     main()
