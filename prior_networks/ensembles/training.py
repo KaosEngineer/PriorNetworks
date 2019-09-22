@@ -220,10 +220,10 @@ class TrainerDistillation(Trainer):
             if self.checkpoint_steps > 0:
                 if self.steps % self.checkpoint_steps == 0:
                     self._save_checkpoint(save_at_steps=True)
-        with open(self.checkpoint_path / 'LOG.txt', 'a') as f:
+        with open('./LOG.txt', 'a') as f:
             f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
                     f"Train Error: {np.round(100.0 * (1.0-accuracy), 1)}; "
-                    f"Train Mean Precision: {np.round(precision.item(), 1)} ")
+                    f"Train Mean Precision: {np.round(precision.item(), 1)}; ")
         return
 
     def test(self, time):
@@ -256,16 +256,17 @@ class TrainerDistillation(Trainer):
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
+              f"Criterion Loss: {np.round(loss, 1)}; "
               f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}%; "
-              f"Time Per Epoch: {np.round(time / 60.0, 1)} min; "
               f"Test Mean Precision: {np.round(precision, 1)}; "
-              f"Criterion Loss: {np.round(loss, 1)}")
+              f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
-        with open(self.checkpoint_path/'LOG.txt', 'a') as f:
+        with open('./LOG.txt', 'a') as f:
             f.write(f"Test Loss: {np.round(test_loss, 3)}; "
+                    f"Criterion Loss: {np.round(loss, 1)}"
                     f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}; "
                     f"Test Mean Precision: {np.round(precision, 1)}; "
-                    f"Criterion Loss: {np.round(loss, 1)}\n")
+                    f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
 
         # Log statistics
         self.test_loss.append(test_loss)

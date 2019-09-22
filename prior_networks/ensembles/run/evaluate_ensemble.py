@@ -49,6 +49,9 @@ def main(argv=None):
 
     mean_probs = np.mean(probs, axis=1)
 
+    np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels)
+    np.savetxt(os.path.join(args.output_path, 'probs.txt'), mean_probs, dtype=np.float32)
+
     nll = -np.mean(np.log(mean_probs[np.arange(mean_probs.shape[0]), np.squeeze(labels)] + 1e-10))
 
     # Get dictionary of uncertainties.
