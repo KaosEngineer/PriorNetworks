@@ -263,7 +263,7 @@ class TrainerDistillation(Trainer):
 
         with open('./LOG.txt', 'a') as f:
             f.write(f"Test Loss: {np.round(test_loss, 3)}; "
-                    f"Criterion Loss: {np.round(loss, 1)}"
+                    f"Criterion Loss: {np.round(loss, 1)}; "
                     f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}; "
                     f"Test Mean Precision: {np.round(precision, 1)}; "
                     f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
