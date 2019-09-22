@@ -58,14 +58,14 @@ def main():
         os.remove(args.output_path + '/*')
     else:
         os.makedirs(args.output_path)
-        os.makedirs(args.output_path/'images')
+        os.makedirs(os.path.join(args.output_path, 'images'))
 
     # Check that we are using a sensible GPU
     device = select_gpu(args.gpu)
 
     # Load up the model
     model_dir = Path(args.model_dir)
-    ckpt = torch.load(model_dir / 'model/model.tar', map_location=device)
+    ckpt = torch.load(os.path.join(model_dir, 'model/model.tar'), map_location=device)
     model = ModelFactory.model_from_checkpoint(ckpt)
     model.to(device)
     model.eval()
@@ -115,29 +115,31 @@ def main():
         images = images.numpy()
         labels = labels.numpy()
         adversarials.extend(attack(inputs=images, labels=labels, unpack=False))
-        print(f"Batch {i}/{len(loader)} took {np.round((time.time()-start) / 60.0, 1)} minutes.")
+        print(f"Batch {i}/{len(loader)} took {np.round((time.time() - start) / 60.0, 1)} minutes.")
 
     adv_labels = np.stack([adversarial.adversarial_class for adversarial in adversarials], axis=0)
     labels = np.stack([adversarial.original_class for adversarial in adversarials], axis=0)
     distances = np.stack([adversarial.distance for adversarial in adversarials], axis=0)
     logits = np.stack([adversarial.output for adversarial in adversarials], axis=0)
 
-    np.savetxt(args.output_path / 'labels.txt', labels, dtype=np.int32)
-    np.savetxt(args.output_path / 'adv_labels.txt', adv_labels, dtype=np.int32)
-    np.savetxt(args.output_path / 'logits.txt', logits, dtype=np.float32)
-    np.savetxt(args.output_path / 'distances.txt', distances, dtype=np.float32)
+    np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels, dtype=np.int32)
+    np.savetxt(os.path.join(args.output_path, 'adv_labels.txt'), adv_labels, dtype=np.int32)
+    np.savetxt(os.path.join(args.output_path, 'logits.txt'), logits, dtype=np.float32)
+    np.savetxt(os.path.join(args.output_path, 'distances.txt'), distances, dtype=np.float32)
 
     accuracy = np.mean(np.asarray(labels == adv_labels, dtype=np.float32))
     sr = np.mean(np.asarray(labels != adv_labels, dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
-        f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} \n')
-        f.write(f'Success Rate: {np.round(100*sr, 1)} \n')
+        f.write(f'Classification Error: {np.round(100 * (1.0 - accuracy), 1)} \n')
+        f.write(f'Success Rate: {np.round(100 * sr, 1)} \n')
 
     print("Saving images to folder...")
     adversarial_images = np.stack([adversarial.perturbed for adversarial in adversarials], axis=0)
-    for i, image in enumerate([np.asarray(255.0*adversarial.perturbed, dtype=np.uint8) for adversarial in adversarials]):
+    for i, image in enumerate(
+            [np.asarray(255.0 * adversarial.perturbed, dtype=np.uint8) for adversarial in adversarials]):
         print(np.max(adversarial_images), np.min(adversarial_images))
-        Image.fromarray(image).save(args.output_path / f"images/{i}.png")
+        Image.fromarray(image).save(os.path.join(args.output_path, f"images/{i}.png"))
+
 
 if __name__ == "__main__":
     main()
