@@ -32,8 +32,8 @@ parser.add_argument('--batch_size', type=int, default=256,
                     help='Batch size for processing')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
-parser.add_argument('--gpu', type=int, default=0,
-                    help='Specify which GPU to evaluate on.')
+parser.add_argument('--gpu', type=int, action='append',
+                    help='Specify which GPUs to to run on.')
 parser.add_argument('--train', action='store_true',
                     help='Whether to evaluate on the training data instead of test data')
 parser.add_argument('--overwrite', action='store_true',
