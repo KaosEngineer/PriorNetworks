@@ -26,6 +26,8 @@ commandLineParser.add_argument('--show', type=bool, default=True,
                                help='which orignal data is saved should be loaded')
 commandLineParser.add_argument('--overwrite', type=bool, default=False,
                                help='which orignal data is saved should be loaded')
+commandLineParser.add_argument('--ood', action='store_true',
+                    help='Whether to evaluate on OOD data with mismatched classes - only saves outputs.')
 
 
 def main(argv=None):
@@ -52,8 +54,6 @@ def main(argv=None):
     np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels)
     np.savetxt(os.path.join(args.output_path, 'probs.txt'), mean_probs)
 
-    nll = -np.mean(np.log(mean_probs[np.arange(mean_probs.shape[0]), np.squeeze(labels)] + 1e-10))
-
     # Get dictionary of uncertainties.
     uncertainties = ensemble_uncertainties(probs, epsilon=1e-10)
 
@@ -61,6 +61,8 @@ def main(argv=None):
     for key in uncertainties.keys():
         np.savetxt(os.path.join(args.output_path, key + '.txt'), uncertainties[key])
 
+    if args.ood:
+        sys.exit()
     # Assess Misclassification Detection
     eval_misc_detect(labels, mean_probs, uncertainties, save_path=args.output_path, misc_positive=True)
 
@@ -71,6 +73,7 @@ def main(argv=None):
     eval_rejection_ratio_class(labels=labels, probs=mean_probs, uncertainties=uncertainties,
                                save_path=args.output_path)
 
+    nll = -np.mean(np.log(mean_probs[np.arange(mean_probs.shape[0]), np.squeeze(labels)] + 1e-10))
     accuracy = np.mean(np.asarray(labels == np.argmax(mean_probs, axis=1), dtype=np.float32))
     with open(os.path.join(args.output_path, 'results.txt'), 'a') as f:
         f.write(f'Classification Error: {np.round(100*(1.0-accuracy),1)} \n')
