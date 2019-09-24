@@ -186,7 +186,7 @@ def main():
                                                          'decay_length': args.tdecay_length},
                                   batch_size=args.batch_size)
     if args.resume:
-        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, True, map_location=device)
+        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
     trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model

@@ -141,7 +141,7 @@ class TrainerDistillation(Trainer):
                         checkpoint_path,
                         load_opt_state=False,
                         load_scheduler_state=False,
-                        load_tscheduler_state=False,
+                        #load_tscheduler_state=False,
                         map_location=None):
         checkpoint = torch.load(checkpoint_path, map_location=map_location)
         self.steps = checkpoint['steps']
@@ -153,8 +153,6 @@ class TrainerDistillation(Trainer):
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         if load_scheduler_state:
             self.scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
-        if load_tscheduler_state:
-            self.temp_scheduler.load_state_dict(checkpoint['temp_scheduler_state_dict'])
 
     def train(self, n_epochs=None, n_iter=None, resume=False):
         # Calc num of epochs
@@ -167,6 +165,7 @@ class TrainerDistillation(Trainer):
 
         if resume:
             init_epoch = math.floor(self.steps / len(self.trainloader))
+            self.temp_scheduler.step(epoch=init_epoch)
 
         for epoch in range(init_epoch, n_epochs):
             print(f'Training epoch: {epoch + 1} / {n_epochs}')
