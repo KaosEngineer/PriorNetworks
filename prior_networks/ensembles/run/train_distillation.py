@@ -14,7 +14,7 @@ from prior_networks.datasets.image.standardised_datasets import construct_transf
 from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
-from prior_networks.ensembles.losses import DirichletEnDDLoss, EnDLoss
+from prior_networks.ensembles.losses import DirichletEnDDLoss, EnDLoss, DirichletEnDDDirTempLoss, DirichletEnDDEnTempLoss
 from prior_networks.ensembles.training import LRTempScheduler
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
@@ -69,6 +69,12 @@ parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
 parser.add_argument('--endd',
+                    action='store_true',
+                    help='Whether to do Ensemble Distribution Distillation.')
+parser.add_argument('--endd_entemp',
+                    action='store_true',
+                    help='Whether to do Ensemble Distribution Distillation.')
+parser.add_argument('--endd_dirtemp',
                     action='store_true',
                     help='Whether to do Ensemble Distribution Distillation.')
 parser.add_argument('--ood',
@@ -160,6 +166,10 @@ def main():
     test_criterion = torch.nn.CrossEntropyLoss()
     if args.endd:
         train_criterion = DirichletEnDDLoss()
+    elif args.endd_entemp:
+        train_criterion = DirichletEnDDEnTempLoss()
+    elif args.endd_dirtemp:
+        train_criterion = DirichletEnDDDirTempLoss()
     else:
         train_criterion = EnDLoss()
 
