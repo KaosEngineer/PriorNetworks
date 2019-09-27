@@ -5,6 +5,7 @@ import sys
 import pathlib
 from pathlib import Path
 import math
+import numpy as np
 
 import torch
 from torch.utils import data
@@ -139,9 +140,9 @@ def main():
         if len(train_dataset) == len(ood_dataset):
             train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
         elif len(train_dataset) < len(ood_dataset):
-            ratio = float(len(ood_dataset)) / float(len(train_dataset))
+            ratio = int(np.round(float(len(ood_dataset)) / float(len(train_dataset))))
             assert ratio.is_integer()
-            dataset_list = [train_dataset, ] * int(ratio)
+            dataset_list = [train_dataset, ] * (1+int(ratio))
             dataset_list.append(ood_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
         elif len(train_dataset) > len(ood_dataset):
