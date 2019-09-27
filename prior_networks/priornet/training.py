@@ -62,8 +62,8 @@ class TrainerWithOOD(Trainer):
             id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
             loss = self.criterion((id_outputs, ood_outputs), (labels, None))
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             self.optimizer.step()
 
             # Update the number of steps
@@ -127,8 +127,8 @@ class TrainerWithOODJoint(Trainer):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, *labels)
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             self.optimizer.step()
             train_loss += loss.item()
             weights = labels[1] / torch.max(labels[1])
@@ -308,9 +308,8 @@ class TrainerWithAdv(Trainer):
             logits, adv_logits = torch.chunk(logits, 2, dim=1)
             loss = self.criterion([logits, adv_logits], [labels, labels])
             assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             loss.backward()
-
+            clip_grad_norm_(self.model.parameters(), self.clip_norm)
             # zero the parameter gradients
             self.optimizer.step()
 
