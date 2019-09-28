@@ -145,8 +145,8 @@ class TrainerWithOODJoint(Trainer):
             if self.steps % self.log_interval == 0:
                 probs = F.softmax(outputs, dim=1)
                 weights = labels[1] / torch.max(labels[1])
-                self.train_accuracy.append(
-                    calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item())
+                accuracy = calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
+                self.train_accuracy.append(accuracy)
                 self.train_loss.append(loss.item())
                 self.train_eval_steps.append(self.steps)
 
@@ -158,8 +158,16 @@ class TrainerWithOODJoint(Trainer):
         id_alpha_0 = id_alpha_0 / (self.steps - init_steps)
         ood_alpha_0 = ood_alpha_0 / (self.steps - init_steps)
         print(f"Train Loss: {np.round(train_loss, 3)}; "
+              f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
               f"Train ID precision: {np.round(id_alpha_0, 1)}; "
               f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
+
+        with open('./LOG.txt', 'a') as f:
+            f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
+                    f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                    f"Train ID precision: {np.round(id_alpha_0, 1)}; "
+                    f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
+
         return
 
     def test(self, time):
@@ -180,6 +188,7 @@ class TrainerWithOODJoint(Trainer):
                     inputs, labels = map(lambda x: x.to(self.device),
                                          (inputs, labels))
                 outputs = self.model(inputs)
+                precision = torch.mean(torch.sum(torch.exp(outputs), dim=1))
                 test_loss += self.test_criterion(outputs, labels).item()
                 probs = F.softmax(outputs, dim=1)
                 n_correct += torch.sum(torch.argmax(probs, dim=1) == labels).item()
@@ -188,9 +197,15 @@ class TrainerWithOODJoint(Trainer):
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
-              f"Test Accuracy: {np.round(100.0 * accuracy, 1)}%; "
+              f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
+              f"Test precision: {np.round(precision, 1)}; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
+        with open('./LOG.txt', 'a') as f:
+            f.write(f"Test Loss: {np.round(test_loss, 3)}; "
+                    f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                    f"Test precision: {np.round(precision, 1)}; "
+                    f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
         # Log statistics
         self.test_loss.append(test_loss)
         self.test_accuracy.append(accuracy)
