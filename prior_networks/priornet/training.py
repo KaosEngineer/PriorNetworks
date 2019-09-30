@@ -188,7 +188,7 @@ class TrainerWithOODJoint(Trainer):
                     inputs, labels = map(lambda x: x.to(self.device),
                                          (inputs, labels))
                 outputs = self.model(inputs)
-                precision = torch.mean(torch.sum(torch.exp(outputs), dim=1))
+                precision = torch.mean(torch.sum(torch.exp(outputs), dim=1)).item()
                 test_loss += self.test_criterion(outputs, labels).item()
                 probs = F.softmax(outputs, dim=1)
                 n_correct += torch.sum(torch.argmax(probs, dim=1) == labels).item()
