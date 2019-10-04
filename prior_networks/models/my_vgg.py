@@ -8,7 +8,7 @@ __all__ = [
 
 class MyVGG(nn.Module):
 
-    def __init__(self, features, num_classes=1000, dropout=0.5, init_weights=True):
+    def __init__(self, features, num_classes=1000, dropout=0.5, init_weights=True, small_inputs=None):
         super(MyVGG, self).__init__()
         self.features = features
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
