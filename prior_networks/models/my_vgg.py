@@ -57,7 +57,7 @@ def make_layers(cfg, batch_norm=False, dropout=0.5, small_inputs=None):
             if batch_norm:
                 layers += [conv2d, nn.BatchNorm2d(v), nn.LeakyReLU(inplace=True), nn.Dropout(p=dropout)]
             else:
-                layers += [conv2d, nn.LeakyReLU(inplace=True), nn.Dropout(p=dropout - 0.3)]
+                layers += [conv2d, nn.LeakyReLU(inplace=True), nn.Dropout(p=dropout)]
             in_channels = v
     return nn.Sequential(*layers)
 
