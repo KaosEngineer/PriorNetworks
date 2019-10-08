@@ -226,7 +226,7 @@ class TrainerWithOODJoint(Trainer):
         logits = np.concatenate(logits, axis=0)
         domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
         uncertainties = dirichlet_prior_network_uncertainty(logits)['mutual_information']
-        
+
         auc = roc_auc_score(domain_labels, uncertainties)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "

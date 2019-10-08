@@ -8,7 +8,7 @@ __all__ = [
 
 class MyVGG(nn.Module):
 
-    def __init__(self, features, num_classes=1000, dropout=0.5, init_weights=True, small_inputs=None):
+    def __init__(self, features, num_classes=1000, dropout=0.7, init_weights=True, small_inputs=None):
         super(MyVGG, self).__init__()
         self.features = features
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
@@ -34,14 +34,14 @@ class MyVGG(nn.Module):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
                 nn.init.constant_(m.bias, 0)
 
 
