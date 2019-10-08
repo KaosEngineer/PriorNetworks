@@ -196,7 +196,7 @@ class TrainerWithOODJoint(Trainer):
                 alpha_0 = torch.sum(torch.exp(outputs), dim=1)
                 id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
                 ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
-                test_loss += self.test_criterion(outputs, labels).item()
+                test_loss += self.test_criterion(outputs, *labels).item()
                 probs = F.softmax(outputs, dim=1)
                 accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
 
