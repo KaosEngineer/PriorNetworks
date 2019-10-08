@@ -55,7 +55,7 @@ parser.add_argument('--gpu', type=int, action='append',
 parser.add_argument('--multi_gpu',
                     action='store_true',
                     help='Use multiple GPUs for training.')
-parser.add_argument('optimizer', choices=['SGD', 'ADAM'], default='SGD',
+parser.add_argument('--optimizer', choices=['SGD', 'ADAM'], default='SGD',
                     help='Choose which optimizer to use.')
 parser.add_argument('--augment',
                     action='store_true',
