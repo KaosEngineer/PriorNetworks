@@ -153,7 +153,7 @@ class TrainerWithOOD(Trainer):
                 probs = F.softmax(id_outputs, dim=1)
 
                 accuracy += calc_accuracy_torch(probs, labels).item()
-                test_loss += self.test_criterion([id_outputs, ood_outputs], *labels).item()
+                test_loss += self.test_criterion((id_outputs, ood_outputs), (labels, None)).item()
 
                 # Get in-domain and OOD Precision
                 id_alpha_0 += torch.mean(torch.sum(torch.exp(id_outputs), dim=1)).item()
