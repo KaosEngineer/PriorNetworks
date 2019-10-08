@@ -63,6 +63,8 @@ class TrainerWithOOD(Trainer):
         # Set model in train mode
         self.model.train()
 
+        accuracies = 0.0
+        train_loss = 0.0
         for i, (data, ood_data) in enumerate(
                 zip(self.trainloader, self.oodloader), 0):
             # Get inputs
@@ -93,9 +95,11 @@ class TrainerWithOOD(Trainer):
             id_alpha_0 = torch.mean(torch.sum(torch.exp(id_outputs), dim=1))
             ood_alpha_0 = torch.mean(torch.sum(torch.exp(ood_outputs), dim=1))
 
+            probs = F.softmax(id_outputs, dim=1)
+            accuracy = calc_accuracy_torch(probs, labels, self.device).item()
+            accuracies += accuracy
+            train_loss += loss.item()
             if self.steps % self.log_interval == 0:
-                probs = F.softmax(id_outputs, dim=1)
-                accuracy = calc_accuracy_torch(probs, labels, self.device).item()
                 self.train_accuracy.append(accuracy)
                 self.train_loss.append(loss.item())
                 self.train_eval_steps.append(self.steps)
@@ -104,16 +108,19 @@ class TrainerWithOOD(Trainer):
                 if self.steps % self.checkpoint_steps == 0:
                     self._save_checkpoint(save_at_steps=True)
 
-            print(f"Train Loss: {np.round(loss.item(), 3)}; "
-                  f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
-                  f"Train ID precision: {np.round(id_alpha_0, 1)}; "
-                  f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
+        accuracies /= len(self.trainloader)
+        train_loss /= len(self.trainloader)
 
-            with open('./LOG.txt', 'a') as f:
-                f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
-                        f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
-                        f"Train ID precision: {np.round(id_alpha_0, 1)}; "
-                        f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
+        print(f"Train Loss: {np.round(loss.item(), 3)}; "
+              f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+              f"Train ID precision: {np.round(id_alpha_0, 1)}; "
+              f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
+
+        with open('./LOG.txt', 'a') as f:
+            f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
+                    f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                    f"Train ID precision: {np.round(id_alpha_0, 1)}; "
+                    f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
         return
 
     def test(self, time):
