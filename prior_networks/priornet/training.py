@@ -225,24 +225,15 @@ class TrainerWithOODJoint(Trainer):
 
         logits = np.concatenate(logits, axis=0)
         domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
-        id_logits = logits[domain_labels == 0]
-        ood_logits = logits[domain_labels == 1]
-
-        in_domain = np.zeros(shape=[id_logits.shape[0]], dtype=np.int32)
-        out_domain = np.ones(shape=[ood_logits.shape[0]], dtype=np.int32)
-        domain_labels = np.concatenate((in_domain, out_domain), axis=0)
-
-        id_uncertainties = dirichlet_prior_network_uncertainty(id_logits)['mutual_information']
-        ood_uncertainties = dirichlet_prior_network_uncertainty(ood_logits)['mutual_information']
-        uncertainties = np.concatenate([id_uncertainties, ood_uncertainties], axis=0)
-
+        uncertainties = dirichlet_prior_network_uncertainty(logits)['mutual_information']
+        
         auc = roc_auc_score(domain_labels, uncertainties)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
               f"Test ID precision: {np.round(id_alpha_0, 1)}; "
               f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
-              f"Test AUROC: {np.round(100.0*auc, 1)}; "
+              f"Test AUROC: {np.round(100.0 * auc, 1)}; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         with open('./LOG.txt', 'a') as f:
@@ -250,7 +241,7 @@ class TrainerWithOODJoint(Trainer):
                     f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
                     f"Test ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
-                    f"Test AUROC: {np.round(100.0*auc, 1)}; "
+                    f"Test AUROC: {np.round(100.0 * auc, 1)}; "
                     f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
         # Log statistics
         self.test_loss.append(test_loss)
