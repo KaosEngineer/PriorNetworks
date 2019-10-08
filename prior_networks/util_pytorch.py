@@ -163,16 +163,18 @@ class TargetTransform:
             return (label, self.target_concentration, self.gamma)
 
 
-def choose_optimizer(optimizer: str, learning_rate: float, weight_decay: float):
+def choose_optimizer(optimizer: str, learning_rate: float, weight_decay: float, momentum: float = 0.9):
     if optimizer == 'SGD':
         optimizer = optim.SGD
-        optimizer_params = {'lr': learning_rate, 'momentum': 0.9,
+        optimizer_params = {'lr': learning_rate, 'momentum': momentum,
                             'nesterov': True,
                             'weight_decay': weight_decay}
 
     elif optimizer == 'ADAM':
         optimizer = optim.AdamW
-        optimizer_params = {'lr': learning_rate, 'weight_decay': weight_decay}
+        optimizer_params = {'lr': learning_rate,
+                            'betas': (momentum, 0.999),
+                            'weight_decay': weight_decay}
     else:
         raise NotImplementedError
 

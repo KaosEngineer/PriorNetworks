@@ -108,6 +108,7 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10):
     :return:
     """
 
+    logits = np.asarray(logits, dtype=np.float64)
     alphas = np.exp(logits)
     alpha0 = np.sum(alphas, axis=1, keepdims=True)
     probs = alphas / alpha0
