@@ -9,6 +9,8 @@ from torch.nn.utils import clip_grad_norm_
 from prior_networks.training import Trainer, calc_accuracy_torch
 from torch.distributions.categorical import Categorical
 from torch.distributions.normal import Normal
+from prior_networks.priornet.dpn import dirichlet_prior_network_uncertainty
+from sklearn.metrics import roc_auc_score
 
 
 class TrainerWithOOD(Trainer):
@@ -195,7 +197,8 @@ class TrainerWithOODJoint(Trainer):
                 weights = labels[1]
                 if torch.max(labels[1]) > 0.0:
                     weights /= torch.max(labels[1])
-                accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
+
+                accuracy += self.calc_accuracy_torch(probs, labels[0], weights)
                 test_loss += self.test_criterion(outputs, *labels).item()
 
                 # Get in-domain and OOD Precision
@@ -212,24 +215,34 @@ class TrainerWithOODJoint(Trainer):
                 logits.append(outputs.cpu().numpy())
                 domain_labels.append(ood_weight.cpu().numpy())
 
-        logits = np.concatenate(logits, axis=0)
-        domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
-        id_logits = logits[domain_labels == 0]
-        ood_logits = logits[domain_labels == 1]
-        print(id_logits.shape, ood_logits.shape, domain_labels.shape)
-
         id_weights = torch.cat(id_weights, dim=0)
         ood_weights = torch.cat(ood_weights, dim=0)
         id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
         ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
 
         test_loss = test_loss / len(self.testloader)
-        accuracy = accuracy / len(self.testloader) * 2
+        accuracy = (accuracy / torch.sum(id_weights)).item()
+
+        logits = np.concatenate(logits, axis=0)
+        domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
+        id_logits = logits[domain_labels == 0]
+        ood_logits = logits[domain_labels == 1]
+
+        in_domain = np.zeros(shape=[id_logits.shape[0]], dtype=np.int32)
+        out_domain = np.ones(shape=[ood_logits.shape[0]], dtype=np.int32)
+        domain_labels = np.concatenate((in_domain, out_domain), axis=0)
+
+        id_uncertainties = dirichlet_prior_network_uncertainty(id_logits)['mutual_information']
+        ood_uncertainties = dirichlet_prior_network_uncertainty(ood_logits)['mutual_information']
+        uncertainties = np.concatenate([id_uncertainties, ood_uncertainties], axis=0)
+
+        auc = roc_auc_score(domain_labels, uncertainties)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
               f"Test ID precision: {np.round(id_alpha_0, 1)}; "
               f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
+              f"Test ROC AUC: {np.round(auc, 1)}; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         with open('./LOG.txt', 'a') as f:
@@ -237,12 +250,25 @@ class TrainerWithOODJoint(Trainer):
                     f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
                     f"Test ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
+                    f"Test ROC AUC: {np.round(auc, 1)}; "
                     f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
         # Log statistics
         self.test_loss.append(test_loss)
         self.test_accuracy.append(accuracy)
         self.test_eval_steps.append(self.steps)
         return
+
+    def calc_accuracy_torch(self, y_probs, y_true, weights):
+        if self.device is None:
+            weights.to(dtype=torch.float64)
+            accuracy = torch.sum(
+                weights * (torch.argmax(y_probs, dim=1) == y_true).to(dtype=torch.float64))
+        else:
+            weights.to(device=self.device, dtype=torch.float64)
+            accuracy = torch.sum(
+                weights * (torch.argmax(y_probs, dim=1) == y_true).to(device=self.device,
+                                                                      dtype=torch.float64))
+        return accuracy
 
 
 class TrainerWithAdv(Trainer):
