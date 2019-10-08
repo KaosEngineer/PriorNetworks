@@ -202,7 +202,7 @@ class TrainerWithOODJoint(Trainer):
                 ood_weight = 1.0 - weights
                 alpha_0 = torch.sum(torch.exp(outputs), dim=1)
                 id_alpha_0 += torch.sum(alpha_0 * weights)
-                ood_alpha_0 += torch.sum(alpha_0 * ood_weights)
+                ood_alpha_0 += torch.sum(alpha_0 * ood_weight)
 
                 # Append logits for future OOD detection at test time calculation...
                 logits.append(outputs.cpu().numpy())
