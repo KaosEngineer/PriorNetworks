@@ -69,7 +69,8 @@ parser.add_argument('--jitter', type=float, default=0.0,
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
-
+parser.add_argument('--clip_norm', type=float, default=10.0,
+                    help='Gradient clipping norm value.')
 
 def main():
     args = parser.parse_args()
@@ -187,7 +188,8 @@ def main():
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   optimizer_params=optimizer_params,
                                   scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
-                                  batch_size=args.batch_size)
+                                  batch_size=args.batch_size,
+                                  clip_norm=args.clip_norm)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
                                 map_location=device)
