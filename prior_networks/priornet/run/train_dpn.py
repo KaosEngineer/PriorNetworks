@@ -12,7 +12,7 @@ from torch.utils import data
 from prior_networks.priornet.dpn_losses import DirichletKLLoss, DirichletKLLossJoint
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithOODJoint
-from prior_networks.util_pytorch import TargetTransform
+from prior_networks.util_pytorch import TargetTransform, choose_optimizer
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
 from prior_networks.models.model_factory import ModelFactory
@@ -171,17 +171,9 @@ def main():
                                      reverse=args.reverse_KL)
 
     # Select optimizer and optimizer params
-    if args.optimizer == 'SGD':
-        optimizer = optim.SGD
-        optimizer_params = {'lr': args.lr, 'momentum': 0.9,
-                            'nesterov': True,
-                            'weight_decay': args.weight_decay}
-
-    elif args.optimizer == 'ADAM':
-        optimizer = optim.Adam
-        optimizer_params = {'lr': args.lr, 'weight_decay': args.weight_decay}
-    else:
-        raise NotImplementedError
+    optimizer, optimizer_params = choose_optimizer(args.optimizer,
+                                                   args.lr,
+                                                   args.weight_decay)
 
     # Setup model trainer and train model
     trainer = TrainerWithOODJoint(model=model,

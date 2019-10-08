@@ -128,7 +128,7 @@ class TrainerWithOODJoint(Trainer):
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
             loss = self.criterion(outputs, *labels)
-            assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
+            assert torch.all(torch.isfinite(loss)).item()
             loss.backward()
             clip_grad_norm_(self.model.parameters(), self.clip_norm)
             self.optimizer.step()

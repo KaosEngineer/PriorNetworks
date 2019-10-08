@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import random
 
+from torch import optim
+
 from prior_networks.datasets import image
 
 # TODO Add LeNet for MNIST and MNIST-like stuff
@@ -159,3 +161,19 @@ class TargetTransform:
             return (0, self.target_concentration, self.gamma)
         else:
             return (label, self.target_concentration, self.gamma)
+
+
+def choose_optimizer(optimizer: str, learning_rate: float, weight_decay: float):
+    if optimizer == 'SGD':
+        optimizer = optim.SGD
+        optimizer_params = {'lr': learning_rate, 'momentum': 0.9,
+                            'nesterov': True,
+                            'weight_decay': weight_decay}
+
+    elif optimizer == 'ADAM':
+        optimizer = optim.AdamW
+        optimizer_params = {'lr': learning_rate, 'weight_decay': weight_decay}
+    else:
+        raise NotImplementedError
+
+    return optimizer, optimizer_params
