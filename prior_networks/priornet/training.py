@@ -177,6 +177,7 @@ class TrainerWithOODJoint(Trainer):
         """
         test_loss, accuracy = 0.0, 0.0
         id_alpha_0, ood_alpha_0 = 0.0, 0.0
+        id_weights, ood_weights = [], []
 
         domain_labels = []
         logits = []
@@ -198,20 +199,28 @@ class TrainerWithOODJoint(Trainer):
 
                 # Get in-domain and OOD Precision
                 weights = weights.to(dtype=torch.float32)
-                ood_weights = 1.0 - weights
+                ood_weight = 1.0 - weights
                 alpha_0 = torch.sum(torch.exp(outputs), dim=1)
-                id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
-                ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
+                id_alpha_0 += torch.sum(alpha_0 * weights)
+                ood_alpha_0 += torch.sum(alpha_0 * ood_weights)
 
                 # Append logits for future OOD detection at test time calculation...
                 logits.append(outputs.cpu().numpy())
                 domain_labels.append(ood_weights.cpu().numpy())
+                id_weights.append(weights)
+                ood_weights.append(ood_weight)
 
-        logits = np.concatenate(logits, axis=0)
-        domain_labels = np.concatenate(domain_labels, axis=0)
-        print(logits.shape, domain_labels.shape)
+        # logits = np.concatenate(logits, axis=0)
+        # domain_labels = np.concatenate(domain_labels, axis=0)
+        # print(logits.shape, domain_labels.shape)
 
+        id_weights = torch.cat(weights, dim=0)
+        ood_weights = torch.cat(ood_weights, dim=0)
+
+        id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
         id_alpha_0 = id_alpha_0 / len(self.testloader)
+
+        ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
         ood_alpha_0 = ood_alpha_0 / len(self.testloader)
         test_loss = test_loss / len(self.testloader)
         accuracy = accuracy / len(self.testloader)
