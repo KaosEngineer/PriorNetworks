@@ -242,7 +242,7 @@ class TrainerWithOODJoint(Trainer):
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
               f"Test ID precision: {np.round(id_alpha_0, 1)}; "
               f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
-              f"Test ROC AUC: {np.round(auc, 1)}; "
+              f"Test AUROC: {np.round(00.0*auc, 1)}; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         with open('./LOG.txt', 'a') as f:
@@ -250,7 +250,7 @@ class TrainerWithOODJoint(Trainer):
                     f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
                     f"Test ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
-                    f"Test ROC AUC: {np.round(100.0*auc, 1)}; "
+                    f"Test AUROC: {np.round(100.0*auc, 1)}; "
                     f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
         # Log statistics
         self.test_loss.append(test_loss)
