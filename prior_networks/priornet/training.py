@@ -206,8 +206,8 @@ class TrainerWithOODJoint(Trainer):
                 logits.append(outputs.cpu().numpy())
                 domain_labels.append(ood_weights.cpu().numpy())
 
-        logits = np.stack(logits, axis=0)
-        domain_labels = np.stack(domain_labels, axis=0)
+        logits = np.concatenate(logits, axis=0)
+        domain_labels = np.concatenate(domain_labels, axis=0)
         print(logits.shape, domain_labels.shape)
 
         id_alpha_0 = id_alpha_0 / len(self.testloader)
