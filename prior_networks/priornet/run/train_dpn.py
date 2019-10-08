@@ -55,6 +55,8 @@ parser.add_argument('--gpu', type=int, action='append',
 parser.add_argument('--multi_gpu',
                     action='store_true',
                     help='Use multiple GPUs for training.')
+parser.add_argument('optimizer', choices=['SGD', 'ADAM'], default='SGD',
+                    help='Choose which optimizer to use.')
 parser.add_argument('--augment',
                     action='store_true',
                     help='Whether to use augmentation.')
@@ -144,7 +146,7 @@ def main():
                                                          download=True,
                                                          split='val')
 
-        #Combine ID and OOD evaluation datasets into a single dataset
+        # Combine ID and OOD evaluation datasets into a single dataset
         val_dataset = data.ConcatDataset([val_dataset, ood_val_dataset])
 
         # Combine ID and OOD training datasets into a single dataset for
@@ -164,14 +166,22 @@ def main():
             dataset_list.append(train_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
 
-
-
     # Set up training and test criteria
     criterion = DirichletKLLossJoint(concentration=args.concentration,
                                      reverse=args.reverse_KL)
-    # test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-    #                                  concentration=args.concentration,
-    #                                  reverse=args.reverse_KL)
+
+    # Select optimizer and optimizer params
+    if args.optimizer == 'SGD':
+        optimizer = optim.SGD
+        optimizer_params = {'lr': args.lr, 'momentum': 0.9,
+                            'nesterov': True,
+                            'weight_decay': args.weight_decay}
+
+    elif args.optimizer == 'ADAM':
+        optimizer = optim.Adam
+        optimizer_params = {'lr': args.lr, 'weight_decay': args.weight_decay}
+    else:
+        raise NotImplementedError
 
     # Setup model trainer and train model
     trainer = TrainerWithOODJoint(model=model,
@@ -179,13 +189,11 @@ def main():
                                   test_criterion=criterion,
                                   train_dataset=train_dataset,
                                   test_dataset=val_dataset,
-                                  optimizer=optim.SGD,
+                                  optimizer=optimizer,
                                   device=device,
                                   checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
-                                  optimizer_params={'lr': args.lr, 'momentum': 0.9,
-                                                    'nesterov': True,
-                                                    'weight_decay': args.weight_decay},
+                                  optimizer_params=optimizer_params,
                                   scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
                                   batch_size=args.batch_size)
     if args.resume:
