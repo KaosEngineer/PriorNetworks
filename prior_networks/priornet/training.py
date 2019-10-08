@@ -65,6 +65,7 @@ class TrainerWithOOD(Trainer):
 
         accuracies = 0.0
         train_loss = 0.0
+        id_alpha_0, ood_alpha_0 = 0.0, 0.0
         for i, (data, ood_data) in enumerate(
                 zip(self.trainloader, self.oodloader), 0):
             # Get inputs
@@ -92,8 +93,8 @@ class TrainerWithOOD(Trainer):
             self.steps += 1
 
             # log statistics
-            id_alpha_0 = torch.mean(torch.sum(torch.exp(id_outputs), dim=1))
-            ood_alpha_0 = torch.mean(torch.sum(torch.exp(ood_outputs), dim=1))
+            id_alpha_0 += torch.mean(torch.sum(torch.exp(id_outputs), dim=1)).item()
+            ood_alpha_0 += torch.mean(torch.sum(torch.exp(ood_outputs), dim=1)).item()
 
             probs = F.softmax(id_outputs, dim=1)
             accuracy = calc_accuracy_torch(probs, labels, self.device).item()
@@ -110,6 +111,8 @@ class TrainerWithOOD(Trainer):
 
         accuracies /= len(self.trainloader)
         train_loss /= len(self.trainloader)
+        id_alpha_0 /= len(self.trainloader)
+        ood_alpha_0 /= len(self.trainloader)
 
         print(f"Train Loss: {np.round(train_loss, 3)}; "
               f"Train Error: {np.round(100.0 * (1.0 - accuracies), 1)}; "
