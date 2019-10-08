@@ -215,7 +215,7 @@ class TrainerWithOODJoint(Trainer):
         # domain_labels = np.concatenate(domain_labels, axis=0)
         # print(logits.shape, domain_labels.shape)
 
-        id_weights = torch.cat(weights, dim=0)
+        id_weights = torch.cat(id_weights, dim=0)
         ood_weights = torch.cat(ood_weights, dim=0)
 
         id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
