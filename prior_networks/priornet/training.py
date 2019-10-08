@@ -219,10 +219,10 @@ class TrainerWithOODJoint(Trainer):
         ood_weights = torch.cat(ood_weights, dim=0)
 
         id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
-        id_alpha_0 = id_alpha_0 / len(self.testloader)
+        #id_alpha_0 = id_alpha_0 / len(self.testloader)
 
         ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
-        ood_alpha_0 = ood_alpha_0 / len(self.testloader)
+        #ood_alpha_0 = ood_alpha_0 / len(self.testloader)
         test_loss = test_loss / len(self.testloader)
         accuracy = accuracy / len(self.testloader) * 2
 
