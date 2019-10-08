@@ -205,8 +205,8 @@ class TrainerWithOODJoint(Trainer):
                 ood_alpha_0 += torch.sum(alpha_0 * ood_weight)
 
                 # Append logits for future OOD detection at test time calculation...
-                logits.append(outputs.cpu().numpy())
-                domain_labels.append(ood_weights.cpu().numpy())
+                #logits.append(outputs.cpu().numpy())
+                #domain_labels.append(ood_weights.cpu().numpy())
                 id_weights.append(weights)
                 ood_weights.append(ood_weight)
 
