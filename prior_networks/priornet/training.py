@@ -191,8 +191,8 @@ class TrainerWithOODJoint(Trainer):
                                           (inputs, *labels))
                 outputs = self.model(inputs)
                 probs = F.softmax(outputs, dim=1)
-                weights = labels[1] / torch.max(labels[1])
-                print(torch.max(labels[1]), weights)
+                if torch.max(labels[1]) > 0.0:
+                    weights = labels[1] / torch.max(labels[1])
                 accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
                 test_loss += self.test_criterion(outputs, *labels).item()
 
