@@ -192,8 +192,9 @@ class TrainerWithOODJoint(Trainer):
                                           (inputs, *labels))
                 outputs = self.model(inputs)
                 probs = F.softmax(outputs, dim=1)
+                weights = labels[1]
                 if torch.max(labels[1]) > 0.0:
-                    weights = labels[1] / torch.max(labels[1])
+                    weights /= torch.max(labels[1])
                 accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
                 test_loss += self.test_criterion(outputs, *labels).item()
 
@@ -223,7 +224,7 @@ class TrainerWithOODJoint(Trainer):
         ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
         ood_alpha_0 = ood_alpha_0 / len(self.testloader)
         test_loss = test_loss / len(self.testloader)
-        accuracy = accuracy / len(self.testloader)
+        accuracy = accuracy / len(self.testloader) * 2
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
