@@ -111,14 +111,14 @@ class TrainerWithOOD(Trainer):
         accuracies /= len(self.trainloader)
         train_loss /= len(self.trainloader)
 
-        print(f"Train Loss: {np.round(loss.item(), 3)}; "
-              f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+        print(f"Train Loss: {np.round(train_loss, 3)}; "
+              f"Train Error: {np.round(100.0 * (1.0 - accuracies), 1)}; "
               f"Train ID precision: {np.round(id_alpha_0, 1)}; "
               f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
 
         with open('./LOG.txt', 'a') as f:
-            f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
-                    f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+            f.write(f"Train Loss: {np.round(train_loss, 3)}; "
+                    f"Train Error: {np.round(100.0 * (1.0 - accuracies), 1)}; "
                     f"Train ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
         return
