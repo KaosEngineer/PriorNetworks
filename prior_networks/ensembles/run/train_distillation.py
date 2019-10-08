@@ -7,14 +7,15 @@ from pathlib import Path
 
 import torch
 from torch.utils import data
-from prior_networks.util_pytorch import DATASET_DICT, select_gpu
+from prior_networks.util_pytorch import DATASET_DICT, select_gpu, choose_optimizer
 from prior_networks.ensembles.training import TrainerDistillation
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
 from prior_networks.models.model_factory import ModelFactory
 
 from prior_networks.ensembles.ensemble_dataset import EnsembleDataset
-from prior_networks.ensembles.losses import DirichletEnDDLoss, EnDLoss, DirichletEnDDDirTempLoss, DirichletEnDDEnTempLoss
+from prior_networks.ensembles.losses import DirichletEnDDLoss, \
+    EnDLoss, DirichletEnDDDirTempLoss, DirichletEnDDEnTempLoss, DirichletEnDDRevLoss
 from prior_networks.ensembles.training import LRTempScheduler
 
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
@@ -53,9 +54,6 @@ parser.add_argument('--model_load_path', type=str, default='./model',
                     help='Source where to load the model from.')
 parser.add_argument('--gpu', type=int, action='append',
                     help='Specify which GPUs to to run on.')
-# parser.add_argument('--multi_gpu',
-#                     action='store_true',
-#                     help='Use multiple GPUs for training.')
 parser.add_argument('--augment',
                     action='store_true',
                     help='Whether to use augmentation.')
@@ -77,6 +75,9 @@ parser.add_argument('--endd_entemp',
 parser.add_argument('--endd_dirtemp',
                     action='store_true',
                     help='Whether to do Ensemble Distribution Distillation.')
+parser.add_argument('--endd_revtemp',
+                    action='store_true',
+                    help='Whether to do Ensemble Distribution Distillation.')
 parser.add_argument('--ood',
                     action='store_true',
                     help='Whether to use auxilliary "OOD" data on which ensemble is diverse.')
@@ -84,6 +85,10 @@ parser.add_argument('--ood_dataset', choices=DATASET_DICT.keys(), default='TIM',
                     help='OOD dataset name.')
 parser.add_argument('--ood_folder', type=str, default=None,
                     help='OOD dataset name.')
+parser.add_argument('--optimizer', choices=['SGD', 'ADAM'], default='SGD',
+                    help='Choose which optimizer to use.')
+parser.add_argument('--clip_norm', type=float, default=10.0,
+                    help='Gradient clipping norm value.')
 def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
@@ -170,8 +175,15 @@ def main():
         train_criterion = DirichletEnDDEnTempLoss()
     elif args.endd_dirtemp:
         train_criterion = DirichletEnDDDirTempLoss()
+    elif args.endd_revtemp:
+        train_criterion = DirichletEnDDRevLoss()
     else:
         train_criterion = EnDLoss()
+
+    # Select optimizer and optimizer params
+    optimizer, optimizer_params = choose_optimizer(args.optimizer,
+                                                   args.lr,
+                                                   args.weight_decay)
 
     # Setup model trainer and train model
     trainer = TrainerDistillation(model=model,
@@ -179,22 +191,20 @@ def main():
                                   test_criterion=test_criterion,
                                   train_dataset=train_dataset,
                                   test_dataset=val_dataset,
-                                  optimizer=optim.SGD,
+                                  optimizer=optimizer,
                                   device=device,
                                   checkpoint_path=model_dir / 'model',
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   temp_scheduler=LRTempScheduler,
-                                  optimizer_params={'lr': args.lr,
-                                                    'momentum': 0.9,
-                                                    'nesterov': True,
-                                                    'weight_decay': args.weight_decay},
+                                  optimizer_params=optimizer_params,
                                   scheduler_params={'milestones': args.lrc,
                                                     'gamma': args.lr_decay},
                                   temp_scheduler_params={'init_temp': args.temperature,
                                                          'min_temp': args.min_temperature,
                                                          'decay_epoch': args.tdecay_epoch,
                                                          'decay_length': args.tdecay_length},
-                                  batch_size=args.batch_size)
+                                  batch_size=args.batch_size,
+                                  clip_norm=args.clip_norm)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
     trainer.train(args.n_epochs, resume=args.resume)

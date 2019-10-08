@@ -9,9 +9,9 @@ import numpy as np
 
 import torch
 from torch.utils import data
-from prior_networks.priornet.dpn_losses import DirichletKLLoss, PriorNetMixedLoss
+from prior_networks.priornet.dpn_losses import DirichletKLLoss, DirichletKLLossJoint
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
-from prior_networks.priornet.training import TrainerWithOOD
+from prior_networks.priornet.training import TrainerWithOODJoint
 from prior_networks.util_pytorch import TargetTransform, choose_optimizer
 from torch import optim
 from prior_networks.datasets.image.standardised_datasets import construct_transforms
@@ -69,7 +69,6 @@ parser.add_argument('--resume',
 parser.add_argument('--clip_norm', type=float, default=10.0,
                     help='Gradient clipping norm value.')
 
-
 def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
@@ -102,6 +101,8 @@ def main():
                                                                                  augment=args.augment,
                                                                                  rotation=args.rotate,
                                                                                  jitter=args.jitter),
+                                                  target_transform=TargetTransform(args.target_concentration,
+                                                                                   1.0),
                                                   download=True,
                                                   split='train')
 
@@ -112,52 +113,59 @@ def main():
                                                                                mode='eval',
                                                                                rotation=args.rotate,
                                                                                jitter=args.jitter),
+                                                target_transform=TargetTransform(args.target_concentration,
+                                                                                 1.0),
                                                 download=True,
                                                 split='val')
 
-    # Load the out-of-domain training dataset
-    ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
-                                                 transform=construct_transforms(
-                                                     n_in=ckpt['n_in'],
-                                                     mean=DATASET_DICT[args.id_dataset].mean,
-                                                     std=DATASET_DICT[args.id_dataset].std,
-                                                     mode='ood'),
-                                                 download=True,
-                                                 split='train')
-    ood_val_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+    if args.gamma > 0.0:
+        # Load the out-of-domain training dataset
+        ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                      transform=construct_transforms(
                                                          n_in=ckpt['n_in'],
                                                          mean=DATASET_DICT[args.id_dataset].mean,
                                                          std=DATASET_DICT[args.id_dataset].std,
-                                                         mode='eval'),
+                                                         mode='ood'),
+                                                     target_transform=TargetTransform(0.0,
+                                                                                      args.gamma,
+                                                                                      ood=True),
                                                      download=True,
-                                                     split='val')
+                                                     split='train')
+        ood_val_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+                                                         transform=construct_transforms(
+                                                             n_in=ckpt['n_in'],
+                                                             mean=DATASET_DICT[args.id_dataset].mean,
+                                                             std=DATASET_DICT[args.id_dataset].std,
+                                                             mode='eval'),
+                                                         target_transform=TargetTransform(0.0,
+                                                                                          args.gamma,
+                                                                                          ood=True),
+                                                         download=True,
+                                                         split='val')
 
+        # Combine ID and OOD evaluation datasets into a single dataset
+        val_dataset = data.ConcatDataset([val_dataset, ood_val_dataset])
 
-    # Combine ID and OOD training datasets into a single dataset for
-    # training (necessary for DataParallel training)
-
-    if len(train_dataset) < len(ood_dataset):
-        ratio = np.round(float(len(ood_dataset)) / float(len(train_dataset)))
-        assert ratio.is_integer()
-        dataset_list = [train_dataset, ] * (1 + int(ratio))
-        train_dataset = data.ConcatDataset(dataset_list)
-    elif len(train_dataset) > len(ood_dataset):
-        ratio = float(len(train_dataset)) / float(len(ood_dataset))
-        assert ratio.is_integer()
-        dataset_list = [ood_dataset, ] * int(ratio)
-        ood_dataset = data.ConcatDataset(dataset_list)
+        # Combine ID and OOD training datasets into a single dataset for
+        # training (necessary for DataParallel training)
+        if len(train_dataset) == len(ood_dataset):
+            train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
+        elif len(train_dataset) < len(ood_dataset):
+            ratio = np.round(float(len(ood_dataset)) / float(len(train_dataset)))
+            assert ratio.is_integer()
+            dataset_list = [train_dataset, ] * (1 + int(ratio))
+            dataset_list.append(ood_dataset)
+            train_dataset = data.ConcatDataset(dataset_list)
+        elif len(train_dataset) > len(ood_dataset):
+            ratio = float(len(train_dataset)) / float(len(ood_dataset))
+            assert ratio.is_integer()
+            dataset_list = [ood_dataset, ] * int(ratio)
+            dataset_list.append(train_dataset)
+            train_dataset = data.ConcatDataset(dataset_list)
 
     # Set up training and test criteria
-    id_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-                                   concentration=args.concentration,
-                                   reverse=args.reverse_KL)
-
-    ood_criterion = DirichletKLLoss(target_concentration=0.0,
-                                    concentration=args.concentration,
-                                    reverse=args.reverse_KL)
-
-    criterion = PriorNetMixedLoss([id_criterion, ood_criterion], mixing_params=[1.0, args.gamma])
+    criterion = DirichletKLLossJoint(concentration=args.concentration,
+                                     reverse=args.reverse_KL)
 
     # Select optimizer and optimizer params
     optimizer, optimizer_params = choose_optimizer(args.optimizer,
@@ -165,21 +173,19 @@ def main():
                                                    args.weight_decay)
 
     # Setup model trainer and train model
-    trainer = TrainerWithOOD(model=model,
-                             criterion=criterion,
-                             test_criterion=criterion,
-                             ood_dataset=ood_dataset,
-                             test_ood_dataset=ood_val_dataset,
-                             train_dataset=train_dataset,
-                             test_dataset=val_dataset,
-                             optimizer=optimizer,
-                             device=device,
-                             checkpoint_path=model_dir / 'model',
-                             scheduler=optim.lr_scheduler.MultiStepLR,
-                             optimizer_params=optimizer_params,
-                             scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
-                             batch_size=args.batch_size,
-                             clip_norm=args.clip_norm)
+    trainer = TrainerWithOODJoint(model=model,
+                                  criterion=criterion,
+                                  test_criterion=criterion,
+                                  train_dataset=train_dataset,
+                                  test_dataset=val_dataset,
+                                  optimizer=optimizer,
+                                  device=device,
+                                  checkpoint_path=model_dir / 'model',
+                                  scheduler=optim.lr_scheduler.MultiStepLR,
+                                  optimizer_params=optimizer_params,
+                                  scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
+                                  batch_size=args.batch_size,
+                                  clip_norm=args.clip_norm)
     if args.resume:
         trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
                                 map_location=device)

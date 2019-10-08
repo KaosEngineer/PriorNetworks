@@ -14,8 +14,12 @@ from sklearn.metrics import roc_auc_score
 
 
 class TrainerWithOOD(Trainer):
-    def __init__(self, model, criterion,
-                 train_dataset, ood_dataset, test_dataset,
+    def __init__(self, model,
+                 criterion,
+                 train_dataset,
+                 ood_dataset,
+                 test_dataset,
+                 test_ood_dataset,
                  optimizer,
                  scheduler=None,
                  optimizer_params: Dict[str, Any] = None,
@@ -29,17 +33,31 @@ class TrainerWithOOD(Trainer):
                  pin_memory=False,
                  checkpoint_path='./',
                  checkpoint_steps=0):
-        super().__init__(model=model, criterion=criterion, train_dataset=train_dataset,
-                         test_dataset=test_dataset, optimizer=optimizer, scheduler=scheduler,
-                         optimizer_params=optimizer_params, scheduler_params=scheduler_params,
-                         batch_size=batch_size, device=device, log_interval=log_interval,
-                         test_criterion=test_criterion, num_workers=num_workers,
-                         pin_memory=pin_memory, clip_norm=clip_norm,
-                         checkpoint_path=checkpoint_path, checkpoint_steps=checkpoint_steps)
+        super().__init__(model=model,
+                         criterion=criterion,
+                         train_dataset=train_dataset,
+                         test_dataset=test_dataset,
+                         optimizer=optimizer,
+                         scheduler=scheduler,
+                         optimizer_params=optimizer_params,
+                         scheduler_params=scheduler_params,
+                         batch_size=batch_size,
+                         device=device,
+                         log_interval=log_interval,
+                         test_criterion=test_criterion,
+                         num_workers=num_workers,
+                         pin_memory=pin_memory,
+                         clip_norm=clip_norm,
+                         checkpoint_path=checkpoint_path,
+                         checkpoint_steps=checkpoint_steps)
 
         assert len(train_dataset) == len(ood_dataset)
+        assert len(test_dataset) == len(test_ood_dataset)
+
         self.oodloader = DataLoader(ood_dataset, batch_size=batch_size,
                                     shuffle=True, num_workers=1, pin_memory=self.pin_memory)
+        self.test_oodloader = DataLoader(test_ood_dataset, batch_size=batch_size,
+                                         shuffle=False, num_workers=1, pin_memory=self.pin_memory)
 
     def _train_single_epoch(self):
         # Set model in train mode
@@ -63,7 +81,7 @@ class TrainerWithOOD(Trainer):
             outputs = self.model(inputs)
             id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
             loss = self.criterion((id_outputs, ood_outputs), (labels, None))
-            assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
+            assert torch.all(torch.isfinite(loss)).item()
             loss.backward()
             clip_grad_norm_(self.model.parameters(), self.clip_norm)
             self.optimizer.step()
@@ -72,16 +90,104 @@ class TrainerWithOOD(Trainer):
             self.steps += 1
 
             # log statistics
+            id_alpha_0 = torch.mean(torch.sum(torch.exp(id_outputs), dim=1))
+            ood_alpha_0 = torch.mean(torch.sum(torch.exp(ood_outputs), dim=1))
+
             if self.steps % self.log_interval == 0:
                 probs = F.softmax(id_outputs, dim=1)
-                self.train_accuracy.append(
-                    calc_accuracy_torch(probs, labels, self.device).item())
+                accuracy = calc_accuracy_torch(probs, labels, self.device).item()
+                self.train_accuracy.append(accuracy)
                 self.train_loss.append(loss.item())
                 self.train_eval_steps.append(self.steps)
 
             if self.checkpoint_steps > 0:
                 if self.steps % self.checkpoint_steps == 0:
                     self._save_checkpoint(save_at_steps=True)
+
+            print(f"Train Loss: {np.round(loss.item(), 3)}; "
+                  f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                  f"Train ID precision: {np.round(id_alpha_0, 1)}; "
+                  f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
+
+            with open('./LOG.txt', 'a') as f:
+                f.write(f"Train Loss: {np.round(loss.item(), 3)}; "
+                        f"Train Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                        f"Train ID precision: {np.round(id_alpha_0, 1)}; "
+                        f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
+        return
+
+    def test(self, time):
+        """
+        Single evaluation on the entire provided test dataset.
+        Return accuracy, mean test loss, and an array of predicted probabilities
+        """
+        test_loss, accuracy = 0.0, 0.0
+        id_alpha_0, ood_alpha_0 = 0.0, 0.0
+        id_weights, ood_weights = [], []
+
+        domain_labels = []
+        id_logits, ood_logits = [], []
+        # Set model in eval mode
+        self.model.eval()
+        id_alpha_0, ood_alpha_0 = 0.0, 0.0
+        with torch.no_grad():
+            for i, (data, ood_data) in enumerate(zip(self.testloader, self.test_oodloader), 0):
+                # Get inputs
+                id_inputs, labels = data
+                ood_inputs, _ = ood_data
+                if self.device is not None:
+                    id_inputs, labels, ood_inputs = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
+                                                        (id_inputs, labels, ood_inputs))
+                id_outputs = self.model(id_inputs)
+                ood_outputs = self.model(ood_inputs)
+                probs = F.softmax(id_outputs, dim=1)
+
+                accuracy += calc_accuracy_torch(probs, labels).item()
+                test_loss += self.test_criterion([id_outputs, ood_outputs], *labels).item()
+
+                # Get in-domain and OOD Precision
+                id_alpha_0 += torch.mean(torch.sum(torch.exp(id_outputs), dim=1)).item()
+                ood_alpha_0 += torch.mean(torch.sum(torch.exp(ood_outputs), dim=1)).item()
+
+                # Append logits for future OOD detection at test time calculation...
+                id_logits.append(id_outputs.cpu().numpy())
+                ood_logits.append(ood_outputs.cpu().numpy())
+
+        id_alpha_0 = id_alpha_0 / len(self.testloader)
+        ood_alpha_0 = ood_alpha_0 / len(self.test_oodloader)
+
+        test_loss = test_loss / len(self.testloader)
+        accuracy = accuracy / len(self.testloader)
+
+        id_logits = np.concatenate(id_logits, axis=0)
+        ood_logits = np.concatenate(ood_logits, axis=0)
+        logits = np.concatenate([id_logits, ood_logits], axis=0)
+        uncertainties = dirichlet_prior_network_uncertainty(logits)['mutual_information']
+
+        in_domain = np.zeros(shape=[id_logits.shape[0]], dtype=np.int32)
+        ood_domain = np.ones(shape=[ood_logits.shape[0]], dtype=np.int32)
+        domain_labels = np.concatenate([in_domain, ood_domain], axis=0)
+
+        auc = roc_auc_score(domain_labels, uncertainties)
+
+        print(f"Test Loss: {np.round(test_loss, 3)}; "
+              f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
+              f"Test ID precision: {np.round(id_alpha_0, 1)}; "
+              f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
+              f"Test AUROC: {np.round(100.0 * auc, 1)}; "
+              f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
+
+        with open('./LOG.txt', 'a') as f:
+            f.write(f"Test Loss: {np.round(test_loss, 3)}; "
+                    f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
+                    f"Test ID precision: {np.round(id_alpha_0, 1)}; "
+                    f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
+                    f"Test AUROC: {np.round(100.0 * auc, 1)}; "
+                    f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
+        # Log statistics
+        self.test_loss.append(test_loss)
+        self.test_accuracy.append(accuracy)
+        self.test_eval_steps.append(self.steps)
         return
 
 
