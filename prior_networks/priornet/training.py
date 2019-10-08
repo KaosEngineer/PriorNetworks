@@ -206,23 +206,23 @@ class TrainerWithOODJoint(Trainer):
                 ood_alpha_0 += torch.sum(alpha_0 * ood_weight)
 
                 # Append logits for future OOD detection at test time calculation...
-                #logits.append(outputs.cpu().numpy())
-                #domain_labels.append(ood_weights.cpu().numpy())
                 id_weights.append(weights)
                 ood_weights.append(ood_weight)
 
-        # logits = np.concatenate(logits, axis=0)
-        # domain_labels = np.concatenate(domain_labels, axis=0)
-        # print(logits.shape, domain_labels.shape)
+                logits.append(outputs.cpu().numpy())
+                domain_labels.append(ood_weight.cpu().numpy())
+
+        logits = np.concatenate(logits, axis=0)
+        domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
+        id_logits = logits[domain_labels == 0]
+        ood_logits = logits[domain_labels == 1]
+        print(id_logits.shape, ood_logits.shape, domain_labels.shape)
 
         id_weights = torch.cat(id_weights, dim=0)
         ood_weights = torch.cat(ood_weights, dim=0)
-
         id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
-        #id_alpha_0 = id_alpha_0 / len(self.testloader)
-
         ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
-        #ood_alpha_0 = ood_alpha_0 / len(self.testloader)
+
         test_loss = test_loss / len(self.testloader)
         accuracy = accuracy / len(self.testloader) * 2
 
