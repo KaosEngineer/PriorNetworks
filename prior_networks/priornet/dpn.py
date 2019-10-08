@@ -88,7 +88,16 @@ class PriorNet(nn.Module):
             dim=1)
         entropy_of_exp = categorical_entropy_torch(probs)
         mutual_info = entropy_of_exp - expected_entropy
-        return conf, entropy_of_exp, expected_entropy, mutual_info, epkl, dentropy
+
+        uncertainties = {'confidence': conf,
+                         'entropy_of_expected': entropy_of_exp,
+                         'expected_entropy': expected_entropy,
+                         'mutual_information': mutual_info,
+                         'EPKL': epkl,
+                         'differential_entropy': torch.squeeze(dentropy),
+                         }
+
+        return uncertainties
 
 
 def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10):
@@ -121,6 +130,7 @@ def dirichlet_prior_network_uncertainty(logits, epsilon=1e-10):
                    'expected_entropy': expected_entropy,
                    'mutual_information': mutual_info,
                    'EPKL': epkl,
-                   'differential_entropy': np.squeeze(dentropy)}
+                   'differential_entropy': np.squeeze(dentropy),
+                   }
 
     return uncertainty

@@ -31,7 +31,7 @@ parser.add_argument('n_epochs', type=int,
 parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
-parser.add_argument('--lrc', action='append', type=int,  help='LR decay milestones')
+parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
 parser.add_argument('--model_dir', type=str, default='./',
                     help='absolute directory path where to save model and associated data.')
 parser.add_argument('--target_concentration', type=float, default=1e2,
@@ -77,7 +77,6 @@ def main():
         f.write(' '.join(sys.argv) + '\n')
         f.write('--------------------------------\n')
 
-
     model_dir = Path(args.model_dir)
     # Load up the model
 
@@ -93,7 +92,6 @@ def main():
         print('Using Multi-GPU training.')
     model.to(device)
 
-
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(n_in=ckpt['n_in'],
@@ -104,9 +102,8 @@ def main():
                                                                                  augment=args.augment,
                                                                                  rotation=args.rotate,
                                                                                  jitter=args.jitter),
-                                                  target_transform=TargetTransform(
-                                                      args.target_concentration,
-                                                      1.0),
+                                                  target_transform=TargetTransform(args.target_concentration,
+                                                                                   1.0),
                                                   download=True,
                                                   split='train')
 
@@ -117,7 +114,8 @@ def main():
                                                                                mode='eval',
                                                                                rotation=args.rotate,
                                                                                jitter=args.jitter),
-                                                target_transform=None,
+                                                target_transform=TargetTransform(args.target_concentration,
+                                                                                 1.0),
                                                 download=True,
                                                 split='val')
 
@@ -134,6 +132,20 @@ def main():
                                                                                       ood=True),
                                                      download=True,
                                                      split='train')
+        ood_val_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
+                                                         transform=construct_transforms(
+                                                             n_in=ckpt['n_in'],
+                                                             mean=DATASET_DICT[args.id_dataset].mean,
+                                                             std=DATASET_DICT[args.id_dataset].std,
+                                                             mode='eval'),
+                                                         target_transform=TargetTransform(0.0,
+                                                                                          args.gamma,
+                                                                                          ood=True),
+                                                         download=True,
+                                                         split='val')
+
+        #Combine ID and OOD evaluation datasets into a single dataset
+        val_dataset = data.ConcatDataset([val_dataset, ood_val_dataset])
 
         # Combine ID and OOD training datasets into a single dataset for
         # training (necessary for DataParallel training)
@@ -142,7 +154,7 @@ def main():
         elif len(train_dataset) < len(ood_dataset):
             ratio = np.round(float(len(ood_dataset)) / float(len(train_dataset)))
             assert ratio.is_integer()
-            dataset_list = [train_dataset, ] * (1+int(ratio))
+            dataset_list = [train_dataset, ] * (1 + int(ratio))
             dataset_list.append(ood_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
         elif len(train_dataset) > len(ood_dataset):
@@ -153,17 +165,18 @@ def main():
             train_dataset = data.ConcatDataset(dataset_list)
 
 
+
     # Set up training and test criteria
     criterion = DirichletKLLossJoint(concentration=args.concentration,
                                      reverse=args.reverse_KL)
-    test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-                                     concentration=args.concentration,
-                                     reverse=args.reverse_KL)
+    # test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
+    #                                  concentration=args.concentration,
+    #                                  reverse=args.reverse_KL)
 
     # Setup model trainer and train model
     trainer = TrainerWithOODJoint(model=model,
                                   criterion=criterion,
-                                  test_criterion=test_criterion,
+                                  test_criterion=criterion,
                                   train_dataset=train_dataset,
                                   test_dataset=val_dataset,
                                   optimizer=optim.SGD,

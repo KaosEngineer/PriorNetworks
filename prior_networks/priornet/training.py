@@ -112,7 +112,7 @@ class TrainerWithOODJoint(Trainer):
         self.model.train()
 
         id_alpha_0, ood_alpha_0 = 0.0, 0.0
-        train_loss = 0.0
+        train_loss, accuracy = 0.0, 0.0
         init_steps = self.steps
         for i, data in enumerate(self.trainloader, 0):
             # Get inputs
@@ -133,7 +133,7 @@ class TrainerWithOODJoint(Trainer):
             train_loss += loss.item()
             weights = labels[1] / torch.max(labels[1])
             weights = weights.to(dtype=torch.float32)
-            ood_weights = 1 - weights
+            ood_weights = 1.0 - weights
             alpha_0 = torch.sum(torch.exp(outputs), dim=1)
             id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
             ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
@@ -175,9 +175,11 @@ class TrainerWithOODJoint(Trainer):
         Single evaluation on the entire provided test dataset.
         Return accuracy, mean test loss, and an array of predicted probabilities
         """
-        test_loss = 0.
-        n_correct = 0  # Track the number of correct classifications
+        test_loss, accuracy = 0.0, 0.0
+        id_alpha_0, ood_alpha_0 = 0.0, 0.0
 
+        domain_labels = []
+        logits = []
         # Set model in eval mode
         self.model.eval()
         with torch.no_grad():
@@ -185,26 +187,42 @@ class TrainerWithOODJoint(Trainer):
                 # Get inputs
                 inputs, labels = data
                 if self.device is not None:
-                    inputs, labels = map(lambda x: x.to(self.device),
-                                         (inputs, labels))
+                    inputs, *labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
+                                          (inputs, *labels))
                 outputs = self.model(inputs)
-                precision = torch.mean(torch.sum(torch.exp(outputs), dim=1)).item()
+                weights = labels[1] / torch.max(labels[1])
+                weights = weights.to(dtype=torch.float32)
+                ood_weights = 1.0 - weights
+                alpha_0 = torch.sum(torch.exp(outputs), dim=1)
+                id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
+                ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
                 test_loss += self.test_criterion(outputs, labels).item()
                 probs = F.softmax(outputs, dim=1)
-                n_correct += torch.sum(torch.argmax(probs, dim=1) == labels).item()
+                accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
 
+                logits.append(outputs.cpu().numpy())
+                domain_labels.append(ood_weights.cpu().numpy())
+
+        logits = np.stack(logits, axis=0)
+        domain_labels = np.stack(domain_labels, axis=0)
+        print(logits.shape, domain_labels.shape)
+
+        id_alpha_0 = id_alpha_0 / len(self.testloader)
+        ood_alpha_0 = ood_alpha_0 / len(self.testloader)
         test_loss = test_loss / len(self.testloader)
-        accuracy = n_correct / len(self.testloader.dataset)
+        accuracy = accuracy / len(self.testloader)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
-              f"Test precision: {np.round(precision, 1)}; "
+              f"Test ID precision: {np.round(id_alpha_0, 1)}; "
+              f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         with open('./LOG.txt', 'a') as f:
             f.write(f"Test Loss: {np.round(test_loss, 3)}; "
                     f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
-                    f"Test precision: {np.round(precision, 1)}; "
+                    f"Test ID precision: {np.round(id_alpha_0, 1)}; "
+                    f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
                     f"Time Per Epoch: {np.round(time / 60.0, 1)} min.\n")
         # Log statistics
         self.test_loss.append(test_loss)
