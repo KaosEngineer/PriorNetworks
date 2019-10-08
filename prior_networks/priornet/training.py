@@ -190,16 +190,19 @@ class TrainerWithOODJoint(Trainer):
                     inputs, *labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
                                           (inputs, *labels))
                 outputs = self.model(inputs)
+                probs = F.softmax(outputs, dim=1)
                 weights = labels[1] / torch.max(labels[1])
+                accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
+                test_loss += self.test_criterion(outputs, *labels).item()
+
+                # Get in-domain and OOD Precision
                 weights = weights.to(dtype=torch.float32)
                 ood_weights = 1.0 - weights
                 alpha_0 = torch.sum(torch.exp(outputs), dim=1)
                 id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
                 ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
-                test_loss += self.test_criterion(outputs, *labels).item()
-                probs = F.softmax(outputs, dim=1)
-                accuracy += calc_accuracy_torch(probs, labels[0], self.device, weights=weights).item()
 
+                # Append logits for future OOD detection at test time calculation...
                 logits.append(outputs.cpu().numpy())
                 domain_labels.append(ood_weights.cpu().numpy())
 
