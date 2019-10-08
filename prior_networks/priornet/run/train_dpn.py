@@ -102,6 +102,7 @@ def main():
                                                                                  augment=args.augment,
                                                                                  rotation=args.rotate,
                                                                                  jitter=args.jitter),
+                                                  target_transform=None,
                                                   download=True,
                                                   split='train')
 
@@ -112,6 +113,7 @@ def main():
                                                                                mode='eval',
                                                                                rotation=args.rotate,
                                                                                jitter=args.jitter),
+                                                target_transform=None,
                                                 download=True,
                                                 split='val')
 
@@ -122,6 +124,7 @@ def main():
                                                      mean=DATASET_DICT[args.id_dataset].mean,
                                                      std=DATASET_DICT[args.id_dataset].std,
                                                      mode='ood'),
+                                                 target_transform=None,
                                                  download=True,
                                                  split='train')
     ood_val_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
@@ -130,6 +133,7 @@ def main():
                                                          mean=DATASET_DICT[args.id_dataset].mean,
                                                          std=DATASET_DICT[args.id_dataset].std,
                                                          mode='eval'),
+                                                     target_transform=None,
                                                      download=True,
                                                      split='val')
 
