@@ -80,9 +80,9 @@ class DirichletKLLoss:
                                                                self.target_concentration)
 
         if self.reverse:
-            loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
+            loss = dirichlet_reverse_kl_divergence(alphas=alphas, target_alphas=target_alphas)
         else:
-            loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
+            loss = dirichlet_kl_divergence(alphas=alphas, target_alphas=target_alphas)
         return loss
 
 

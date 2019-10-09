@@ -253,8 +253,10 @@ class TrainerWithOODJoint(Trainer):
             weights = weights.to(dtype=torch.float32)
             ood_weights = 1.0 - weights
             alpha_0 = torch.sum(torch.exp(outputs), dim=1)
-            id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
-            ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
+            if torch.sum(weights) > 0.0:
+                id_alpha_0 += (torch.sum(alpha_0 * weights) / torch.sum(weights)).item()
+            if torch.sum(ood_weights) > 0.0:
+                ood_alpha_0 += (torch.sum(alpha_0 * ood_weights) / torch.sum(ood_weights)).item()
 
             # Update the number of steps
             self.steps += 1

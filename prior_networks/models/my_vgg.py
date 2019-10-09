@@ -14,10 +14,10 @@ class MyVGG(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 2048),
-            nn.LeakyReLU(True),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
             nn.Dropout(p=dropout),
             nn.Linear(2048, 2048),
-            nn.LeakyReLU(True),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True),
             nn.Dropout(p=dropout),
             nn.Linear(2048, num_classes),
         )
@@ -55,9 +55,9 @@ def make_layers(cfg, batch_norm=False, dropout=0.7, small_inputs=None):
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.LeakyReLU(inplace=True), nn.Dropout(p=dropout)]
+                layers += [conv2d, nn.BatchNorm2d(v), nn.LeakyReLU(negative_slope=0.2, inplace=True), nn.Dropout(p=dropout)]
             else:
-                layers += [conv2d, nn.LeakyReLU(inplace=True), nn.Dropout(p=dropout)]
+                layers += [conv2d, nn.LeakyReLU(negative_slope=0.2, inplace=True), nn.Dropout(p=dropout)]
             in_channels = v
     return nn.Sequential(*layers)
 

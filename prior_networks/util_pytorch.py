@@ -166,7 +166,8 @@ class TargetTransform:
 def choose_optimizer(optimizer: str, learning_rate: float, weight_decay: float, momentum: float = 0.9):
     if optimizer == 'SGD':
         optimizer = optim.SGD
-        optimizer_params = {'lr': learning_rate, 'momentum': momentum,
+        optimizer_params = {'lr': learning_rate,
+                            'momentum': momentum,
                             'nesterov': True,
                             'weight_decay': weight_decay}
 
