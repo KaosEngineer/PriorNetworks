@@ -45,7 +45,7 @@ class MyVGG(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
-def make_layers(cfg, batch_norm=False, dropout=0.5, small_inputs=None):
+def make_layers(cfg, batch_norm=False, dropout=0.7, small_inputs=None):
     layers = []
     in_channels = 3
     dropout = max(dropout - 0.3, 0.0)
@@ -80,7 +80,7 @@ def _vgg(arch, cfg, batch_norm, pretrained, progress, dropout=0.5, **kwargs):
 dropout = 0.5,
 
 
-def myvgg16(pretrained=False, progress=True, dropout=0.5, **kwargs):
+def myvgg16(pretrained=False, progress=True, dropout=0.7, **kwargs):
     r"""VGG 16-layer model (configuration "D")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -91,7 +91,7 @@ def myvgg16(pretrained=False, progress=True, dropout=0.5, **kwargs):
     return _vgg('vgg16', 'D', False, pretrained, progress, dropout, **kwargs)
 
 
-def myvgg16_bn(pretrained=False, progress=True, dropout=0.5, **kwargs):
+def myvgg16_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
     r"""VGG 16-layer model (configuration "D") with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -102,7 +102,7 @@ def myvgg16_bn(pretrained=False, progress=True, dropout=0.5, **kwargs):
     return _vgg('vgg16_bn', 'D', True, pretrained, progress, dropout, **kwargs)
 
 
-def myvgg19(pretrained=False, progress=True, dropout=0.5, **kwargs):
+def myvgg19(pretrained=False, progress=True, dropout=0.7, **kwargs):
     r"""VGG 19-layer model (configuration "E")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -113,7 +113,7 @@ def myvgg19(pretrained=False, progress=True, dropout=0.5, **kwargs):
     return _vgg('vgg19', 'E', False, pretrained, progress, dropout, **kwargs)
 
 
-def myvgg19_bn(pretrained=False, progress=True, dropout=0.5, **kwargs):
+def myvgg19_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
     r"""VGG 19-layer model (configuration 'E') with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 

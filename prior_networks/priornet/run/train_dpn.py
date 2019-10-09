@@ -146,6 +146,7 @@ def main():
         assert ratio.is_integer()
         dataset_list = [train_dataset, ] * int(ratio)
         train_dataset = data.ConcatDataset(dataset_list)
+        print(len(train_dataset))
     elif len(train_dataset) > len(ood_dataset):
         ratio = float(len(train_dataset)) / float(len(ood_dataset))
         assert ratio.is_integer()
