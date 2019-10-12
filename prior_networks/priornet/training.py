@@ -336,16 +336,22 @@ class TrainerWithOODJoint(Trainer):
         id_weights = torch.cat(id_weights, dim=0)
         ood_weights = torch.cat(ood_weights, dim=0)
         id_alpha_0 = (id_alpha_0 / torch.sum(id_weights)).item()
-        ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
+        if torch.sum(ood_weights) > 0.0:
+            ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
+        else:
+            ood_alpha_0 = 0.0
 
         test_loss = test_loss / len(self.testloader)
         accuracy = (accuracy / torch.sum(id_weights)).item()
 
-        logits = np.concatenate(logits, axis=0)
-        domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
-        uncertainties = dirichlet_prior_network_uncertainty(logits)['mutual_information']
-
-        auc = roc_auc_score(domain_labels, uncertainties)
+        if torch.sum(ood_weights) > 0.0:
+            logits = np.concatenate(logits, axis=0)
+            domain_labels = np.asarray(np.concatenate(domain_labels, axis=0), dtype=np.int32)
+            uncertainties = dirichlet_prior_network_uncertainty(logits)['mutual_information']
+            ood_alpha_0 = (ood_alpha_0 / torch.sum(ood_weights)).item()
+            auc = roc_auc_score(domain_labels, uncertainties)
+        else:
+            auc = 0.5
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
