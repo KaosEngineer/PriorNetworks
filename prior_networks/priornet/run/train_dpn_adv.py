@@ -103,11 +103,10 @@ def main():
 
     # Set up training and test criteria
     test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-                                     concentration=args.concentration,
-                                     reverse=args.reverse_KL)
+                                     concentration=args.concentration)
+
     adv_criterion = DirichletKLLoss(target_concentration=args.adv_concentration,
-                                    concentration=args.concentration,
-                                    reverse=args.reverse_KL)
+                                    concentration=args.concentration)
 
     train_criterion = PriorNetMixedLoss([test_criterion, adv_criterion],
                                         [1.0, args.gamma])

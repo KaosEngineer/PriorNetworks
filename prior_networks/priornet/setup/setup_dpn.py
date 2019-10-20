@@ -24,6 +24,8 @@ parser.add_argument('--n_channels', type=int, default=3,
                     help='Choose number in image channels. Default 3 for color images.')
 parser.add_argument('--small_inputs', action='store_true',
                     help='Whether model should be setup to use small inputs.')
+parser.add_argument('--drop_rate', type=float, default=0.0,
+                    help='Dropout rate if model uses it.')
 parser.add_argument('--override_directory', action='store_true', default=False,
                     help='If the ensemble directory already exists, whether to override and write'
                          ' to that directory')
@@ -51,6 +53,7 @@ def main():
     model = ModelFactory.create_model(args.arch,
                                       num_classes=args.num_classes,
                                       small_inputs=args.small_inputs,
+                                      dropout_rate=args.drop_rate,
                                       pretrained=False)
 
     ModelFactory.checkpoint_model(path='model/model.tar',
@@ -58,6 +61,7 @@ def main():
                                   arch=args.arch,
                                   n_channels=args.n_channels,
                                   num_classes=args.num_classes,
+                                  dropout_rate=args.drop_rate,
                                   small_inputs=args.small_inputs,
                                   n_in=args.n_in)
 

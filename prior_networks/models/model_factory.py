@@ -33,8 +33,8 @@ class ModelFactory(object):
                   'densenet201': prior_networks.models.densenet201}
     ARCHITECTURE_FIELD = 'arch'
     STATE_DICT_FIELD = 'model_state_dict'
-    MODEL_ARGS_FIELDS = ['num_classes', 'small_inputs']
-    EXPECTED_FIELDS = ['num_classes', 'small_inputs', 'n_channels', 'n_in']
+    MODEL_ARGS_FIELDS = ['num_classes', 'small_inputs', 'dropout_rate']
+    EXPECTED_FIELDS = ['num_classes', 'small_inputs', 'n_channels', 'n_in', 'dropout_rate']
 
     @classmethod
     def model_from_checkpoint(cls, checkpoint) -> nn.Module:
