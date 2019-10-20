@@ -40,8 +40,6 @@ parser.add_argument('--concentration', type=float, default=1.0,
                     help='Concentration of non-target classes.')
 parser.add_argument('--gamma', type=float, default=1.0,
                     help='Weight for OOD loss.')
-parser.add_argument('--dropout_rate', type=float, default=0.0,
-                    help='Dropout rate if model uses it.')
 parser.add_argument('--weight_decay', type=float, default=0.0,
                     help='L2 weight decay.')
 parser.add_argument('--batch_size', type=int, default=128,
@@ -202,6 +200,7 @@ def main():
     ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
                                   model=model,
                                   arch=ckpt['arch'],
+                                  dropout_rate=ckpt['dropout_rate'],
                                   n_channels=ckpt['n_channels'],
                                   num_classes=ckpt['num_classes'],
                                   small_inputs=ckpt['small_inputs'],

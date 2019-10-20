@@ -136,6 +136,7 @@ def main():
     ModelFactory.checkpoint_model(path=model_dir / 'model/model.tar',
                                   model=model,
                                   arch=ckpt['arch'],
+                                  dropout_rate=ckpt['dropout_rate'],
                                   n_channels=ckpt['n_channels'],
                                   num_classes=ckpt['num_classes'],
                                   small_inputs=ckpt['small_inputs'],
