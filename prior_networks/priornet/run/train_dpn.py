@@ -144,12 +144,17 @@ def main():
         assert ratio.is_integer()
         dataset_list = [train_dataset, ] * int(ratio)
         train_dataset = data.ConcatDataset(dataset_list)
+        ood_dataset = data.ConcatDataset([ood_dataset, ood_dataset])
+        ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
         print(len(train_dataset))
     elif len(train_dataset) > len(ood_dataset):
         ratio = float(len(train_dataset)) / float(len(ood_dataset))
         assert ratio.is_integer()
         dataset_list = [ood_dataset, ] * int(ratio)
         ood_dataset = data.ConcatDataset(dataset_list)
+        if len(ood_dataset) > len(train_dataset):
+            ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
+    assert len(train_dataset) == len(ood_dataset)
 
     # Set up training and test criteria
     id_criterion = DirichletKLLoss(target_concentration=args.target_concentration,

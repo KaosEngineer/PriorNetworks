@@ -155,6 +155,8 @@ def main():
             dataset_list = [train_dataset, ] * (1 + int(ratio))
             dataset_list.append(ood_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
+            ood_dataset = data.ConcatDataset([ood_dataset, ood_dataset])
+            ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
         elif len(train_dataset) > len(ood_dataset):
             ratio = float(len(train_dataset)) / float(len(ood_dataset))
             assert ratio.is_integer()
