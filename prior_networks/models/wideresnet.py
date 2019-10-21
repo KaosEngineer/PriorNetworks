@@ -116,18 +116,3 @@ def wide_resnet40_2(pretrained=None, progress=None, small_inputs=None, **kwargs)
         small_inputs: Unused
     """
     return WideResNet(**kwargs, depth=40, widen_factor=2)
-
-    # class WideResNet28x10:
-    #     base = WideResNet
-    #     args = list()
-    #     kwargs = {'depth': 28, 'widen_factor': 10}
-    #     transform_train = transforms.Compose([
-    #         transforms.RandomCrop(32, padding=4),
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    #     ])
-    #     transform_test = transforms.Compose([
-    #         transforms.ToTensor(),
-    #         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    #     ])

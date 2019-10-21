@@ -53,7 +53,10 @@ parser.add_argument('--jitter', type=float, default=0.0,
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
-
+parser.add_argument('--clip_norm', type=float, default=10.0,
+                    help='Gradient clipping norm value.')
+parser.add_argument('--checkpoint_path', type=str, default=None,
+                    help='Path to where to checkpoint.')
 
 
 def main():
@@ -65,6 +68,9 @@ def main():
         f.write('--------------------------------\n')
 
     model_dir = Path(args.model_dir)
+    checkpoint_path = args.checkpoint_path
+    if checkpoint_path is None:
+        checkpoint_path = model_dir / 'model'
     # Load up the model
 
     assert max(args.gpu) <= torch.cuda.device_count() - 1
@@ -115,15 +121,20 @@ def main():
                       test_dataset=val_dataset,
                       optimizer=optim.SGD,
                       device=device,
-                      checkpoint_path=model_dir / 'model',
+                      checkpoint_path=checkpoint_path,
                       scheduler=optim.lr_scheduler.MultiStepLR,
                       optimizer_params={'lr': args.lr, 'momentum': 0.9,
                                         'nesterov': True,
                                         'weight_decay': args.weight_decay},
                       scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
-                      batch_size=args.batch_size)
+                      batch_size=args.batch_size,
+                      clip_norm=args.clip_norm)
     if args.resume:
-        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True, map_location=device)
+        try:
+            trainer.load_checkpoint(checkpoint_path / 'checkpoint.tar', True, True, map_location=device)
+        except:
+            print('No checkpoint found, training from empty model.')
+            pass
     trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model

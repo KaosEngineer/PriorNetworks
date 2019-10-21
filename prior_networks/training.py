@@ -87,8 +87,15 @@ class Trainer:
             'train_loss': self.train_loss,
             'test_loss': self.test_loss
         }, os.path.join(self.checkpoint_path, checkpoint_name))
+        try:
+            import nirvana_dl
+            nirvana_dl.snapshot.dump_snapshot()
+            print('Checkpoint saved to snapshots.')
+        except Exception:
+            pass
 
-    def load_checkpoint(self, checkpoint_path, load_opt_state=False, load_scheduler_state=False, map_location=None):
+    def load_checkpoint(self, load_opt_state=False, load_scheduler_state=False, map_location=None):
+        checkpoint_path = os.path.join(self.checkpoint_path, 'checkpoint.tar')
         checkpoint = torch.load(checkpoint_path, map_location=map_location)
         self.steps = checkpoint['steps']
         self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -189,8 +196,8 @@ class Trainer:
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
-              f"Test Accuracy: {np.round(100.0*accuracy, 1)}%; "
-              f"Time Per Epoch: {np.round(time/60.0,1)} min")
+              f"Test Accuracy: {np.round(100.0 * accuracy, 1)}%; "
+              f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         # Log statistics
         self.test_loss.append(test_loss)

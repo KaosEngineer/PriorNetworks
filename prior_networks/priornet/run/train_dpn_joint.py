@@ -67,6 +67,9 @@ parser.add_argument('--resume',
                     help='Whether to resume training from checkpoint.')
 parser.add_argument('--clip_norm', type=float, default=10.0,
                     help='Gradient clipping norm value.')
+parser.add_argument('--checkpoint_path', type=str, default=None,
+                    help='Path to where to checkpoint.')
+
 
 def main():
     args = parser.parse_args()
@@ -77,6 +80,9 @@ def main():
         f.write('--------------------------------\n')
 
     model_dir = Path(args.model_dir)
+    checkpoint_path = args.checkpoint_path
+    if checkpoint_path is None:
+        checkpoint_path = model_dir / 'model'
 
     # Check that we are training on a sensible GPU
     assert max(args.gpu) <= torch.cuda.device_count() - 1
@@ -153,17 +159,22 @@ def main():
             ratio = np.round(float(len(ood_dataset)) / float(len(train_dataset)))
             assert ratio.is_integer()
             dataset_list = [train_dataset, ] * (1 + int(ratio))
-            dataset_list.append(ood_dataset)
             train_dataset = data.ConcatDataset(dataset_list)
-            if len(train_dataset) > len(ood_dataset):
+            if len(ood_dataset) > len(train_dataset):
                 ood_dataset = data.ConcatDataset([ood_dataset, ood_dataset])
                 ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
+            assert len(train_dataset) == len(ood_dataset)
+            train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
         elif len(train_dataset) > len(ood_dataset):
-            ratio = float(len(train_dataset)) / float(len(ood_dataset))
+            ratio = np.round(float(len(train_dataset)) / float(len(ood_dataset)))
             assert ratio.is_integer()
-            dataset_list = [ood_dataset, ] * int(ratio)
-            dataset_list.append(train_dataset)
-            train_dataset = data.ConcatDataset(dataset_list)
+            dataset_list = [ood_dataset, ] * (int(ratio) + 1)
+            ood_dataset = data.ConcatDataset(dataset_list)
+
+            if len(ood_dataset) > len(train_dataset):
+                ood_dataset = data.ConcatDataset([ood_dataset, ood_dataset])
+                ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
+            assert len(train_dataset) == len(ood_dataset)
 
     # Set up training and test criteria
     if args.FKL:
@@ -186,15 +197,18 @@ def main():
                                   test_dataset=val_dataset,
                                   optimizer=optimizer,
                                   device=device,
-                                  checkpoint_path=model_dir / 'model',
+                                  checkpoint_path=checkpoint_path,
                                   scheduler=optim.lr_scheduler.MultiStepLR,
                                   optimizer_params=optimizer_params,
                                   scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
                                   batch_size=args.batch_size,
                                   clip_norm=args.clip_norm)
     if args.resume:
-        trainer.load_checkpoint(model_dir / 'model/checkpoint.tar', True, True,
-                                map_location=device)
+        try:
+            trainer.load_checkpoint(True, True, map_location=device)
+        except:
+            print('No checkpoint found, training from empty model.')
+            pass
     trainer.train(args.n_epochs, resume=args.resume)
 
     # Save final model

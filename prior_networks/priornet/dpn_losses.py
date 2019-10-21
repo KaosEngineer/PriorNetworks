@@ -22,7 +22,7 @@ class PriorNetMixedLoss:
 
     def forward(self, logits_list, labels_list):
         total_loss = []
-        target_concentration=0.0
+        target_concentration = 0.0
         for i, loss in enumerate(self.losses):
             if loss.target_concentration > target_concentration:
                 target_concentration = loss.target_concentration
@@ -31,7 +31,7 @@ class PriorNetMixedLoss:
             total_loss.append(weighted_loss)
         total_loss = torch.stack(total_loss, dim=0)
         # Normalize by target concentration, so that loss  magnitude is constant wrt lr and other losses
-        return torch.mean(total_loss)/target_concentration
+        return torch.mean(total_loss) / target_concentration
 
 
 class DirichletKLLoss:
@@ -170,7 +170,7 @@ def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precis
     alphas_term = torch.sum(torch.lgamma(alphas + epsilon) - torch.lgamma(target_alphas + epsilon)
                             + (target_alphas - alphas) * (torch.digamma(target_alphas + epsilon)
                                                           - torch.digamma(
-        target_precision + epsilon)), dim=1, keepdim=True)
+                target_precision + epsilon)), dim=1, keepdim=True)
 
     cost = torch.squeeze(precision_term + alphas_term)
     return cost
