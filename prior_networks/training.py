@@ -107,6 +107,8 @@ class Trainer:
         if load_scheduler_state:
             self.scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
 
+        print(f"Model restored from checkpoint {checkpoint_path}")
+
     def train(self, n_epochs=None, n_iter=None, resume=False):
         # Calc num of epochs
         init_epoch = 0
