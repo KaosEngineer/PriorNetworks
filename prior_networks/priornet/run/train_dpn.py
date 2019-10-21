@@ -161,6 +161,8 @@ def main():
             ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
 
     assert len(train_dataset) == len(ood_dataset)
+    print(f"Validation dataset length: {len(val_dataset)}")
+    print(f"Train dataset length: {len(train_dataset)}")
 
     # Set up training and test criteria
     id_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
