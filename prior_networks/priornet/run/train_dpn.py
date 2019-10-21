@@ -69,6 +69,7 @@ parser.add_argument('--clip_norm', type=float, default=10.0,
 parser.add_argument('--checkpoint_path', type=str, default=None,
                     help='Path to where to checkpoint.')
 
+
 def main():
     args = parser.parse_args()
     if not os.path.isdir('CMDs'):
@@ -138,25 +139,27 @@ def main():
                                                      download=True,
                                                      split='val')
 
-
     # Combine ID and OOD training datasets into a single dataset for
     # training (necessary for DataParallel training)
+    assert len(val_dataset) == len(ood_val_dataset)
 
+    # Even out dataset lengths.
+    id_ratio=1.0
     if len(train_dataset) < len(ood_dataset):
-        ratio = np.round(float(len(ood_dataset)) / float(len(train_dataset)))
-        assert ratio.is_integer()
-        dataset_list = [train_dataset, ] * int(ratio)
+        id_ratio = np.ceil(float(len(ood_dataset)) / float(len(train_dataset)))
+        assert id_ratio.is_integer()
+        dataset_list = [train_dataset, ] * (int(id_ratio))
         train_dataset = data.ConcatDataset(dataset_list)
-        ood_dataset = data.ConcatDataset([ood_dataset, ood_dataset])
-        ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
-        print(len(train_dataset))
-    elif len(train_dataset) > len(ood_dataset):
-        ratio = float(len(train_dataset)) / float(len(ood_dataset))
+
+    if len(train_dataset) > len(ood_dataset):
+        ratio = np.ceil(float(len(train_dataset)) / float(len(ood_dataset)))
         assert ratio.is_integer()
         dataset_list = [ood_dataset, ] * int(ratio)
         ood_dataset = data.ConcatDataset(dataset_list)
+
         if len(ood_dataset) > len(train_dataset):
             ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
+
     assert len(train_dataset) == len(ood_dataset)
 
     # Set up training and test criteria
@@ -176,6 +179,7 @@ def main():
                                                    args.weight_decay)
 
     # Setup model trainer and train model
+    lrc = [int(lrc/id_ratio) for lrc in args.lrc]
     trainer = TrainerWithOOD(model=model,
                              criterion=criterion,
                              test_criterion=criterion,
@@ -188,7 +192,7 @@ def main():
                              checkpoint_path=checkpoint_path,
                              scheduler=optim.lr_scheduler.MultiStepLR,
                              optimizer_params=optimizer_params,
-                             scheduler_params={'milestones': args.lrc, 'gamma': args.lr_decay},
+                             scheduler_params={'milestones': lrc, 'gamma': args.lr_decay},
                              batch_size=args.batch_size,
                              clip_norm=args.clip_norm)
     if args.resume:
@@ -197,7 +201,7 @@ def main():
         except:
             print('No checkpoint found, training from empty model.')
             pass
-    trainer.train(args.n_epochs, resume=args.resume)
+    trainer.train(int(args.n_epochs/id_ratio), resume=args.resume)
 
     # Save final model
     if len(args.gpu) > 1 and torch.cuda.device_count() > 1:
