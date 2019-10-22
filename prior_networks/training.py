@@ -92,6 +92,7 @@ class Trainer:
             nirvana_dl.snapshot.dump_snapshot()
             print('Checkpoint saved to snapshots.')
         except Exception:
+            print('Checkpoint NOT save to snapshots!')
             pass
 
     def load_checkpoint(self, load_opt_state=False, load_scheduler_state=False, map_location=None):
