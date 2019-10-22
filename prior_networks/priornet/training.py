@@ -451,8 +451,7 @@ class TrainerWithAdv(Trainer):
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
             loss = self.adv_criterion(outputs, targets, mean=False)
-            assert torch.equal(torch.isnan(loss),
-                               torch.zeros_like(loss, dtype=torch.uint8))
+            assert torch.all(torch.isfinite(loss)).item()
 
             loss = torch.where(torch.eq(targets, labels), -loss, loss)
 
