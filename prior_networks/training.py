@@ -88,13 +88,13 @@ class Trainer:
             'train_loss': self.train_loss,
             'test_loss': self.test_loss
         }, os.path.join(self.checkpoint_path, checkpoint_name))
-        #try:
-        import nirvana_dl.snapshot as snap
-        snap.dump_snapshot()
-        print('Checkpoint saved to snapshots.')
-        #except Exception:
-        #    print('Checkpoint NOT save to snapshots!')
-        #    pass
+        try:
+            import nirvana_dl.snapshot as snap
+            snap.dump_snapshot()
+            print('Checkpoint saved to snapshots.')
+        except Exception:
+            print('Checkpoint NOT save to snapshots!')
+            pass
 
     def load_checkpoint(self, load_opt_state=False, load_scheduler_state=False, map_location=None):
         checkpoint_path = os.path.join(self.checkpoint_path, 'checkpoint.tar')
