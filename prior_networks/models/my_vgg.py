@@ -48,7 +48,7 @@ class MyVGG(nn.Module):
 def make_layers(cfg, batch_norm=False, dropout_rate=0.3, small_inputs=None):
     layers = []
     in_channels = 3
-    dropout_rate = max(dropout_rate - 0.3, 2.0)
+    dropout_rate = max(dropout_rate - 0.3, 0.2)
     for v in cfg:
         if v == 'M':
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
