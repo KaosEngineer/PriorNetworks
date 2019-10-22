@@ -8,17 +8,17 @@ __all__ = [
 
 class MyVGG(nn.Module):
 
-    def __init__(self, features, num_classes=1000, dropout=0.7, init_weights=True, small_inputs=None):
+    def __init__(self, features, num_classes=1000, dropout_rate=0.3, init_weights=True, small_inputs=None):
         super(MyVGG, self).__init__()
         self.features = features
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
         self.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 2048),
             nn.LeakyReLU(negative_slope=0.2, inplace=True),
-            nn.Dropout(p=dropout),
+            nn.Dropout(p=dropout_rate),
             nn.Linear(2048, 2048),
             nn.LeakyReLU(negative_slope=0.2, inplace=True),
-            nn.Dropout(p=dropout),
+            nn.Dropout(p=dropout_rate),
             nn.Linear(2048, num_classes),
         )
         if init_weights:
@@ -45,19 +45,20 @@ class MyVGG(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
 
-def make_layers(cfg, batch_norm=False, dropout=0.7, small_inputs=None):
+def make_layers(cfg, batch_norm=False, dropout_rate=0.3, small_inputs=None):
     layers = []
     in_channels = 3
-    dropout = max(dropout - 0.3, 0.0)
+    dropout_rate = max(dropout_rate - 0.3, 0.0)
     for v in cfg:
         if v == 'M':
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.LeakyReLU(negative_slope=0.2, inplace=True), nn.Dropout(p=dropout)]
+                layers += [conv2d, nn.BatchNorm2d(v), nn.LeakyReLU(negative_slope=0.2, inplace=True),
+                           nn.Dropout(p=dropout_rate)]
             else:
-                layers += [conv2d, nn.LeakyReLU(negative_slope=0.2, inplace=True), nn.Dropout(p=dropout)]
+                layers += [conv2d, nn.LeakyReLU(negative_slope=0.2, inplace=True), nn.Dropout(p=dropout_rate)]
             in_channels = v
     return nn.Sequential(*layers)
 
@@ -70,17 +71,14 @@ cfgs = {
 }
 
 
-def _vgg(arch, cfg, batch_norm, pretrained, progress, dropout=0.5, **kwargs):
+def _vgg(arch, cfg, batch_norm, pretrained, progress, dropout_rate=0.3, **kwargs):
     if pretrained:
         kwargs['init_weights'] = False
-    model = MyVGG(make_layers(cfgs[cfg], dropout=dropout, batch_norm=batch_norm), dropout=dropout, **kwargs)
+    model = MyVGG(make_layers(cfgs[cfg], dropout_rate=dropout_rate, batch_norm=batch_norm), dropout_rate=dropout_rate, **kwargs)
     return model
 
 
-dropout = 0.5,
-
-
-def myvgg16(pretrained=False, progress=True, dropout=0.7, **kwargs):
+def myvgg16(pretrained=False, progress=True, dropout_rate=0.3, **kwargs):
     r"""VGG 16-layer model (configuration "D")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -88,10 +86,10 @@ def myvgg16(pretrained=False, progress=True, dropout=0.7, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg16', 'D', False, pretrained, progress, dropout, **kwargs)
+    return _vgg('vgg16', 'D', False, pretrained, progress, dropout_rate, **kwargs)
 
 
-def myvgg16_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
+def myvgg16_bn(pretrained=False, progress=True, dropout_rate=0.3, **kwargs):
     r"""VGG 16-layer model (configuration "D") with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -99,10 +97,10 @@ def myvgg16_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg16_bn', 'D', True, pretrained, progress, dropout, **kwargs)
+    return _vgg('vgg16_bn', 'D', True, pretrained, progress, dropout_rate, **kwargs)
 
 
-def myvgg19(pretrained=False, progress=True, dropout=0.7, **kwargs):
+def myvgg19(pretrained=False, progress=True, dropout_rate=0.3, **kwargs):
     r"""VGG 19-layer model (configuration "E")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -110,10 +108,10 @@ def myvgg19(pretrained=False, progress=True, dropout=0.7, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg19', 'E', False, pretrained, progress, dropout, **kwargs)
+    return _vgg('vgg19', 'E', False, pretrained, progress, dropout_rate, **kwargs)
 
 
-def myvgg19_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
+def myvgg19_bn(pretrained=False, progress=True, dropout_rate=0.3, **kwargs):
     r"""VGG 19-layer model (configuration 'E') with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -121,4 +119,4 @@ def myvgg19_bn(pretrained=False, progress=True, dropout=0.7, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg19_bn', 'E', True, pretrained, progress, dropout, **kwargs)
+    return _vgg('vgg19_bn', 'E', True, pretrained, progress, dropout_rate, **kwargs)
