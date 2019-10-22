@@ -74,12 +74,12 @@ class WideResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(nstages[3], momentum=0.9)
         self.linear = nn.Linear(nstages[3], num_classes)
 
-    def _wide_layer(self, block, planes, num_blocks, dropout_rate, stride):
+    def _wide_layer(self, block, planes, num_blocks, dropout_rate, stride, leak):
         strides = [stride] + [1] * int(num_blocks - 1)
         layers = []
 
         for stride in strides:
-            layers.append(block(self.in_planes, planes, dropout_rate, stride))
+            layers.append(block(self.in_planes, planes, dropout_rate, stride, leak))
             self.in_planes = planes
 
         return nn.Sequential(*layers)

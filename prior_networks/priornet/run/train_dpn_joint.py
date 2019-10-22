@@ -98,26 +98,27 @@ def main():
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                  transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                                 mode='train',
-                                                                                 mean=DATASET_DICT[
-                                                                                     args.id_dataset].mean,
-                                                                                 std=DATASET_DICT[args.id_dataset].std,
-                                                                                 augment=args.augment,
-                                                                                 rotation=args.rotate,
-                                                                                 jitter=args.jitter),
+                                                  transform=construct_transforms(
+                                                      n_in=ckpt['n_in'],
+                                                      mode='train',
+                                                      mean=DATASET_DICT[args.id_dataset].mean,
+                                                      std=DATASET_DICT[args.id_dataset].std,
+                                                      augment=args.augment,
+                                                      rotation=args.rotate,
+                                                      jitter=args.jitter),
                                                   target_transform=TargetTransform(args.target_concentration,
                                                                                    1.0),
                                                   download=True,
                                                   split='train')
 
     val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
-                                                transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                               mean=DATASET_DICT[args.id_dataset].mean,
-                                                                               std=DATASET_DICT[args.id_dataset].std,
-                                                                               mode='eval',
-                                                                               rotation=args.rotate,
-                                                                               jitter=args.jitter),
+                                                transform=construct_transforms(
+                                                    n_in=ckpt['n_in'],
+                                                    mean=DATASET_DICT[args.id_dataset].mean,
+                                                    std=DATASET_DICT[args.id_dataset].std,
+                                                    mode='eval',
+                                                    rotation=args.rotate,
+                                                    jitter=args.jitter),
                                                 target_transform=TargetTransform(args.target_concentration,
                                                                                  1.0),
                                                 download=True,
@@ -154,7 +155,7 @@ def main():
         val_dataset = data.ConcatDataset([val_dataset, ood_val_dataset])
 
         # Even out dataset length and combine into one.
-        id_ratio=1.0
+        id_ratio = 1.0
         if len(train_dataset) < len(ood_dataset):
             id_ratio = np.ceil(float(len(ood_dataset)) / float(len(train_dataset)))
             assert id_ratio.is_integer()
@@ -208,7 +209,7 @@ def main():
         except:
             print('No checkpoint found, training from empty model.')
             pass
-    trainer.train(int(args.n_epochs/id_ratio), resume=args.resume)
+    trainer.train(int(args.n_epochs / id_ratio), resume=args.resume)
 
     # Save final model
     if len(args.gpu) > 1 and torch.cuda.device_count() > 1:
