@@ -68,27 +68,30 @@ class TrainerWithOOD(Trainer):
         id_alpha_0, ood_alpha_0 = 0.0, 0.0
         for i, (data, ood_data) in enumerate(
                 zip(self.trainloader, self.oodloader), 0):
-            # Get inputs
-            inputs, labels = data
-            ood_inputs, _ = ood_data
-            if self.device is not None:
-                # Move data to adequate device
-                inputs, labels, ood_inputs = map(lambda x: x.to(self.device,
-                                                                non_blocking=self.pin_memory),
-                                                 (inputs, labels, ood_inputs))
+            try:
+                # Get inputs
+                inputs, labels = data
+                ood_inputs, _ = ood_data
+                if self.device is not None:
+                    # Move data to adequate device
+                    inputs, labels, ood_inputs = map(lambda x: x.to(self.device,
+                                                                    non_blocking=self.pin_memory),
+                                                     (inputs, labels, ood_inputs))
 
-            # zero the parameter gradients
-            self.optimizer.zero_grad()
+                # zero the parameter gradients
+                self.optimizer.zero_grad()
 
-            inputs = torch.cat((inputs, ood_inputs), dim=0)
-            outputs = self.model(inputs)
-            id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
-            loss = self.criterion((id_outputs, ood_outputs), (labels, None))
-            assert torch.all(torch.isfinite(loss)).item()
-            loss.backward()
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
-            self.optimizer.step()
-
+                inputs = torch.cat((inputs, ood_inputs), dim=0)
+                outputs = self.model(inputs)
+                id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
+                loss = self.criterion((id_outputs, ood_outputs), (labels, None))
+                assert torch.all(torch.isfinite(loss)).item()
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), self.clip_norm)
+                self.optimizer.step()
+            except AssertionError:
+                print("Loss is NAN, skipping batch...")
+                continue
             # Update the number of steps
             self.steps += 1
 
@@ -233,21 +236,25 @@ class TrainerWithOODJoint(Trainer):
         train_loss, accuracy = 0.0, 0.0
         init_steps = self.steps
         for i, data in enumerate(self.trainloader, 0):
-            # Get inputs
-            inputs, labels = data
-            if self.device is not None:
-                # Move data to adequate device
-                inputs, *labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
-                                      (inputs, *labels))
+            try:
+                # Get inputs
+                inputs, labels = data
+                if self.device is not None:
+                    # Move data to adequate device
+                    inputs, *labels = map(lambda x: x.to(self.device, non_blocking=self.pin_memory),
+                                          (inputs, *labels))
+                # zero the parameter gradients
+                self.optimizer.zero_grad()
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, *labels)
+                assert torch.all(torch.isfinite(loss)).item()
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), self.clip_norm)
+                self.optimizer.step()
+            except AssertionError:
+                print("Loss is NAN, skipping batch...")
+                continue
 
-            # zero the parameter gradients
-            self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.criterion(outputs, *labels)
-            assert torch.all(torch.isfinite(loss)).item()
-            loss.backward()
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
-            self.optimizer.step()
             train_loss += loss.item()
             weights = labels[1] / torch.max(labels[1])
             weights = weights.to(dtype=torch.float32)
@@ -478,27 +485,31 @@ class TrainerWithAdv(Trainer):
         self.model.train()
 
         for i, data in enumerate(self.trainloader, 0):
-            # Get inputs
-            inputs, labels = data
-            if self.device is not None:
-                # Move data to adequate device
-                inputs, labels = map(lambda x: x.to(self.device,
-                                                    non_blocking=self.pin_memory),
-                                     (inputs, labels))
+            try:
+                # Get inputs
+                inputs, labels = data
+                if self.device is not None:
+                    # Move data to adequate device
+                    inputs, labels = map(lambda x: x.to(self.device,
+                                                        non_blocking=self.pin_memory),
+                                         (inputs, labels))
+                adv_inputs = self._construct_FGSM_attack(labels=labels,
+                                                         inputs=inputs)
+                self.model.zero_grad()
+                cat_inputs = torch.cat([inputs, adv_inputs], dim=1).view(
+                    torch.Size([2 * inputs.size()[0]]) + inputs.size()[1:])
+                logits = self.model(cat_inputs).view([inputs.size()[0], -1])
+                logits, adv_logits = torch.chunk(logits, 2, dim=1)
 
-            adv_inputs = self._construct_FGSM_attack(labels=labels,
-                                                     inputs=inputs)
-            self.model.zero_grad()
-            cat_inputs = torch.cat([inputs, adv_inputs], dim=1).view(
-                torch.Size([2 * inputs.size()[0]]) + inputs.size()[1:])
-            logits = self.model(cat_inputs).view([inputs.size()[0], -1])
-            logits, adv_logits = torch.chunk(logits, 2, dim=1)
-            loss = self.criterion([logits, adv_logits], [labels, labels])
-            assert torch.isnan(loss) == torch.tensor([0], dtype=torch.uint8).to(self.device)
-            loss.backward()
-            clip_grad_norm_(self.model.parameters(), self.clip_norm)
-            # zero the parameter gradients
-            self.optimizer.step()
+                loss = self.criterion([logits, adv_logits], [labels, labels])
+                assert torch.all(torch.isfinite(loss)).item()
+                loss.backward()
+                clip_grad_norm_(self.model.parameters(), self.clip_norm)
+                # zero the parameter gradients
+                self.optimizer.step()
+            except AssertionError:
+                print("Loss is NAN, skipping batch...")
+                continue
 
             # Update the number of steps
             self.steps += 1
