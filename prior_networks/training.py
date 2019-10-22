@@ -89,8 +89,8 @@ class Trainer:
             'test_loss': self.test_loss
         }, os.path.join(self.checkpoint_path, checkpoint_name))
         #try:
-        import nirvana_dl
-        nirvana_dl.snapshot.dump_snapshot()
+        import nirvana_dl.snapshot as snap
+        snap.dump_snapshot()
         print('Checkpoint saved to snapshots.')
         #except Exception:
         #    print('Checkpoint NOT save to snapshots!')
