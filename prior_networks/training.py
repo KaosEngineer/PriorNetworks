@@ -79,6 +79,7 @@ class Trainer:
         else:
             checkpoint_name = 'checkpoint.tar'
 
+        print(f"Saving checkpoint to {self.checkpoint_path}...")
         torch.save({
             'steps': self.steps,
             'model_state_dict': self.model.state_dict(),

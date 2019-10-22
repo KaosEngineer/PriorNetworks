@@ -150,6 +150,7 @@ def main():
 
         # Combine ID and OOD evaluation datasets into a single dataset
         assert len(val_dataset) == len(ood_val_dataset)
+        print(f"Validation dataset length: {len(val_dataset)}")
         val_dataset = data.ConcatDataset([val_dataset, ood_val_dataset])
 
         # Even out dataset length and combine into one.
@@ -170,6 +171,7 @@ def main():
                 ood_dataset = data.Subset(ood_dataset, np.arange(0, len(train_dataset)))
 
         assert len(train_dataset) == len(ood_dataset)
+        print(f"Train dataset length: {len(train_dataset)}")
         train_dataset = data.ConcatDataset([train_dataset, ood_dataset])
 
     # Set up training and test criteria
