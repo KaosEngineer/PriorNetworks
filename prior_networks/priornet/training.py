@@ -81,9 +81,15 @@ class TrainerWithOOD(Trainer):
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
 
-                inputs = torch.cat((inputs, ood_inputs), dim=0)
-                outputs = self.model(inputs)
-                id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
+                # inputs = torch.cat((inputs, ood_inputs), dim=0)
+                # outputs = self.model(inputs)
+                #id_outputs, ood_outputs = torch.chunk(outputs, 2, dim=0)
+
+                cat_inputs = torch.cat([inputs, ood_inputs], dim=1).view(
+                    torch.Size([2 * inputs.size()[0]]) + inputs.size()[1:])
+                logits = self.model(cat_inputs).view([inputs.size()[0], -1])
+                id_outputs, ood_outputs = torch.chunk(logits, 2, dim=1)
+
                 loss = self.criterion((id_outputs, ood_outputs), (labels, None))
                 assert torch.all(torch.isfinite(loss)).item()
                 loss.backward()
