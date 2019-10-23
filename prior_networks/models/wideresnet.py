@@ -45,8 +45,8 @@ class WideBasic(nn.Module):
 
     def forward(self, x):
         if self.leak:
-            out = self.dropout(self.conv1(F.leaky_relu(self.bn1(x))))
-            out = self.conv2(F.leaky_relu(self.bn2(out)))
+            out = self.dropout(self.conv1(F.leaky_relu(self.bn1(x), negative_slope=0.2)))
+            out = self.conv2(F.leaky_relu(self.bn2(out), negative_slope=0.2))
         else:
             out = self.dropout(self.conv1(F.relu(self.bn1(x))))
             out = self.conv2(F.relu(self.bn2(out)))
@@ -90,7 +90,7 @@ class WideResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         if self.leak:
-            out = F.leaky_relu(self.bn1(out))
+            out = F.leaky_relu(self.bn1(out), negative_slope=0.2)
         else:
             out = F.relu(self.bn1(out))
         out = F.avg_pool2d(out, out.size(3))
