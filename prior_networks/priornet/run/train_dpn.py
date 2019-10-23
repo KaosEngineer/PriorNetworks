@@ -101,8 +101,8 @@ def main():
         mean = DATASET_DICT[args.dataset].mean
         std = DATASET_DICT[args.dataset].std
     else:
-        mean = (0.0, 0.0, 0.0)
-        std = (1.0, 1.0, 1.0)
+        mean = (0.5, 0.5, 0.5)
+        std = (0.5, 0.5, 0.5)
 
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
