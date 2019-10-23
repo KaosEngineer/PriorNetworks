@@ -62,6 +62,9 @@ parser.add_argument('--rotate',
 parser.add_argument('--jitter', type=float, default=0.0,
                     help='Specify how much random color, '
                          'hue, saturation and contrast jitter to apply')
+parser.add_argument('--normalize',
+                    action='store_false',
+                    help='Whether to standardize input (x-mu)/std')
 parser.add_argument('--resume',
                     action='store_true',
                     help='Whether to resume training from checkpoint.')
@@ -96,13 +99,20 @@ def main():
         print('Using Multi-GPU training.')
     model.to(device)
 
+    if args.normalize:
+        mean = DATASET_DICT[args.dataset].mean
+        std = DATASET_DICT[args.dataset].std
+    else:
+        mean = (0.0, 0.0, 0.0),
+        std = (1.0, 1.0, 1.0),
+
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                   transform=construct_transforms(
                                                       n_in=ckpt['n_in'],
                                                       mode='train',
-                                                      mean=DATASET_DICT[args.id_dataset].mean,
-                                                      std=DATASET_DICT[args.id_dataset].std,
+                                                      mean=mean,
+                                                      std=std,
                                                       augment=args.augment,
                                                       rotation=args.rotate,
                                                       jitter=args.jitter),
@@ -114,8 +124,8 @@ def main():
     val_dataset = DATASET_DICT[args.id_dataset](root=args.data_path,
                                                 transform=construct_transforms(
                                                     n_in=ckpt['n_in'],
-                                                    mean=DATASET_DICT[args.id_dataset].mean,
-                                                    std=DATASET_DICT[args.id_dataset].std,
+                                                    mean=mean,
+                                                    std=std,
                                                     mode='eval',
                                                     rotation=args.rotate,
                                                     jitter=args.jitter),
@@ -129,8 +139,8 @@ def main():
         ood_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                      transform=construct_transforms(
                                                          n_in=ckpt['n_in'],
-                                                         mean=DATASET_DICT[args.id_dataset].mean,
-                                                         std=DATASET_DICT[args.id_dataset].std,
+                                                         mean=mean,
+                                                         std=std,
                                                          mode='ood'),
                                                      target_transform=TargetTransform(0.0,
                                                                                       args.gamma,
@@ -140,8 +150,8 @@ def main():
         ood_val_dataset = DATASET_DICT[args.ood_dataset](root=args.data_path,
                                                          transform=construct_transforms(
                                                              n_in=ckpt['n_in'],
-                                                             mean=DATASET_DICT[args.id_dataset].mean,
-                                                             std=DATASET_DICT[args.id_dataset].std,
+                                                             mean=mean,
+                                                             std=std,
                                                              mode='eval'),
                                                          target_transform=TargetTransform(0.0,
                                                                                           args.gamma,

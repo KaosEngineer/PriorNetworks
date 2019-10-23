@@ -47,6 +47,9 @@ parser.add_argument('--augment',
 parser.add_argument('--rotate',
                     action='store_true',
                     help='Whether to use rotation augmentation')
+parser.add_argument('--normalize',
+                    action='store_false',
+                    help='Whether to standardize input (x-mu)/std')
 parser.add_argument('--jitter', type=float, default=0.0,
                     help='Specify how much random color, '
                          'hue, saturation and contrast jitter to apply')
@@ -84,12 +87,19 @@ def main():
         print('Using Multi-GPU training.')
     model.to(device)
 
+    if args.normalize:
+        mean = DATASET_DICT[args.dataset].mean
+        std = DATASET_DICT[args.dataset].std
+    else:
+        mean = (0.0, 0.0, 0.0),
+        std = (1.0, 1.0, 1.0),
+
     # Load the in-domain training and validation data
     train_dataset = DATASET_DICT[args.dataset](root=args.data_path,
                                                transform=construct_transforms(n_in=ckpt['n_in'],
                                                                               mode='train',
-                                                                              mean=DATASET_DICT[args.dataset].mean,
-                                                                              std=DATASET_DICT[args.dataset].std,
+                                                                              mean=mean,
+                                                                              std=std,
                                                                               augment=args.augment,
                                                                               rotation=args.rotate,
                                                                               jitter=args.jitter),
@@ -99,16 +109,14 @@ def main():
 
     val_dataset = DATASET_DICT[args.dataset](root=args.data_path,
                                              transform=construct_transforms(n_in=ckpt['n_in'],
-                                                                            mean=DATASET_DICT[args.dataset].mean,
-                                                                            std=DATASET_DICT[args.dataset].std,
+                                                                            mean=mean,
+                                                                            std=std,
                                                                             mode='eval'),
                                              target_transform=None,
                                              download=True,
                                              split='val')
 
     # Check that we are training on a sensible GPU
-
-
 
     # Set up training and test criteria
     criterion = torch.nn.CrossEntropyLoss()
