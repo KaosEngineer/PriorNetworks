@@ -98,8 +98,8 @@ def main():
     model.to(device)
 
     if args.normalize:
-        mean = DATASET_DICT[args.dataset].mean
-        std = DATASET_DICT[args.dataset].std
+        mean = DATASET_DICT[args.id_dataset].mean
+        std = DATASET_DICT[args.id_dataset].std
     else:
         mean = (0.5, 0.5, 0.5)
         std = (0.5, 0.5, 0.5)
