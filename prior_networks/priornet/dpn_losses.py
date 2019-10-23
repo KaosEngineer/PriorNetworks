@@ -31,7 +31,7 @@ class PriorNetMixedLoss:
             total_loss.append(weighted_loss)
         total_loss = torch.stack(total_loss, dim=0)
         # Normalize by target concentration, so that loss  magnitude is constant wrt lr and other losses
-        return torch.sum(total_loss) / target_concentration
+        return torch.mean(total_loss) / target_concentration
 
 
 class DirichletKLLoss:
