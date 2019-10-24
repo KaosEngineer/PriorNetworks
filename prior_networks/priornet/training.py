@@ -131,15 +131,15 @@ class TrainerWithOOD(Trainer):
         id_alpha_0 /= len(self.trainloader)
         ood_alpha_0 /= len(self.trainloader)
 
-        print(f"Train ID Loss: {np.round(id_loss, 3)}; "
-              f"Train OODD Loss: {np.round(ood_loss, 3)}; "
+        print(f"Train ID Loss: {np.round(id_loss, 1)}; "
+              f"Train OOD Loss: {np.round(ood_loss, 1)}; "
               f"Train Error: {np.round(100.0 * (1.0 - accuracies), 1)}; "
               f"Train ID precision: {np.round(id_alpha_0, 1)}; "
               f"Train OOD precision: {np.round(ood_alpha_0, 1)}")
 
         with open('./LOG.txt', 'a') as f:
-            f.write(f"Train ID Loss: {np.round(id_loss, 3)}; "
-                    f"Train OODD Loss: {np.round(ood_loss, 3)}; "
+            f.write(f"Train ID Loss: {np.round(id_loss, 1)}; "
+                    f"Train OOD Loss: {np.round(ood_loss, 1)}; "
                     f"Train Error: {np.round(100.0 * (1.0 - accuracies), 1)}; "
                     f"Train ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Train OOD precision: {np.round(ood_alpha_0, 1)}; ")
@@ -202,8 +202,8 @@ class TrainerWithOOD(Trainer):
 
         auc = roc_auc_score(domain_labels, uncertainties)
 
-        print(f"Test ID Loss: {np.round(id_loss, 3)}; "
-              f"Test OODD Loss: {np.round(ood_loss, 3)}; "
+        print(f"Test ID Loss: {np.round(id_loss, 1)}; "
+              f"Test OOD Loss: {np.round(ood_loss, 1)}; "
               f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}%; "
               f"Test ID precision: {np.round(id_alpha_0, 1)}; "
               f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
@@ -211,8 +211,8 @@ class TrainerWithOOD(Trainer):
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         with open('./LOG.txt', 'a') as f:
-            f.write(f"Test ID Loss: {np.round(id_loss, 3)}; "
-                    f"Test OODD Loss: {np.round(ood_loss, 3)}; "
+            f.write(f"Test ID Loss: {np.round(id_loss, 1)}; "
+                    f"Test OOD Loss: {np.round(ood_loss, 1)}; "
                     f"Test Error: {np.round(100.0 * (1.0 - accuracy), 1)}; "
                     f"Test ID precision: {np.round(id_alpha_0, 1)}; "
                     f"Test OOD precision: {np.round(ood_alpha_0, 1)}; "
