@@ -195,6 +195,8 @@ def main():
     lrc = [int(lrc / id_ratio) for lrc in args.lrc]
     trainer = TrainerWithOOD(model=model,
                              criterion=criterion,
+                             id_criterion=id_criterion,
+                             ood_criterion=ood_criterion,
                              test_criterion=criterion,
                              ood_dataset=ood_dataset,
                              test_ood_dataset=ood_val_dataset,

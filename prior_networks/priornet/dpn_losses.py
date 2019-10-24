@@ -90,64 +90,6 @@ class DirichletKLLoss:
         return loss
 
 
-class DirichletKLLossJoint:
-    """
-    Can be applied to any model which returns logits
-
-    """
-
-    def __init__(self, concentration=1.0, reverse=True):
-        """
-        :param target_concentration: The concentration parameter for the
-        target class (if provided)
-        :param concentration: The 'base' concentration parameters for
-        non-target classes.
-        """
-
-        self.concentration = concentration
-        self.reverse = reverse
-
-    def __call__(self, logits, labels, target_concentration, gamma, mean=True):
-        alphas = torch.exp(logits)
-        return self.forward(alphas, labels, target_concentration, gamma, mean)
-
-    def forward(self, alphas, labels, target_concentration, gamma, mean):
-        loss = self.compute_loss(alphas, labels, target_concentration, gamma)
-
-        if mean:
-            return torch.mean(loss)
-        else:
-            return loss
-
-    def compute_loss(self, alphas, labels, target_concentration, gamma):
-        """
-        :param alphas: The alpha parameter outputs from the model
-        :param labels: Optional. The target labels indicating the correct
-        class.
-
-        The loss creates a set of target alpha (concentration) parameters
-        with all values set to self.concentration, except for the correct
-        class (if provided), which is set to self.target_concentration
-        :return: an array of per example loss
-        """
-        # Create array of target (desired) concentration parameters
-
-        target_concentration = target_concentration.to(alphas)
-        gamma = gamma.to(alphas)
-
-        target_alphas = torch.ones_like(alphas) * self.concentration
-        # if labels is not None:
-        target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None],
-                                                           target_concentration[:, None])
-
-        if self.reverse:
-            loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
-        else:
-            loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
-
-        return gamma * loss
-
-
 def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precision=None,
                             epsilon=1e-8):
     """
@@ -192,3 +134,65 @@ def dirichlet_reverse_kl_divergence(alphas, target_alphas, precision=None, targe
     return dirichlet_kl_divergence(alphas=target_alphas, target_alphas=alphas,
                                    precision=target_precision,
                                    target_precision=precision, epsilon=epsilon)
+
+
+
+
+
+#
+# class DirichletKLLossJoint:
+#     """
+#     Can be applied to any model which returns logits
+#
+#     """
+#
+#     def __init__(self, concentration=1.0, reverse=True):
+#         """
+#         :param target_concentration: The concentration parameter for the
+#         target class (if provided)
+#         :param concentration: The 'base' concentration parameters for
+#         non-target classes.
+#         """
+#
+#         self.concentration = concentration
+#         self.reverse = reverse
+#
+#     def __call__(self, logits, labels, target_concentration, gamma, mean=True):
+#         alphas = torch.exp(logits)
+#         return self.forward(alphas, labels, target_concentration, gamma, mean)
+#
+#     def forward(self, alphas, labels, target_concentration, gamma, mean):
+#         loss = self.compute_loss(alphas, labels, target_concentration, gamma)
+#
+#         if mean:
+#             return torch.mean(loss)
+#         else:
+#             return loss
+#
+#     def compute_loss(self, alphas, labels, target_concentration, gamma):
+#         """
+#         :param alphas: The alpha parameter outputs from the model
+#         :param labels: Optional. The target labels indicating the correct
+#         class.
+#
+#         The loss creates a set of target alpha (concentration) parameters
+#         with all values set to self.concentration, except for the correct
+#         class (if provided), which is set to self.target_concentration
+#         :return: an array of per example loss
+#         """
+#         # Create array of target (desired) concentration parameters
+#
+#         target_concentration = target_concentration.to(alphas)
+#         gamma = gamma.to(alphas)
+#
+#         target_alphas = torch.ones_like(alphas) * self.concentration
+#         # if labels is not None:
+#         target_alphas += torch.zeros_like(alphas).scatter_(1, labels[:, None],
+#                                                            target_concentration[:, None])
+#
+#         if self.reverse:
+#             loss = dirichlet_reverse_kl_divergence(alphas, target_alphas=target_alphas)
+#         else:
+#             loss = dirichlet_kl_divergence(alphas, target_alphas=target_alphas)
+#
+#         return gamma * loss
