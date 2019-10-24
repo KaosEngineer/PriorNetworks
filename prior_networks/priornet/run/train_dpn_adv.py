@@ -70,8 +70,6 @@ parser.add_argument('--clip_norm', type=float, default=10.0,
                     help='Gradient clipping norm value.')
 parser.add_argument('--checkpoint_path', type=str, default=None,
                     help='Path to where to checkpoint.')
-parser.add_argument('--checkpoint_path', type=str, default=None,
-                    help='Path to where to checkpoint.')
 
 
 def main():
