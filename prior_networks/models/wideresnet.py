@@ -20,20 +20,20 @@ def conv3x3(in_planes, out_planes, stride=1):
 def conv_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        init.kaiming_normal(m.weight)
+        init.kaiming_normal_(m.weight)
         init.constant(m.bias, 0)
     elif classname.find('BatchNorm') != -1:
-        init.constant(m.weight, 1)
-        init.constant(m.bias, 0)
+        init.constant_(m.weight, 1)
+        init.constant_(m.bias, 0)
 
 def conv_leak_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
-        init.kaiming_normal(m.weight, a=0.2)
-        init.constant(m.bias, 0)
+        init.kaiming_normal_(m.weight, a=0.2)
+        init.constant_(m.bias, 0)
     elif classname.find('BatchNorm') != -1:
-        init.constant(m.weight, 1)
-        init.constant(m.bias, 0)
+        init.constant_(m.weight, 1)
+        init.constant_(m.bias, 0)
 
 class WideBasic(nn.Module):
     def __init__(self, in_planes, planes, dropout_rate, stride=1, leak=False):
