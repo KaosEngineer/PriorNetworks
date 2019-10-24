@@ -281,9 +281,10 @@ class TrainerWithAdv(Trainer):
             target_sampler = Categorical(probs=probs)
             targets = target_sampler.sample(torch.Size([outputs.size()[0]]))
 
-            epsilon_sampler = Normal(0, self.adv_noise)
-            epsilon = epsilon_sampler.sample(torch.Size([outputs.size()[0]]))
-            epsilon = torch.abs(epsilon) + 0.004
+            #epsilon_sampler = Normal(0, self.adv_noise)
+            #epsilon = epsilon_sampler.sample(torch.Size([outputs.size()[0]]))
+            #epsilon = torch.abs(epsilon) + 0.004
+            epsilon = torch.tensor(0.3, dtype=torch.float32)
             epsilon = epsilon.view([outputs.size()[0], 1, 1, 1])
 
             if self.device is not None:
@@ -291,6 +292,7 @@ class TrainerWithAdv(Trainer):
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
             loss = self.adv_criterion(outputs, targets, mean=False)
+            print(loss)
             assert torch.all(torch.isfinite(loss)).item()
 
             loss = torch.where(torch.eq(targets, labels), -loss, loss)
@@ -306,7 +308,7 @@ class TrainerWithAdv(Trainer):
 
             update = epsilon * grads.sign()
 
-            perturbed_image = torch.clamp(adv_inputs - update, 0, 1)
+            perturbed_image = torch.clamp(adv_inputs - update, -4.0, 4.0)
             adv_inputs.data = perturbed_image
 
         # Return the perturbed image
