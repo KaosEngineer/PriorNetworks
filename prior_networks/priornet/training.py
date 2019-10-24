@@ -291,11 +291,7 @@ class TrainerWithAdv(Trainer):
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
 
-            loss = self.test_criterion(outputs, labels)
-            print(loss)
-            assert torch.all(torch.isfinite(loss)).item()
             loss = self.adv_criterion(outputs, targets, mean=False)
-            print(loss)
             assert torch.all(torch.isfinite(loss)).item()
 
             loss = torch.where(torch.eq(targets, labels), -loss, loss)
@@ -308,6 +304,7 @@ class TrainerWithAdv(Trainer):
                                         adv_inputs,
                                         grad_outputs=grad_outputs,
                                         only_inputs=True)[0]
+            assert torch.all(torch.isfinite(grads)).item()
 
             update = epsilon * grads.sign()
 
