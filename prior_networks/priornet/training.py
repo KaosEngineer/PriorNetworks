@@ -276,7 +276,6 @@ class TrainerWithAdv(Trainer):
 
         with torch.enable_grad():
             outputs = self.model(adv_inputs)
-            assert torch.all(torch.isfinite(outputs)).item()
 
             probs = torch.ones(size=[outputs.size()[1]]) / outputs.size()[1]
             target_sampler = Categorical(probs=probs)
