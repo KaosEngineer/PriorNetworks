@@ -284,14 +284,13 @@ class TrainerWithAdv(Trainer):
             epsilon_sampler = Normal(0, self.adv_noise)
             epsilon = epsilon_sampler.sample(torch.Size([outputs.size()[0]]))
             epsilon = torch.abs(epsilon) + 0.004
-            #epsilon = torch.tensor(0.3, dtype=torch.float32)
             epsilon = epsilon.view([outputs.size()[0], 1, 1, 1])
-            print(epsilon)
 
             if self.device is not None:
                 targets = targets.to(self.device, non_blocking=self.pin_memory)
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
+            print(outputs)
             loss = self.adv_criterion(outputs, targets, mean=False)
             print(loss)
             assert torch.all(torch.isfinite(loss)).item()
