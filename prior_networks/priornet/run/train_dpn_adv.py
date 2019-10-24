@@ -17,8 +17,6 @@ from prior_networks.models.model_factory import ModelFactory
 parser = argparse.ArgumentParser(description='Train a Dirichlet Prior Network model using a '
                                              'standard Torchvision architecture on a Torchvision '
                                              'dataset.')
-parser.add_argument('model_dir', type=str,
-                    help='absolute directory path where to save model and associated data.')
 parser.add_argument('data_path', type=str,
                     help='absolute path to training data.')
 parser.add_argument('id_dataset', choices=DATASET_DICT.keys(),
@@ -29,6 +27,8 @@ parser.add_argument('lr', type=float,
                     help='Initial learning rate.')
 parser.add_argument('--lr_decay', type=float, default=0.2, help='LR decay multiplies')
 parser.add_argument('--lrc', action='append', type=int, help='LR decay milestones')
+parser.add_argument('--model_dir', type=str, default='./',
+                    help='absolute directory path where to save model and associated data.')
 parser.add_argument('--target_concentration', type=float, default=1e2,
                     help='Target in-domain concentration.')
 parser.add_argument('--adv_concentration', type=float, default=1.0,
