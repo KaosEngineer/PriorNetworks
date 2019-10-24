@@ -291,6 +291,9 @@ class TrainerWithAdv(Trainer):
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
             print(targets)
+            loss = self.test_criterion(outputs, labels)
+            print(loss)
+            assert torch.all(torch.isfinite(loss)).item()
             loss = self.adv_criterion(outputs, targets, mean=False)
             print(loss)
             assert torch.all(torch.isfinite(loss)).item()
