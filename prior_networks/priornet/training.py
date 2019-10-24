@@ -276,6 +276,7 @@ class TrainerWithAdv(Trainer):
 
         with torch.enable_grad():
             outputs = self.model(adv_inputs)
+            assert torch.all(torch.isfinite(outputs)).item()
 
             probs = torch.ones(size=[outputs.size()[1]]) / outputs.size()[1]
             target_sampler = Categorical(probs=probs)
@@ -290,7 +291,7 @@ class TrainerWithAdv(Trainer):
                 targets = targets.to(self.device, non_blocking=self.pin_memory)
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
-            print(targets)
+
             loss = self.test_criterion(outputs, labels)
             print(loss)
             assert torch.all(torch.isfinite(loss)).item()
