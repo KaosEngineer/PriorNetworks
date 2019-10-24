@@ -26,6 +26,14 @@ def conv_init(m):
         init.constant(m.weight, 1)
         init.constant(m.bias, 0)
 
+def conv_leak_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        init.kaiming_normal(m.weight, a=0.2)
+        init.constant(m.bias, 0)
+    elif classname.find('BatchNorm') != -1:
+        init.constant(m.weight, 1)
+        init.constant(m.bias, 0)
 
 class WideBasic(nn.Module):
     def __init__(self, in_planes, planes, dropout_rate, stride=1, leak=False):
@@ -106,7 +114,9 @@ def wide_resnet28_10(pretrained=None, progress=None, small_inputs=None, **kwargs
         progress (bool): Empty variable for common interface
         small_inputs: Unused
     """
-    return WideResNet(**kwargs, depth=28, widen_factor=10)
+    net = WideResNet(**kwargs, depth=28, widen_factor=10)
+    net.apply(conv_init)
+    return net
 
 
 def wide_leaky_resnet28_10(pretrained=None, progress=None, small_inputs=None, **kwargs):
@@ -116,7 +126,9 @@ def wide_leaky_resnet28_10(pretrained=None, progress=None, small_inputs=None, **
         progress (bool): Empty variable for common interface
         small_inputs: Unused
     """
-    return WideResNet(**kwargs, depth=28, widen_factor=10, leak=True)
+    net = WideResNet(**kwargs, depth=28, widen_factor=10, leak=True)
+    net.apply(conv_leak_init)
+    return net
 
 
 def wide_resnet28_12(pretrained=None, progress=None, small_inputs=None, **kwargs):
@@ -126,7 +138,9 @@ def wide_resnet28_12(pretrained=None, progress=None, small_inputs=None, **kwargs
         progress (bool): Empty variable for common interface
         small_inputs: Unused
     """
-    return WideResNet(**kwargs, depth=28, widen_factor=12)
+    net = WideResNet(**kwargs, depth=28, widen_factor=12)
+    net.apply(conv_init)
+    return net
 
 
 def wide_resnet40_2(pretrained=None, progress=None, small_inputs=None, **kwargs):
@@ -136,4 +150,7 @@ def wide_resnet40_2(pretrained=None, progress=None, small_inputs=None, **kwargs)
         progress (bool): Empty variable for common interface
         small_inputs: Unused
     """
-    return WideResNet(**kwargs, depth=40, widen_factor=2)
+
+    net = WideResNet(**kwargs, depth=40, widen_factor=2)
+    net.apply(conv_init)
+    return net
