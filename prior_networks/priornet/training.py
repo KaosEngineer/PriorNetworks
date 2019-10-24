@@ -281,11 +281,12 @@ class TrainerWithAdv(Trainer):
             target_sampler = Categorical(probs=probs)
             targets = target_sampler.sample(torch.Size([outputs.size()[0]]))
 
-            #epsilon_sampler = Normal(0, self.adv_noise)
-            #epsilon = epsilon_sampler.sample(torch.Size([outputs.size()[0]]))
-            #epsilon = torch.abs(epsilon) + 0.004
-            epsilon = torch.tensor(0.3, dtype=torch.float32)
+            epsilon_sampler = Normal(0, self.adv_noise)
+            epsilon = epsilon_sampler.sample(torch.Size([outputs.size()[0]]))
+            epsilon = torch.abs(epsilon) + 0.004
+            #epsilon = torch.tensor(0.3, dtype=torch.float32)
             epsilon = epsilon.view([outputs.size()[0], 1, 1, 1])
+            print(epsilon)
 
             if self.device is not None:
                 targets = targets.to(self.device, non_blocking=self.pin_memory)
