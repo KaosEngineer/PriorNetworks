@@ -290,7 +290,6 @@ class TrainerWithAdv(Trainer):
                 targets = targets.to(self.device, non_blocking=self.pin_memory)
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
-
             loss = self.adv_criterion(outputs, targets, mean=False)
             assert torch.all(torch.isfinite(loss)).item()
 
@@ -321,6 +320,7 @@ class TrainerWithAdv(Trainer):
 
         nat_loss, adv_loss = 0.0, 0.0
         nat_accuracy, adv_accuracy = 0.0, 0.0
+        nat_alpha_0, adv_alpha_0 = 0.0, 0.0
         for i, data in enumerate(self.trainloader, 0):
 
             # Get inputs
@@ -345,6 +345,9 @@ class TrainerWithAdv(Trainer):
 
             nat_probs = F.softmax(logits, dim=1)
             adv_probs = F.softmax(adv_logits, dim=1)
+
+            nat_alpha_0 += torch.mean(torch.sum(torch.exp(logits), dim=1)).item()
+            adv_alpha_0 += torch.mean(torch.sum(torch.exp(adv_logits), dim=1)).item()
 
             nat_accuracy += calc_accuracy_torch(nat_probs, labels, self.device).item()
             adv_accuracy += calc_accuracy_torch(adv_probs, labels, self.device).item()
@@ -378,15 +381,22 @@ class TrainerWithAdv(Trainer):
         nat_accuracy /= len(self.trainloader)
         adv_accuracy /= len(self.trainloader)
 
+        nat_alpha_0 /= len(self.trainloader)
+        adv_alpha_0 /= len(self.trainloader)
+
         print(f"Train Nat Loss: {np.round(nat_loss, 1)}; "
               f"Train Adv Loss: {np.round(adv_loss, 1)}; "
               f"Train Nat Error: {np.round(100.0 * (1.0 - nat_accuracy), 1)}; "
-              f"Train Adv Error: {np.round(100.0 * (1.0 - adv_accuracy), 1)}; ")
+              f"Train Adv Error: {np.round(100.0 * (1.0 - adv_accuracy), 1)}; "
+              f"Train Nat Prec: {np.round(nat_alpha_0, 1)}; "
+              f"Train Adv Prec: {np.round(adv_alpha_0, 1)};")
         with open('./LOG.txt', 'a') as f:
             f.write(f"Train Nat Loss: {np.round(nat_loss, 1)}; "
                     f"Train Adv Loss: {np.round(adv_loss, 1)}; "
                     f"Train Nat Error: {np.round(100.0 * (1.0 - nat_accuracy), 1)}; "
-                    f"Train Adv Error: {np.round(100.0 * (1.0 - adv_accuracy), 1)}; ")
+                    f"Train Adv Error: {np.round(100.0 * (1.0 - adv_accuracy), 1)}; "
+                    f"Train Nat Prec: {np.round(nat_alpha_0, 1)}; "
+                    f"Train Adv Prec: {np.round(adv_alpha_0, 1)};")
 
         return
 
