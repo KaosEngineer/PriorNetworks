@@ -244,8 +244,8 @@ IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp',
 
 
 class TinyImageNet(datasets.VisionDataset):
-    mean = (0.4914, 0.4823, 0.4465)
-    std = (0.247, 0.243, 0.261)
+    mean = (0.4802, 0.4481, 0.3975)
+    std = (0.2770, 0.2691, 0.2821)
 
     def __init__(self, root, transform, target_transform, split,
                  extensions=IMG_EXTENSIONS,
