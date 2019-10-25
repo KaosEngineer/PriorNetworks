@@ -2,7 +2,7 @@
 A number of classes that transform the torch vision datasets into a standard format
 usable for uncertainty (e.g. out-of-domain vs. in-domain) experimentation.
 """
-import context
+#import context
 import torchvision
 import sys
 from torchvision.datasets import DatasetFolder
