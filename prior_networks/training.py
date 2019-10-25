@@ -200,7 +200,7 @@ class Trainer:
         accuracy = n_correct / len(self.testloader.dataset)
 
         print(f"Test Loss: {np.round(test_loss, 3)}; "
-              f"Test Accuracy: {np.round(100.0 * accuracy, 1)}%; "
+              f"Test Error: {np.round(100.0 * (1.0-accuracy), 1)}%; "
               f"Time Per Epoch: {np.round(time / 60.0, 1)} min")
 
         # Log statistics

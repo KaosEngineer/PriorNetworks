@@ -114,7 +114,7 @@ def dirichlet_kl_divergence(alphas, target_alphas, precision=None, target_precis
                             + (target_alphas - alphas) * (torch.digamma(target_alphas + epsilon)
                                                           - torch.digamma(
                 target_precision + epsilon)), dim=1, keepdim=True)
-    assert torch.all(torch.isfinite(alphas_term )).item()
+    assert torch.all(torch.isfinite(alphas_term)).item()
 
     cost = torch.squeeze(precision_term + alphas_term)
     return cost
@@ -136,10 +136,6 @@ def dirichlet_reverse_kl_divergence(alphas, target_alphas, precision=None, targe
     return dirichlet_kl_divergence(alphas=target_alphas, target_alphas=alphas,
                                    precision=target_precision,
                                    target_precision=precision, epsilon=epsilon)
-
-
-
-
 
 #
 # class DirichletKLLossJoint:
