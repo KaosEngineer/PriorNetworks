@@ -4,6 +4,30 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+class MixedLoss:
+    def __init__(self, losses, mixing_params: Optional[Iterable[float]]):
+        assert isinstance(losses, (list, tuple))
+        assert isinstance(mixing_params, (list, tuple, np.ndarray))
+        assert len(losses) == len(mixing_params)
+
+        self.losses = losses
+        if mixing_params is not None:
+            self.mixing_params = mixing_params
+        else:
+            self.mixing_params = [1.] * len(self.losses)
+
+    def __call__(self, logits_list, labels_list):
+        return self.forward(logits_list, labels_list)
+
+    def forward(self, logits_list, labels_list):
+        total_loss = []
+        for i, loss in enumerate(self.losses):
+            weighted_loss = (loss(logits_list[i], labels_list[i])
+                             * self.mixing_params[i])
+            total_loss.append(weighted_loss)
+        total_loss = torch.stack(total_loss, dim=0)
+        # Normalize by target concentration, so that loss  magnitude is constant wrt lr and other losses
+        return torch.sum(total_loss)
 
 class PriorNetMixedLoss:
     def __init__(self, losses, mixing_params: Optional[Iterable[float]]):

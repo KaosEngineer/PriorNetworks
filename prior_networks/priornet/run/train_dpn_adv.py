@@ -5,8 +5,9 @@ import sys
 from pathlib import Path
 
 import torch
+from torch import nn
 from torch.utils import data
-from prior_networks.priornet.dpn_losses import DirichletKLLoss, PriorNetMixedLoss
+from prior_networks.priornet.dpn_losses import DirichletKLLoss, PriorNetMixedLoss, MixedLoss
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
 from prior_networks.priornet.training import TrainerWithAdv
 from prior_networks.util_pytorch import TargetTransform, choose_optimizer
@@ -47,6 +48,9 @@ parser.add_argument('--model_load_path', type=str, default='./model',
                     help='Source where to load the model from.')
 parser.add_argument('--reverse_KL', type=bool, default=True,
                     help='Whether to use forward or reverse KL. Default is to ALWAYS use reverse KL.')
+parser.add_argument('--STD_ADV',
+                    action='store_true',
+                    help='Whether to use standard adversarial training.')
 parser.add_argument('--gpu', type=int, action='append',
                     help='Specify which GPUs to to run on.')
 parser.add_argument('--optimizer', choices=['SGD', 'ADAM'], default='SGD',
@@ -133,16 +137,23 @@ def main():
     print(f"Train dataset length: {len(train_dataset)}")
 
     # Set up training and test criteria
-    test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
-                                     concentration=args.concentration,
-                                     reverse=args.reverse_KL)
+    if args.STD_ADV:
+        test_criterion = nn.CrossEntropyLoss()
+        adv_criterion = nn.CrossEntropyLoss()
 
-    adv_criterion = DirichletKLLoss(target_concentration=args.adv_concentration,
-                                    concentration=args.concentration,
-                                    reverse=args.reverse_KL)
+        train_criterion = MixedLoss([test_criterion, adv_criterion], [1.0, 1.0])
 
-    train_criterion = PriorNetMixedLoss([test_criterion, adv_criterion],
-                                        [1.0, args.gamma])
+    else:
+        test_criterion = DirichletKLLoss(target_concentration=args.target_concentration,
+                                         concentration=args.concentration,
+                                         reverse=args.reverse_KL)
+
+        adv_criterion = DirichletKLLoss(target_concentration=args.adv_concentration,
+                                        concentration=args.concentration,
+                                        reverse=args.reverse_KL)
+
+        train_criterion = PriorNetMixedLoss([test_criterion, adv_criterion],
+                                            [1.0, args.gamma])
 
     # Select optimizer and optimizer params
     optimizer, optimizer_params = choose_optimizer(args.optimizer,
