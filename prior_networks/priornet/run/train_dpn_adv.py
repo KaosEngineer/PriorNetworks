@@ -6,6 +6,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from torch.utils import data
 from prior_networks.priornet.dpn_losses import DirichletKLLoss, PriorNetMixedLoss, MixedLoss
 from prior_networks.util_pytorch import DATASET_DICT, select_gpu
@@ -138,8 +139,8 @@ def main():
 
     # Set up training and test criteria
     if args.STD_ADV:
-        test_criterion = nn.CrossEntropyLoss()
-        adv_criterion = nn.CrossEntropyLoss()
+        test_criterion = F.cross_entropy
+        adv_criterion = F.cross_entropy
 
         train_criterion = MixedLoss([test_criterion, adv_criterion], [1.0, 1.0])
 

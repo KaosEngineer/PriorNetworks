@@ -76,17 +76,19 @@ class DirichletKLLoss:
         self.concentration = concentration
         self.reverse = reverse
 
-    def __call__(self, logits, labels, mean=True):
+    def __call__(self, logits, labels, reduction='mean'):
         alphas = torch.exp(logits)
-        return self.forward(alphas, labels, mean=mean)
+        return self.forward(alphas, labels, reduction=reduction)
 
-    def forward(self, alphas, labels, mean):
+    def forward(self, alphas, labels, reduction='mean'):
         loss = self.compute_loss(alphas, labels)
 
-        if mean:
+        if reduction == 'mean':
             return torch.mean(loss)
-        else:
+        elif reduction is None:
             return loss
+        else:
+            raise NotImplementedError
 
     def compute_loss(self, alphas, labels: Optional[torch.tensor] = None):
         """
