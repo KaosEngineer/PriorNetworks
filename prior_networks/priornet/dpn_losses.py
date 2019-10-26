@@ -85,7 +85,7 @@ class DirichletKLLoss:
 
         if reduction == 'mean':
             return torch.mean(loss)
-        elif reduction is None:
+        elif reduction =='none':
             return loss
         else:
             raise NotImplementedError

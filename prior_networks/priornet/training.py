@@ -290,7 +290,7 @@ class TrainerWithAdv(Trainer):
                 targets = targets.to(self.device, non_blocking=self.pin_memory)
                 epsilon = epsilon.to(self.device, non_blocking=self.pin_memory)
 
-            loss = self.adv_criterion(outputs, targets, reduction=None)
+            loss = self.adv_criterion(outputs, targets, reduction='none')
             assert torch.all(torch.isfinite(loss)).item()
 
             loss = torch.where(torch.eq(targets, labels), -loss, loss)
