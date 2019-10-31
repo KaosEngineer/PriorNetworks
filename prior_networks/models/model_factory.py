@@ -41,7 +41,13 @@ class ModelFactory(object):
     def model_from_checkpoint(cls, checkpoint) -> nn.Module:
         model_class = cls.MODEL_DICT[checkpoint[cls.ARCHITECTURE_FIELD]]
 
-        model_param_dict = {field: checkpoint[field] for field in cls.MODEL_ARGS_FIELDS}
+        try:
+            model_param_dict = {field: checkpoint[field] for field in cls.MODEL_ARGS_FIELDS}
+        except KeyError:
+            fields = ['num_classes', 'small_inputs']
+            model_param_dict = {field: checkpoint[field] for field in fields}
+            model_param_dict['dropout_rate'] = 0.0
+
         model = model_class(**model_param_dict)
 
         model.load_state_dict(checkpoint[cls.STATE_DICT_FIELD])
