@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+
 class MixedLoss:
     def __init__(self, losses, mixing_params: Optional[Iterable[float]]):
         assert isinstance(losses, (list, tuple))
@@ -28,6 +29,7 @@ class MixedLoss:
         total_loss = torch.stack(total_loss, dim=0)
         # Normalize by target concentration, so that loss  magnitude is constant wrt lr and other losses
         return torch.sum(total_loss)
+
 
 class PriorNetMixedLoss:
     def __init__(self, losses, mixing_params: Optional[Iterable[float]]):
@@ -85,7 +87,7 @@ class DirichletKLLoss:
 
         if reduction == 'mean':
             return torch.mean(loss)
-        elif reduction =='none':
+        elif reduction == 'none':
             return loss
         else:
             raise NotImplementedError

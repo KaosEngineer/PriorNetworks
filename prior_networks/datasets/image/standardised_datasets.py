@@ -180,9 +180,10 @@ class CIFAR10(torchvision.datasets.CIFAR10):
 
 
 class CIFAR100(torchvision.datasets.CIFAR100):
-    mean = (0.5071, 0.4865, 0.4409)
-    std = (0.267, 0.256, 0.276)
-
+    # mean = (0.5071, 0.4865, 0.4409)
+    # std = (0.267, 0.256, 0.276)
+    mean = (0.4914, 0.4823, 0.4465)
+    std = (0.247, 0.243, 0.261)
 
     def __init__(self, root, transform, target_transform, download, split):
         assert split in split_options
