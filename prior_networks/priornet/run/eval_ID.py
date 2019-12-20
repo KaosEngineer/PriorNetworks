@@ -97,7 +97,7 @@ def main():
 
     # Save model outputs
     np.savetxt(os.path.join(args.output_path, 'labels.txt'), labels)
-    #np.savetxt(os.path.join(args.output_path, 'probs.txt'), probs)
+    np.savetxt(os.path.join(args.output_path, 'probs.txt'), probs)
     np.savetxt(os.path.join(args.output_path, 'logits.txt'), logits)
 
     # Get dictionary of uncertainties.
